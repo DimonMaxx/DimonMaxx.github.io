@@ -156,11 +156,6 @@
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Invisible.mp3"
   },
   {
-    "title": "In The End",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Izzo%20-%20In%20The%20End.mp3"
-  },
-  {
     "title": "Jigga What , Faint",
     "artist": "Linkin Park",
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Jigga%20What%20%2C%20Faint.mp3"
@@ -819,5 +814,10 @@
     "title": "Whole World Is Watching (Feat. Dave Pirner)",
     "artist": "Within Temptation",
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Whole%20World%20Is%20Watching%20%28Feat.%20Dave%20Pirner%29.mp3"
+  },
+  {
+    "title": "In The End",
+    "artist": "Izzo",
+    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Izzo%20-%20In%20The%20End.mp3"
   }
 ]
