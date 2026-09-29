@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Перехватываем ответы Vue (не делаем свои запросы).
-Кликаем по папкам в UI → Vue сам грузит содержимое → мы парсим ответ.
+Перехват ответов Vue (исправлено: wait_for_timeout вместо time.sleep).
 """
 
 import os
@@ -50,21 +49,19 @@ class Catcher:
     def count(self):
         return len(self.responses)
 
-    def last(self):
-        return self.responses[-1] if self.responses else None
-
-    def wait_new(self, prev_count, timeout=15):
-        """Ждёт, пока появится новый ответ."""
-        start = time.time()
-        while time.time() - start < timeout:
+    def wait_new(self, page, prev_count, timeout_ms=15000):
+        """Ждёт новый ответ, используя page.wait_for_timeout (не блокирует)."""
+        elapsed = 0
+        while elapsed < timeout_ms:
             if len(self.responses) > prev_count:
                 return self.responses[-1]
-            time.sleep(0.3)
+            page.wait_for_timeout(200)
+            elapsed += 200
         return None
 
 
 def download_file(context, dlink, save_path):
-    """Скачивает файл через context.request (dlink подписан, CORS не важно)."""
+    """Скачивает файл через context.request."""
     print(f"  GET {dlink[:100]}...")
     t0 = time.time()
     resp = context.request.get(dlink, timeout=180000)
@@ -115,20 +112,33 @@ def parse_software_txt(file_path):
 
 
 def click_folder(page, folder_name):
-    """Кликает по папке с указанным именем. Возвращает True при успехе."""
-    for el in page.query_selector_all('.file-item-name'):
-        try:
-            txt = (el.inner_text() or "").strip()
-            if txt == folder_name:
-                el.click(timeout=5000)
-                return True
-        except Exception:
-            pass
+    """
+    Кликает по папке в основной области.
+    Пробует несколько стратегий для надёжности.
+    """
+    # Стратегия 1: ищем в .file-item-listmode (основная область)
+    selectors = [
+        '.file-item-listmode .file-item-name',
+        '.file-item-name',
+        '.file-content .file-item-name',
+    ]
+    for sel in selectors:
+        elements = page.query_selector_all(sel)
+        for el in elements:
+            try:
+                txt = (el.inner_text() or "").strip()
+                if txt == folder_name:
+                    el.scroll_into_view_if_needed()
+                    page.wait_for_timeout(200)
+                    el.click(timeout=5000)
+                    return True
+            except Exception:
+                pass
     return False
 
 
 def click_breadcrumb(page, name):
-    """Кликает по breadcrumb с указанным именем (возврат)."""
+    """Кликает по breadcrumb (возврат в родительскую папку)."""
     for el in page.query_selector_all('.breadcrumb-item'):
         try:
             txt = (el.inner_text() or "").strip()
@@ -150,30 +160,28 @@ def print_items(items, indent="    "):
               f"{it.get('size', 0):>12} b  dlink:{has_dlink}")
 
 
-def navigate_and_capture(page, catcher, path, timeout=15):
+def navigate_and_capture(page, catcher, path, timeout_ms=20000):
     """
-    Кликает по цепочке папок и возвращает ответ Vue.
-    :param path: список имён, например ['Программы', 'Text']
+    Кликает по цепочке папок и ждёт новый ответ Vue.
+    ВАЖНО: используем page.wait_for_timeout, а не time.sleep.
     """
-    # Сбрасываем — ждём новый ответ
     prev = catcher.count()
 
-    # Кликаем по каждой папке в пути
     for name in path:
         ok = click_folder(page, name)
         if not ok:
             print(f"  ✗ Не удалось кликнуть '{name}'")
             return None
-        time.sleep(0.5)
+        # Даём Vue время отправить запрос и Playwright — обработать событие
+        page.wait_for_timeout(500)
 
-    # Ждём ответа
-    result = catcher.wait_new(prev, timeout=timeout)
+    result = catcher.wait_new(page, prev, timeout_ms=timeout_ms)
     return result
 
 
 def main():
     print("=" * 70)
-    print("ПЕРЕХВАТ ОТВЕТОВ Vue (клики по UI)")
+    print("ПЕРЕХВАТ ОТВЕТОВ Vue (исправлено: wait_for_timeout)")
     print("=" * 70)
 
     with sync_playwright() as p:
@@ -204,8 +212,8 @@ def main():
         page.wait_for_timeout(7000)
         print(f"Финальный URL: {page.url}")
 
-        # Ждём первого ответа от Vue
-        initial = catcher.wait_new(0, timeout=10)
+        # Ждём первого ответа Vue
+        initial = catcher.wait_new(page, 0, timeout_ms=10000)
         if not initial:
             print("✗ Vue не сделал ни одного запроса /share/list")
             browser.close()
@@ -222,8 +230,14 @@ def main():
         res1 = navigate_and_capture(page, catcher, ["Программы"])
         if not res1:
             print("✗ Не удалось открыть папку")
+            # Делаем скриншот и HTML для отладки
+            page.screenshot(path="/tmp/fail_programs.png")
+            with open("/tmp/fail_programs.html", "w", encoding="utf-8") as f:
+                f.write(page.content())
+            print("  Сохранены: /tmp/fail_programs.png и .html")
             browser.close()
             return
+
         data1 = res1["data"]
         items1 = data1.get("list") or []
         print(f"errno: {data1.get('errno')}, элементов: {len(items1)}")
@@ -261,17 +275,17 @@ def main():
             download_file(context, dll_file["dlink"], "/tmp/belico.dll")
 
         # ─── Обходим подпапки ───
-        print(f"\n{'─' * 70}\nШАГ 4: Обход подпапок (клики по UI)\n{'─' * 70}")
+        print(f"\n{'─' * 70}\nШАГ 4: Обход подпапок\n{'─' * 70}")
 
         for i, sub in enumerate(subdirs):
             sub_name = sub.get("server_filename")
             print(f"\n[{i}] Подпапка: {sub_name}")
 
-            # Возвращаемся в папку "Программы" через breadcrumb
+            # Возвращаемся в "Программы"
             if i > 0:
                 print(f"    Возвращаемся в «Программы»...")
                 click_breadcrumb(page, "Программы")
-                time.sleep(2)
+                page.wait_for_timeout(2000)
 
             # Кликаем по подпапке
             res_sub = navigate_and_capture(page, catcher, [sub_name])
@@ -283,7 +297,6 @@ def main():
             print(f"    errno: {data_sub.get('errno')}, файлов: {len(items_sub)}")
             print_items(items_sub, indent="      ")
 
-            # Сопоставление
             if programs_map:
                 print(f"\n    Сопоставление с 1_Software.txt:")
                 matched = 0
@@ -317,6 +330,12 @@ def main():
                     else:
                         print(f"      ✗ {fname}")
                 print(f"    Совпадений: {matched}/{len(files_only)}")
+
+        # Финальный скриншот
+        page.screenshot(path="/tmp/final_state.png")
+        with open("/tmp/final_state.html", "w", encoding="utf-8") as f:
+            f.write(page.content())
+        print(f"\nФинальные скриншот и HTML: /tmp/final_state.png, .html")
 
         browser.close()
 
