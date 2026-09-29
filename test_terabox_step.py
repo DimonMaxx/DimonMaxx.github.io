@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Диагностика TeraBox API с правильным извлечением jsToken
-из eval(decodeURIComponent(...)) и попыткой на нескольких доменах.
+Финальная диагностика TeraBox API.
+Цель: понять, как получить содержимое конкретной расшаренной папки.
 """
 
 import os
@@ -15,7 +15,7 @@ from urllib.parse import unquote
 
 import requests
 
-URLS = {
+SHARE_URLS = {
     "Для сайта":  "https://1024terabox.com/s/1w4Vu3UwAFWEx-WEc8jxUCA",
     "Программы":  "https://1024terabox.com/s/1y91_O-V1aszt69FeCBBcxA",
 }
@@ -25,205 +25,224 @@ if not COOKIE:
     print("✗ TERABOX_COOKIE не задан")
     sys.exit(1)
 
-HEADERS_BASE = {
+BASE_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                   "AppleWebKit/537.36 (KHTML, like Gecko) "
                   "Chrome/120.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
     "Cookie": f"ndus={COOKIE}",
 }
 
-# Все известные домены TeraBox (проверим все)
-API_DOMAINS = [
+# Известные домены TeraBox
+DOMAINS = [
     "https://www.terabox.app",
     "https://www.1024tera.com",
     "https://www.terabox.com",
-    "https://www.4funbox.com",
 ]
 
 
 def extract_tokens(html):
-    """Извлекает jsToken, pcftoken и другие токены из HTML."""
-    result = {
-        "jsToken": None,
-        "pcftoken": None,
-    }
+    """Извлекает jsToken, pcftoken из HTML."""
+    js_token = None
+    pcftoken = None
 
-    # 1. jsToken — внутри eval(decodeURIComponent(`...fn%28%22XXX%22%29...`))
-    # Ищем паттерн fn%28%22<token>%22%29 в URL-encoded виде
     m = re.search(r'fn%28%22([A-Za-z0-9_\-]+)%22%29', html)
     if m:
-        result["jsToken"] = m.group(1)
-    else:
-        # Резервный вариант: ищем всё, декодируем и уже там ищем
-        m_eval = re.search(r'decodeURIComponent\(`([^`]+)`\)', html)
-        if m_eval:
-            decoded = unquote(m_eval.group(1))
-            m2 = re.search(r'fn\("([A-Za-z0-9_\-]+)"\)', decoded)
-            if m2:
-                result["jsToken"] = m2.group(1)
+        js_token = m.group(1)
 
-    # 2. pcftoken — в templateData JSON
     m = re.search(r'"pcftoken"\s*:\s*"([^"]+)"', html)
     if m:
-        result["pcftoken"] = m.group(1)
+        pcftoken = m.group(1)
 
-    return result
+    return js_token, pcftoken
 
 
-def extract_surl(url):
-    """Извлекает surl без ведущей '1'."""
+def extract_surls(url):
+    """Возвращает все варианты surl (с ведущей 1 и без)."""
     m = re.search(r'/s/([A-Za-z0-9_\-]+)', url)
     if not m:
-        return None
-    surl = m.group(1)
-    # TeraBox API принимает surl без ведущей '1'
-    if surl.startswith("1") and len(surl) > 20:
-        return surl[1:]
-    return surl
+        return []
+    full = m.group(1)
+    no1 = full[1:] if full.startswith("1") else full
+    return list({full, no1})
 
 
-def try_api_requests(surl, js_token, referer_url, label):
-    """Пробует API на нескольких доменах и эндпоинтах."""
-    endpoints = [
-        "/share/list",
-        "/api/list",
-        "/share/listall",
-    ]
-    params_variants = [
-        # Стандартный набор параметров
-        lambda surl, js: {
-            "shorturl": surl, "root": "1", "web": "1",
-            "app_id": "250528", "jsToken": js,
-        },
-        # Без jsToken (иногда работает)
-        lambda surl, js: {
-            "shorturl": surl, "root": "1", "web": "1",
-            "app_id": "250528",
-        },
-        # С page
-        lambda surl, js: {
-            "shorturl": surl, "root": "1", "web": "1",
-            "app_id": "250528", "jsToken": js, "page": "1", "num": "1000",
-        },
-    ]
+def analyze_response(data, label):
+    """Анализирует JSON-ответ и выводит структуру."""
+    print(f"\n  ── Анализ ответа ({label}) ──")
+    if not isinstance(data, dict):
+        print(f"    Тип ответа: {type(data).__name__}, не dict")
+        return
 
-    for domain in API_DOMAINS:
-        for endpoint in endpoints:
-            for i, params_fn in enumerate(params_variants):
-                api_url = f"{domain}{endpoint}"
-                params = params_fn(surl, js_token)
-                api_headers = {
-                    "User-Agent": HEADERS_BASE["User-Agent"],
-                    "Referer": referer_url,
-                    "Cookie": f"ndus={COOKIE}",
-                    "Accept": "application/json, text/plain, */*",
-                }
-                try:
-                    t0 = time.time()
-                    r = requests.get(api_url, params=params,
-                                     headers=api_headers, timeout=20)
-                    elapsed = round(time.time() - t0, 2)
-                    status = r.status_code
-                    text_preview = r.text[:150].replace("\n", " ")
+    errno = data.get("errno")
+    print(f"    errno: {errno}")
+    if errno != 0:
+        errmsg = data.get("errmsg") or data.get("error") or "?"
+        print(f"    errmsg: {errmsg}")
+        # Показываем любые подсказки
+        for k, v in data.items():
+            if k not in ("errno", "errmsg"):
+                print(f"    {k}: {str(v)[:200]}")
+        return
 
-                    # Проверяем, JSON ли это и есть ли errno
-                    try:
-                        data = r.json()
-                        errno = data.get("errno")
-                        if errno == 0:
-                            print(f"    ✅ УСПЕХ!")
-                            print(f"       Domain:   {domain}")
-                            print(f"       Endpoint: {endpoint}")
-                            print(f"       Params:   {list(params.keys())}")
-                            print(f"       Status:   {status}  Time: {elapsed} sec")
-                            print(f"       Keys:     {list(data.keys())}")
-                            return domain, endpoint, data
-                        else:
-                            errmsg = data.get("errmsg") or data.get("error") or "?"
-                            print(f"    ⚠ {domain}{endpoint} [P{i}] → errno={errno} ({errmsg})")
-                    except Exception:
-                        # Не JSON
-                        print(f"    ⚠ {domain}{endpoint} [P{i}] → HTTP {status}, не JSON: {text_preview[:80]}")
+    flist = data.get("list") or data.get("file_list") or []
+    if not isinstance(flist, list):
+        print(f"    Поле 'list' не список: {type(flist)}")
+        return
 
-                except requests.exceptions.Timeout:
-                    print(f"    ✗ {domain}{endpoint} [P{i}] → timeout")
-                except Exception as e:
-                    print(f"    ✗ {domain}{endpoint} [P{i}] → {e}")
+    print(f"    ✅ Файлов: {len(flist)}")
+    for i, item in enumerate(flist[:30]):
+        if not isinstance(item, dict):
+            print(f"      [{i}] (не dict): {item}")
+            continue
+        name = item.get("server_filename") or item.get("filename") or "?"
+        isdir = item.get("isdir") or 0
+        size = item.get("size") or 0
+        path = item.get("path") or ""
+        fsid = item.get("fs_id") or ""
+        kind = "DIR " if str(isdir) == "1" else "FILE"
+        print(f"      [{i:>2}] [{kind}] {name}  ({size} b)  fs_id={fsid}  path={path}")
 
-    return None, None, None
+
+def try_endpoint(domain, endpoint, params, referer):
+    """Один запрос к API."""
+    api_url = f"{domain}{endpoint}"
+    headers = {
+        "User-Agent": BASE_HEADERS["User-Agent"],
+        "Referer": referer,
+        "Cookie": f"ndus={COOKIE}",
+        "Accept": "application/json, text/plain, */*",
+    }
+    try:
+        t0 = time.time()
+        r = requests.get(api_url, params=params, headers=headers, timeout=20)
+        elapsed = round(time.time() - t0, 2)
+        try:
+            data = r.json()
+            return r.status_code, data, elapsed
+        except Exception:
+            return r.status_code, {"_raw": r.text[:300]}, elapsed
+    except requests.exceptions.Timeout:
+        return None, {"_error": "timeout"}, 0
+    except Exception as e:
+        return None, {"_error": str(e)}, 0
 
 
 def main():
-    print("=" * 60)
-    print("ДИАГНОСТИКА API TERABOX")
-    print("=" * 60)
+    print("=" * 70)
+    print("ФИНАЛЬНАЯ ДИАГНОСТИКА TERABOX API")
+    print("=" * 70)
 
-    for label, url in URLS.items():
-        print(f"\n{'=' * 60}")
+    for label, url in SHARE_URLS.items():
+        print(f"\n{'=' * 70}")
         print(f"ПАПКА: {label}")
         print(f"URL: {url}")
-        print("=" * 60)
+        print("=" * 70)
 
+        # 1. Получаем HTML
         try:
-            # Шаг 1. Получаем HTML
             t0 = time.time()
-            r = requests.get(url, headers=HEADERS_BASE, timeout=60,
-                             allow_redirects=True)
+            r = requests.get(url, headers=BASE_HEADERS, timeout=60, allow_redirects=True)
             print(f"GET → HTTP {r.status_code} за {round(time.time() - t0, 2)} сек")
             print(f"Финальный URL: {r.url}")
             html = r.text
-
-            # Шаг 2. Извлекаем токены
-            tokens = extract_tokens(html)
-            print(f"\nИзвлечённые токены:")
-            print(f"  jsToken:  {tokens['jsToken'][:60] + '...' if tokens['jsToken'] else 'НЕ НАЙДЕН'}")
-            print(f"  pcftoken: {tokens['pcftoken'][:60] + '...' if tokens['pcftoken'] else 'НЕ НАЙДЕН'}")
-
-            if not tokens["jsToken"]:
-                print("  ✗ Без jsToken API-запрос невозможен, пропускаем")
-                continue
-
-            # Шаг 3. Извлекаем surl
-            surl = extract_surl(url)
-            print(f"\nsurl (без ведущей '1'): {surl}")
-
-            # Шаг 4. Пробуем API
-            print(f"\nПеребор вариантов API:")
-            domain, endpoint, data = try_api_requests(
-                surl, tokens["jsToken"], r.url, label
-            )
-
-            if data:
-                print(f"\n🎉 РАБОЧАЯ КОМБИНАЦИЯ НАЙДЕНА:")
-                print(f"   Domain:   {domain}")
-                print(f"   Endpoint: {endpoint}")
-                print(f"\nОтвет (первые 3000 символов):")
-                print(json.dumps(data, ensure_ascii=False, indent=2)[:3000])
-
-                # Анализ структуры
-                flist = data.get("list") or data.get("file_list") or []
-                if isinstance(flist, list):
-                    print(f"\n📂 Файлов в ответе: {len(flist)}")
-                    for i, item in enumerate(flist[:20]):
-                        name = item.get("server_filename") or item.get("filename") or "?"
-                        isdir = item.get("isdir") or 0
-                        size = item.get("size") or 0
-                        kind = "DIR " if str(isdir) == "1" else "FILE"
-                        print(f"  [{i:>2}] [{kind}] {name}  ({size} b)")
-                    if len(flist) > 20:
-                        print(f"  ... и ещё {len(flist) - 20}")
-            else:
-                print(f"\n❌ Ни одна комбинация не сработала")
-
         except Exception as e:
-            print(f"✗ Ошибка: {e}")
-            traceback.print_exc()
+            print(f"✗ Ошибка GET: {e}")
+            continue
 
-    print("\n" + "=" * 60)
+        # 2. Извлекаем токены
+        js_token, pcftoken = extract_tokens(html)
+        print(f"\nТокены:")
+        print(f"  jsToken:  {js_token[:50] + '...' if js_token else 'НЕ НАЙДЕН'}")
+        print(f"  pcftoken: {pcftoken[:50] + '...' if pcftoken else 'НЕ НАЙДЕН'}")
+
+        if not js_token:
+            print("  ✗ Без jsToken пропускаем")
+            continue
+
+        # 3. Извлекаем все варианты surl
+        surls = extract_surls(url)
+        print(f"\nВарианты surl: {surls}")
+
+        # 4. Перебираем варианты. Сначала пробуем /api/list с разными именами параметра
+        print(f"\n{'─' * 70}")
+        print("ЭТАП 1: /api/list с разными именами параметра surl")
+        print('─' * 70)
+
+        param_names = ["shorturl", "surl", "short_url", "surl_no1"]
+
+        for surl in surls:
+            for param_name in param_names:
+                params = {
+                    param_name: surl,
+                    "root": "1",
+                    "web": "1",
+                    "app_id": "250528",
+                    "jsToken": js_token,
+                }
+                status, data, elapsed = try_endpoint(
+                    "https://www.terabox.app", "/api/list",
+                    params, r.url
+                )
+                errno = data.get("errno") if isinstance(data, dict) else "?"
+                flist = data.get("list") if isinstance(data, dict) else None
+                count = len(flist) if isinstance(flist, list) else 0
+
+                # Проверяем — не вернул ли он корень диска
+                is_root = False
+                if isinstance(flist, list) and flist:
+                    names = [i.get("server_filename") for i in flist if isinstance(i, dict)]
+                    if "Для сайта" in names and "Программы" in names:
+                        is_root = True
+
+                mark = "📁 КОРЕНЬ" if is_root else ("✅ OK" if errno == 0 else "⚠")
+                print(f"  {mark} param={param_name:<12} surl={surl[:25]:<25} → errno={errno}, файлов={count}")
+
+        # 5. ЭТАП 2: /share/list на разных доменах
+        print(f"\n{'─' * 70}")
+        print("ЭТАП 2: /share/list на разных доменах")
+        print('─' * 70)
+
+        for surl in surls:
+            for domain in DOMAINS:
+                params = {
+                    "shorturl": surl,
+                    "root": "1",
+                    "web": "1",
+                    "app_id": "250528",
+                    "jsToken": js_token,
+                }
+                status, data, elapsed = try_endpoint(domain, "/share/list", params, r.url)
+                errno = data.get("errno") if isinstance(data, dict) else "?"
+                errmsg = data.get("errmsg") if isinstance(data, dict) else "?"
+                flist = data.get("list") if isinstance(data, dict) else None
+                count = len(flist) if isinstance(flist, list) else 0
+                print(f"  {domain:<30} surl={surl[:20]:<20} → errno={errno} ({errmsg}), файлов={count}")
+
+        # 6. Сохраняем полный ответ для анализа
+        # Возьмём самый успешный вариант
+        print(f"\n{'─' * 70}")
+        print("ЭТАП 3: Полный JSON ответа /api/list (для анализа)")
+        print('─' * 70)
+
+        for surl in surls:
+            params = {
+                "shorturl": surl,
+                "root": "1",
+                "web": "1",
+                "app_id": "250528",
+                "jsToken": js_token,
+            }
+            status, data, elapsed = try_endpoint(
+                "https://www.terabox.app", "/api/list", params, r.url
+            )
+            print(f"\n  Запрос: surl={surl}")
+            print(f"  Ответ (первые 2000 символов):")
+            print(f"  {json.dumps(data, ensure_ascii=False, indent=2)[:2000]}")
+
+    print("\n" + "=" * 70)
     print("ДИАГНОСТИКА ЗАВЕРШЕНА")
-    print("=" * 60)
+    print("=" * 70)
 
 
 if __name__ == "__main__":
