@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Перехватываем все XHR-запросы, которые делает Vue-приложение TeraBox,
-когда пользователь кликает по папке. Это покажет правильный endpoint
-и параметры для получения содержимого.
+Перехват XHR-запросов TeraBox с правильным кликом по папке.
+Сохраняем ВСЕ запросы от загрузки страницы, не очищаем captured.
+Пробуем разные стратегии клика.
 """
 
 import os
@@ -30,9 +30,55 @@ COOKIE_DOMAINS = [
 ]
 
 
+def analyze_requests(captured, label=""):
+    """Печатает все XHR-запросы и их параметры."""
+    reqs = [c for c in captured if c["kind"] == "request"]
+    resps = [c for c in captured if c["kind"] == "response"]
+
+    print(f"\n{'═' * 70}")
+    print(f"АНАЛИЗ ЗАПРОСОВ {label}")
+    print(f"{'═' * 70}")
+    print(f"Всего request: {len(reqs)}, response: {len(resps)}")
+
+    # Смотрим только API-запросы (не статику)
+    api_reqs = [r for r in reqs
+                if any(x in r["url"] for x in ("/share/", "/api/", "/list", "/main"))
+                and "/static/" not in r["url"]
+                and not r["url"].endswith((".js", ".css", ".png", ".jpg"))]
+
+    print(f"\n── API-запросы ({len(api_reqs)}) ──")
+    for i, r in enumerate(api_reqs):
+        print(f"\n[{i}] {r['method']} {r['url'][:180]}")
+        if r.get("post_data"):
+            print(f"    POST: {r['post_data'][:400]}")
+
+    # Ответы на них
+    api_resps = [c for c in resps
+                 if any(x in c["url"] for x in ("/share/", "/api/", "/list", "/main"))
+                 and "/static/" not in c["url"]]
+    print(f"\n── API-ответы ({len(api_resps)}) ──")
+    for i, c in enumerate(api_resps):
+        print(f"\n[{i}] HTTP {c['status']}  {c['url'][:180]}")
+        preview = c.get("body_preview", "")
+        if preview:
+            try:
+                parsed = json.loads(preview)
+                if isinstance(parsed, dict):
+                    print(f"    errno: {parsed.get('errno')}")
+                    flist = parsed.get("list") or []
+                    if isinstance(flist, list):
+                        print(f"    list: {len(flist)} элементов")
+                        for j, item in enumerate(flist[:5]):
+                            name = item.get("server_filename") or "?"
+                            isdir = item.get("isdir") or 0
+                            print(f"      [{j}] {'DIR' if str(isdir) == '1' else 'FILE'} {name}")
+            except Exception:
+                print(f"    Body (не JSON): {preview[:200]}")
+
+
 def main():
     print("=" * 70)
-    print("ПЕРЕХВАТ XHR-ЗАПРОСОВ TERABOX")
+    print("ПЕРЕХВАТ XHR + ПРАВИЛЬНЫЙ КЛИК ПО ПАПКЕ")
     print("=" * 70)
 
     with sync_playwright() as p:
@@ -55,33 +101,27 @@ def main():
 
         page = context.new_page()
 
-        # ─── Перехватываем все запросы и ответы ───
+        # ═══ Перехват ═══
         captured = []
 
         def on_request(req):
-            """Фиксируем все XHR/fetch-запросы."""
             try:
-                rtype = req.resource_type
-                if rtype in ("xhr", "fetch"):
+                if req.resource_type in ("xhr", "fetch"):
                     captured.append({
                         "kind": "request",
                         "method": req.method,
                         "url": req.url,
                         "post_data": req.post_data,
-                        "headers": req.headers,
                     })
             except Exception:
                 pass
 
         def on_response(resp):
-            """Фиксируем ответы на XHR/fetch."""
             try:
-                req = resp.request
-                if req.resource_type in ("xhr", "fetch"):
+                if resp.request.resource_type in ("xhr", "fetch"):
                     body_text = ""
                     try:
-                        # Пробуем взять JSON
-                        body_text = resp.text()[:2000]
+                        body_text = resp.text()[:3000]
                     except Exception:
                         pass
                     captured.append({
@@ -97,102 +137,126 @@ def main():
         page.on("request", on_request)
         page.on("response", on_response)
 
-        # ─── 1. Открываем страницу ───
+        # ═══ 1. Открываем страницу ═══
         print(f"\nОткрываем: {PROGRAMS_URL}")
         page.goto(PROGRAMS_URL, wait_until="domcontentloaded", timeout=60000)
-        page.wait_for_timeout(5000)
+        page.wait_for_timeout(7000)
         print(f"Финальный URL: {page.url}")
 
-        # Очищаем список — оставим только то, что пойдёт после клика
-        captured.clear()
+        # Анализ того, что было при загрузке
+        analyze_requests(captured, "(при загрузке страницы)")
 
-        # ─── 2. Кликаем по папке "Программы" в интерфейсе ───
-        print("\n" + "─" * 70)
-        print("ШАГ 1: Клик по папке «Программы» в интерфейсе")
-        print("─" * 70)
+        # ═══ 2. Пробуем кликнуть разными способами ═══
+        print("\n" + "═" * 70)
+        print("КЛИК ПО ПАПКЕ «Программы» — несколько стратегий")
+        print("═" * 70)
 
-        # Ищем элементы с названием "Программы"
-        candidates = page.query_selector_all('text=Программы')
-        print(f"Найдено элементов с текстом 'Программы': {len(candidates)}")
+        # Снимок состояния DOM до клика
+        before_html_len = len(page.content())
 
-        clicked = False
-        for el in candidates:
-            try:
-                # Пропускаем breadcrumb и левый сайдбар, кликаем только по основной папке
-                # Пробуем кликнуть по 2-му (обычно это папка в основном окне)
-                el.click()
-                page.wait_for_timeout(3000)
-                print(f"✓ Клик выполнен по элементу")
-                clicked = True
-                break
-            except Exception as e:
-                print(f"  Ошибка клика: {e}")
-
-        if not clicked:
-            print("✗ Не удалось кликнуть по папке")
-
-        # Даём время на выполнение всех запросов
-        page.wait_for_timeout(4000)
-
-        # ─── 3. Анализируем собранные запросы ───
-        print("\n" + "─" * 70)
-        print("ШАГ 2: Собранные XHR/fetch-запросы и ответы")
-        print("─" * 70)
-
-        # Фильтруем — интересуют только запросы к API TeraBox
-        api_requests = [c for c in captured
-                        if c["kind"] == "request"
-                        and "/share/" in c.get("url", "")
-                        and "/static/" not in c.get("url", "")]
-        api_responses = [c for c in captured
-                         if c["kind"] == "response"
-                         and "/share/" in c.get("url", "")
-                         and "/static/" not in c.get("url", "")]
-
-        print(f"\nВсего XHR/fetch-запросов: {len([c for c in captured if c['kind'] == 'request'])}")
-        print(f"Запросов к /share/: {len(api_requests)}")
-
-        print("\n" + "─" * 70)
-        print("ЗАПРОСЫ к /share/:")
-        print("─" * 70)
-        for i, req in enumerate(api_requests):
-            print(f"\n[{i}] {req['method']} {req['url'][:200]}")
-            if req.get("post_data"):
-                print(f"     POST: {req['post_data'][:300]}")
-
-        print("\n" + "─" * 70)
-        print("ОТВЕТЫ от /share/:")
-        print("─" * 70)
-        for i, resp in enumerate(api_responses):
-            print(f"\n[{i}] HTTP {resp['status']}  {resp['url'][:200]}")
-            print(f"     Content-Type: {resp['content_type']}")
-            preview = resp.get("body_preview", "")
-            if preview:
-                # Красивый JSON
+        # Стратегия 1: клик по .file-item-name с текстом "Программы"
+        print("\n[Стратегия 1] Клик по .file-item-name с текстом 'Программы'")
+        try:
+            elements = page.query_selector_all('.file-item-name')
+            print(f"  Найдено .file-item-name: {len(elements)}")
+            target = None
+            for el in elements:
                 try:
-                    parsed = json.loads(preview)
-                    print(f"     JSON keys: {list(parsed.keys()) if isinstance(parsed, dict) else type(parsed).__name__}")
-                    if isinstance(parsed, dict):
-                        print(f"     errno: {parsed.get('errno')}")
-                        flist = parsed.get("list") or []
-                        print(f"     list length: {len(flist) if isinstance(flist, list) else 'not list'}")
-                        if isinstance(flist, list) and flist:
-                            for j, item in enumerate(flist[:10]):
-                                name = item.get("server_filename") or "?"
-                                isdir = item.get("isdir") or 0
-                                kind = "DIR" if str(isdir) == "1" else "FILE"
-                                print(f"       [{j}] [{kind}] {name}")
+                    txt = (el.inner_text() or "").strip()
+                    if txt == "Программы":
+                        target = el
+                        print(f"  Найден: '{txt}'")
+                        break
                 except Exception:
-                    print(f"     Body: {preview[:300]}")
+                    pass
 
-        # ─── 4. Сохраняем все запросы для анализа ───
+            if target:
+                captured.clear()  # очищаем, чтобы видеть только запросы от клика
+                target.click(timeout=5000)
+                page.wait_for_timeout(4000)
+                print(f"  ✓ Клик выполнен")
+            else:
+                print(f"  ✗ Элемент с текстом 'Программы' не найден")
+        except Exception as e:
+            print(f"  ✗ Ошибка: {e}")
+
+        # Проверяем, изменилось ли что-то
+        after_html_len = len(page.content())
+        print(f"\n  HTML до: {before_html_len}, после: {after_html_len}, "
+              f"разница: {after_html_len - before_html_len}")
+
+        analyze_requests(captured, "(после клика)")
+
+        # ═══ 3. Если ничего не помогло — пробуем двойной клик ═══
+        if not any(c["kind"] == "request" and "/share/" in c["url"] for c in captured):
+            print("\n[Стратегия 2] Двойной клик по .file-item-name")
+            try:
+                elements = page.query_selector_all('.file-item-name')
+                for el in elements:
+                    try:
+                        txt = (el.inner_text() or "").strip()
+                        if txt == "Программы":
+                            captured.clear()
+                            el.dblclick(timeout=5000)
+                            page.wait_for_timeout(4000)
+                            print(f"  ✓ Двойной клик выполнен")
+                            break
+                    except Exception:
+                        pass
+            except Exception as e:
+                print(f"  ✗ Ошибка: {e}")
+            analyze_requests(captured, "(после двойного клика)")
+
+        # ═══ 4. Если всё ещё нет — клик по родителю ═══
+        if not any(c["kind"] == "request" and "/share/" in c["url"] for c in captured):
+            print("\n[Стратегия 3] Клик по .file-content (родитель)")
+            try:
+                elements = page.query_selector_all('.file-content')
+                print(f"  Найдено .file-content: {len(elements)}")
+                for el in elements:
+                    try:
+                        txt = (el.inner_text() or "").strip()
+                        if "Программы" in txt:
+                            captured.clear()
+                            el.click(timeout=5000)
+                            page.wait_for_timeout(4000)
+                            print(f"  ✓ Клик по родителю выполнен")
+                            break
+                    except Exception:
+                        pass
+            except Exception as e:
+                print(f"  ✗ Ошибка: {e}")
+            analyze_requests(captured, "(после клика по родителю)")
+
+        # ═══ 5. Финальный анализ ═══
+        print("\n" + "═" * 70)
+        print("ИТОГОВЫЙ АНАЛИЗ")
+        print("═" * 70)
+
+        share_reqs = [c for c in captured if c["kind"] == "request" and "/share/" in c["url"]]
+        print(f"Запросов к /share/: {len(share_reqs)}")
+
+        if share_reqs:
+            print("\n✅ Найдены запросы к /share/! Вот параметры:")
+            for r in share_reqs:
+                print(f"\n  {r['method']} {r['url']}")
+        else:
+            print("\n❌ Запросов к /share/ по-прежнему нет.")
+            print("   Возможно, TeraBox делает их на другом домене или с другим путём.")
+
+        # Сохраняем все запросы
         with open("/tmp/terabox_requests.json", "w", encoding="utf-8") as f:
             json.dump(captured, f, ensure_ascii=False, indent=2, default=str)
         print(f"\nВсе запросы сохранены в /tmp/terabox_requests.json")
 
-        # Делаем скриншот после клика
+        # Скриншот
         page.screenshot(path="/tmp/after_click.png", full_page=False)
-        print("Скриншот после клика: /tmp/after_click.png")
+        print("Скриншот: /tmp/after_click.png")
+
+        # Сохраняем HTML
+        with open("/tmp/after_click.html", "w", encoding="utf-8") as f:
+            f.write(page.content())
+        print("HTML: /tmp/after_click.html")
 
         browser.close()
 
