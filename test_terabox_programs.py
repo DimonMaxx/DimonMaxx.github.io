@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Перебор ВСЕХ стратегий клика + прямой вызов через JS.
+Финальный тест TeraBox:
+1. Открываем корень ссылки
+2. Двойной клик по "Программы" → собираем содержимое
+3. Скачиваем 1_Software.txt и belico.dll
+4. Заходим в каждую подпапку, собираем .exe файлы
+5. Сопоставляем с описаниями из 1_Software.txt
 """
 
 import os
@@ -28,36 +33,21 @@ COOKIE_DOMAINS = [
 class Catcher:
     def __init__(self):
         self.responses = []
-        self.all_requests = []
 
     def attach(self, page):
-        def on_request(req):
-            if req.resource_type in ("xhr", "fetch"):
-                self.all_requests.append({
-                    "url": req.url,
-                    "method": req.method,
-                    "ts": time.time(),
-                })
-
         def on_response(resp):
             if "/share/list" in resp.url and "/static/" not in resp.url:
                 try:
                     data = resp.json()
-                    self.responses.append({
-                        "data": data,
-                        "url": resp.url,
-                        "ts": time.time(),
-                    })
+                    self.responses.append({"data": data, "ts": time.time()})
                 except Exception:
                     pass
-
-        page.on("request", on_request)
         page.on("response", on_response)
 
     def count(self):
         return len(self.responses)
 
-    def wait_new(self, page, prev_count, timeout_ms=8000):
+    def wait_new(self, page, prev_count, timeout_ms=15000):
         elapsed = 0
         while elapsed < timeout_ms:
             if len(self.responses) > prev_count:
@@ -67,28 +57,113 @@ class Catcher:
         return None
 
 
-def click_strategy(page, name, strategy_fn, timeout_ms=5000):
-    """
-    Пробует одну стратегию клика. Возвращает True если новый запрос пришёл.
-    """
-    print(f"\n  ▶ Стратегия: {name}")
-    try:
-        prev_count = 0  # заглушка
-    except Exception:
-        pass
-
-    try:
-        strategy_fn()
-        page.wait_for_timeout(2500)  # даём Vue время отправить запрос
-        return True
-    except Exception as e:
-        print(f"    ✗ Ошибка: {e}")
+def double_click_folder(page, name):
+    """Двойной клик по папке с заданным именем."""
+    loc = page.locator(f'.file-item-listmode:has-text("{name}")').first
+    if loc.count() == 0:
         return False
+    loc.scroll_into_view_if_needed(timeout=3000)
+    page.wait_for_timeout(200)
+    loc.dblclick(timeout=5000)
+    return True
+
+
+def download_file(context, dlink, save_path):
+    print(f"  GET {dlink[:100]}...")
+    t0 = time.time()
+    resp = context.request.get(dlink, timeout=180000)
+    print(f"  HTTP {resp.status} за {round(time.time() - t0, 2)} сек")
+    if resp.status != 200:
+        return None
+    body = resp.body()
+    with open(save_path, "wb") as f:
+        f.write(body)
+    print(f"  ✓ Сохранено: {save_path} ({len(body)} байт)")
+    return save_path
+
+
+def parse_software_txt(file_path):
+    """Парсит 1_Software.txt."""
+    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+        content = f.read()
+
+    programs = {}
+    current = None
+    for raw in content.split("\n"):
+        line = raw.rstrip("\r").strip()
+        if not line:
+            continue
+        if line.startswith("Name="):
+            name = line[5:].strip()
+            if name:
+                current = {
+                    "name": name, "hint": "", "icon": "",
+                    "icon_index": "", "group": "", "version": "",
+                    "url": "", "key": "",
+                }
+                programs[name.lower()] = current
+        elif current is not None:
+            if line.startswith("Hint="):
+                current["hint"] = line[5:].strip().lstrip("|").strip()
+            elif line.startswith("Icon="):
+                current["icon"] = line[5:].strip()
+            elif line.startswith("IconIndex="):
+                current["icon_index"] = line[10:].strip()
+            elif line.startswith("Group="):
+                current["group"] = line[6:].strip()
+            elif line.startswith("Ver="):
+                current["version"] = line[4:].strip()
+            elif line.startswith("URL="):
+                current["url"] = line[4:].strip()
+            elif line.startswith("Key="):
+                current["key"] = line[4:].strip()
+    return programs
+
+
+def match_program(filename, programs_map):
+    """Ищет программу в programs_map по имени файла."""
+    base = re.sub(r"\.(exe|msi|zip|rar|7z|txt|dll)$", "",
+                  filename, flags=re.IGNORECASE)
+    # Убираем суффиксы: -x86, -x64, .win, _setup, _portable
+    base_clean = re.sub(
+        r"[\-_.](x86|x64|win|setup|installer|portable|install|full)$",
+        "", base, flags=re.IGNORECASE)
+    base_lower = base_clean.lower()
+    base_cleanest = re.sub(r"[\s\.\-_]", "", base_lower)
+
+    # Прямое совпадение
+    if base_lower in programs_map:
+        return programs_map[base_lower]
+
+    # Совпадение без разделителей
+    for key, val in programs_map.items():
+        key_clean = re.sub(r"[\s\.\-_]", "", key)
+        if key_clean == base_cleanest:
+            return val
+
+    # Частичное (разница < 5 символов)
+    for key, val in programs_map.items():
+        key_clean = re.sub(r"[\s\.\-_]", "", key)
+        if abs(len(key_clean) - len(base_cleanest)) < 5:
+            if base_cleanest and (base_cleanest in key_clean
+                                  or key_clean in base_cleanest):
+                return val
+    return None
+
+
+def print_items(items, indent="    "):
+    for i, it in enumerate(items):
+        name = it.get("server_filename")
+        is_dir = str(it.get("isdir")) == "1"
+        kind = "DIR " if is_dir else "FILE"
+        has_dl = "✓" if it.get("dlink") else "✗"
+        print(f"{indent}[{i:>2}] [{kind}] {name:<35} "
+              f"{it.get('size', 0):>12} b  dlink:{has_dl}")
 
 
 def main():
     print("=" * 70)
-    print("ПЕРЕБОР ВСЕХ СТРАТЕГИЙ КЛИКА")
+    print("ФИНАЛЬНЫЙ ТЕСТ: обход TeraBox + сопоставление с 1_Software.txt")
     print("=" * 70)
 
     with sync_playwright() as p:
@@ -113,9 +188,10 @@ def main():
         catcher = Catcher()
         catcher.attach(page)
 
+        # ═══ Открываем корень ═══
         print(f"\nОткрываем {START_URL}")
         page.goto(START_URL, wait_until="domcontentloaded", timeout=60000)
-        page.wait_for_timeout(8000)
+        page.wait_for_timeout(7000)
         print(f"Финальный URL: {page.url}")
 
         initial = catcher.wait_new(page, 0, timeout_ms=10000)
@@ -123,223 +199,160 @@ def main():
             print("✗ Vue не сделал /share/list")
             browser.close()
             return
+
         data_root = initial["data"]
         items_root = data_root.get("list") or []
-        print(f"✓ Корень — errno: {data_root.get('errno')}, "
+        print(f"\n✓ Корень — errno: {data_root.get('errno')}, "
               f"элементов: {len(items_root)}")
+        print_items(items_root)
 
-        # ═══════════════════════════════════════════════════════════════
-        # ДИАГНОСТИКА: получим координаты элементов
-        # ═══════════════════════════════════════════════════════════════
-        print(f"\n{'─' * 70}\nДИАГНОСТИКА: координаты и размеры\n{'─' * 70}")
+        # ═══ ШАГ 1: вход в "Программы" ═══
+        print(f"\n{'─' * 70}\nШАГ 1: Вход в папку «Программы»\n{'─' * 70}")
+        prev = catcher.count()
+        if not double_click_folder(page, "Программы"):
+            print("✗ Не удалось войти в папку")
+            browser.close()
+            return
+        page.wait_for_timeout(4000)
 
-        diag = page.evaluate("""() => {
-            const items = document.querySelectorAll('.file-item-listmode');
-            const out = [];
-            items.forEach((item, idx) => {
-                const rect = item.getBoundingClientRect();
-                const name = item.querySelector('.file-item-name')?.textContent || '';
-                const icon = item.querySelector('.file-icon-dir') ? 'yes' : 'no';
-                const iconBox = item.querySelector('.icon-box') ? 'yes' : 'no';
-                const fileContent = item.querySelector('.file-content') ? 'yes' : 'no';
-                out.push({
-                    idx, name,
-                    x: Math.round(rect.x), y: Math.round(rect.y),
-                    w: Math.round(rect.width), h: Math.round(rect.height),
-                    hasIcon: icon, hasIconBox: iconBox, hasContent: fileContent,
-                });
-            });
-            return out;
-        }""")
-        for d in diag:
-            print(f"  [{d['idx']}] '{d['name']}' "
-                  f"x={d['x']} y={d['y']} w={d['w']} h={d['h']} "
-                  f"icon={d['hasIcon']} iconBox={d['hasIconBox']} "
-                  f"content={d['hasContent']}")
+        res_prog = catcher.wait_new(page, prev, timeout_ms=15000)
+        if not res_prog:
+            print("✗ Нет ответа после клика")
+            browser.close()
+            return
 
-        # ═══════════════════════════════════════════════════════════════
-        # ПЕРЕБОР СТРАТЕГИЙ
-        # ═══════════════════════════════════════════════════════════════
-        print(f"\n{'═' * 70}")
-        print("ПЕРЕБОР СТРАТЕГИЙ КЛИКА")
-        print(f"{'═' * 70}")
+        data_prog = res_prog["data"]
+        items_prog = data_prog.get("list") or []
+        print(f"errno: {data_prog.get('errno')}, элементов: {len(items_prog)}")
+        print_items(items_prog)
 
-        strategies = [
-            # (название, функция)
-            ("1. dblclick на .file-item-listmode",
-             lambda: page.locator('.file-item-listmode').first.dblclick()),
+        # Разделяем на подпапки и файлы
+        subdirs = []
+        desc_file = None
+        dll_file = None
+        for it in items_prog:
+            name = it.get("server_filename")
+            if name == "1_Software.txt":
+                desc_file = it
+            elif name == "belico.dll":
+                dll_file = it
+            elif str(it.get("isdir")) == "1":
+                subdirs.append(it)
 
-            ("2. click на .file-content",
-             lambda: page.locator('.file-item-listmode .file-content').first.click()),
+        # ═══ ШАГ 2: скачиваем 1_Software.txt ═══
+        print(f"\n{'─' * 70}\nШАГ 2: 1_Software.txt\n{'─' * 70}")
+        programs_map = {}
+        if desc_file and desc_file.get("dlink"):
+            save = download_file(context, desc_file["dlink"],
+                                 "/tmp/1_Software.txt")
+            if save:
+                programs_map = parse_software_txt(save)
+                print(f"  ✓ Программ в файле: {len(programs_map)}")
+                for i, (key, val) in enumerate(list(programs_map.items())[:15]):
+                    print(f"    [{i}] Name={val['name']}")
+                    print(f"         Group={val['group']}  Ver={val['version']}")
+                    hint = (val.get('hint') or '')[:100]
+                    print(f"         Hint={hint}...")
+                if len(programs_map) > 15:
+                    print(f"    ... и ещё {len(programs_map) - 15}")
 
-            ("3. click на .icon-box",
-             lambda: page.locator('.file-item-listmode .icon-box').first.click()),
+        # ═══ ШАГ 3: скачиваем belico.dll ═══
+        print(f"\n{'─' * 70}\nШАГ 3: belico.dll\n{'─' * 70}")
+        if dll_file and dll_file.get("dlink"):
+            print(f"  Размер: {dll_file.get('size')} байт")
+            download_file(context, dll_file["dlink"], "/tmp/belico.dll")
 
-            ("4. click на .file-icon-dir",
-             lambda: page.locator('.file-item-listmode .file-icon-dir').first.click()),
+        # ═══ ШАГ 4: обход каждой подпапки ═══
+        print(f"\n{'─' * 70}\nШАГ 4: Обход подпапок\n{'─' * 70}")
 
-            ("5. dblclick на .file-content",
-             lambda: page.locator('.file-item-listmode .file-content').first.dblclick()),
+        all_files_matched = []
 
-            ("6. Клик через mouse.click по координатам центра",
-             lambda: _mouse_click_center(page, diag)),
+        for i, sub in enumerate(subdirs):
+            sub_name = sub.get("server_filename")
+            print(f"\n{'━' * 70}")
+            print(f"ПОДПАПКА [{i+1}/{len(subdirs)}]: {sub_name}")
+            print(f"{'━' * 70}")
 
-            ("7. dispatchEvent click через JS",
-             lambda: _js_click(page)),
-
-            ("8. mousedown + mouseup через mouse",
-             lambda: _mouse_down_up(page, diag)),
-        ]
-
-        for name, fn in strategies:
-            prev_count = catcher.count()
-            prev_reqs = len(catcher.all_requests)
-            url_before = page.url
-
-            print(f"\n{'─' * 70}\n{name}\n{'─' * 70}")
-
-            try:
-                fn()
+            # Возвращаемся в "Программы" через reload
+            if i > 0:
+                print(f"  → Возврат в «Программы» (перезагрузка)...")
+                page.goto(START_URL, wait_until="domcontentloaded",
+                          timeout=60000)
+                page.wait_for_timeout(5000)
+                # И снова входим в "Программы"
+                prev = catcher.count()
+                if not double_click_folder(page, "Программы"):
+                    print(f"  ✗ Не удалось вернуться")
+                    continue
                 page.wait_for_timeout(3000)
-            except Exception as e:
-                print(f"  ✗ Ошибка выполнения: {e}")
+                catcher.wait_new(page, prev, timeout_ms=10000)
+
+            # Входим в подпапку
+            prev = catcher.count()
+            if not double_click_folder(page, sub_name):
+                print(f"  ✗ Не удалось открыть '{sub_name}'")
+                continue
+            page.wait_for_timeout(4000)
+
+            res_sub = catcher.wait_new(page, prev, timeout_ms=15000)
+            if not res_sub:
+                print(f"  ✗ Нет ответа для '{sub_name}'")
                 continue
 
-            # Проверяем, появился ли новый запрос
-            new_responses = catcher.count() - prev_count
-            new_reqs = catcher.all_requests[prev_reqs:]
-            url_changed = page.url != url_before
+            data_sub = res_sub["data"]
+            items_sub = data_sub.get("list") or []
+            print(f"  errno: {data_sub.get('errno')}, "
+                  f"файлов: {len(items_sub)}")
+            print_items(items_sub, indent="    ")
 
-            print(f"  Новых /share/list: {new_responses}")
-            print(f"  Новых XHR/fetch: {len(new_reqs)}")
-            print(f"  URL изменился: {url_changed}")
+            # Обрабатываем файлы
+            files_only = [it for it in items_sub
+                          if str(it.get("isdir")) != "1"]
+            print(f"\n  Сопоставление с 1_Software.txt:")
+            matched_in_sub = 0
+            for it in files_only:
+                fname = it.get("server_filename") or ""
+                found = match_program(fname, programs_map)
+                if found:
+                    matched_in_sub += 1
+                    print(f"    ✓ {fname}")
+                    print(f"      → Name: {found['name']}")
+                    hint = (found.get('hint') or '')[:120]
+                    print(f"      → Hint: {hint}...")
+                    all_files_matched.append({
+                        "subfolder": sub_name,
+                        "filename": fname,
+                        "name": found["name"],
+                        "hint": found.get("hint", ""),
+                        "size": it.get("size", 0),
+                        "dlink": it.get("dlink", ""),
+                    })
+                else:
+                    print(f"    ✗ {fname}")
 
-            if new_reqs:
-                for r in new_reqs[:3]:
-                    print(f"    {r['method']} {r['url'][:130]}")
+            print(f"\n  Совпадений: {matched_in_sub}/{len(files_only)}")
 
-            if new_responses > 0:
-                print(f"\n  🎉 УСПЕХ! Стратегия '{name}' сработала!")
-                result = catcher.responses[-1]
-                data = result["data"]
-                items = data.get("list") or []
-                print(f"  errno: {data.get('errno')}, элементов: {len(items)}")
-                for i, it in enumerate(items[:15]):
-                    name_f = it.get("server_filename")
-                    is_dir = str(it.get("isdir")) == "1"
-                    kind = "DIR " if is_dir else "FILE"
-                    print(f"    [{i:>2}] [{kind}] {name_f:<35} {it.get('size',0)} b")
-
-                page.screenshot(path="/tmp/success.png")
-                with open("/tmp/success.html", "w", encoding="utf-8") as f:
-                    f.write(page.content())
-                print(f"\n  Сохранены: /tmp/success.png и .html")
-
-                browser.close()
-                print("\n" + "=" * 70)
-                print("ТЕСТ ЗАВЕРШЁН УСПЕШНО")
-                print("=" * 70)
-                return
-
-        # Если ни одна стратегия не сработала
+        # ═══ ИТОГО ═══
         print(f"\n{'═' * 70}")
-        print("❌ Ни одна стратегия не сработала")
+        print(f"ИТОГО: сопоставлено {len(all_files_matched)} программ")
         print(f"{'═' * 70}")
-        print("\nПробуем ПРЯМОЙ вызов Vue через клик по DOM-элементу с эмуляцией настоящего пользователя...")
+        for m in all_files_matched:
+            print(f"  [{m['subfolder']}] {m['name']} "
+                  f"({m['size']} b) → {m['filename']}")
 
-        # Fallback: заходим через URL напрямую
-        print(f"\n{'─' * 70}")
-        print("FALLBACK: прямой переход по URL с dir")
-        print(f"{'─' * 70}")
+        # Сохраняем JSON с результатом
+        with open("/tmp/matched_programs.json", "w", encoding="utf-8") as f:
+            json.dump(all_files_matched, f, ensure_ascii=False, indent=2)
+        print(f"\nСохранено: /tmp/matched_programs.json")
 
-        # Найдём surl и попробуем зайти напрямую в папку
-        new_url = page.url.split('?')[0] + "?surl=y91_O-V1aszt69FeCBBcxA&dir=/Для сайта/Программы"
-        # Или проще — используем текущий URL и пробуем добавить path
-        from urllib.parse import quote
-        try:
-            # Пробуем программно вызвать Vue router push
-            result = page.evaluate("""() => {
-                // Ищем vue-router
-                if (window.__VUE_ROUTER__) {
-                    return 'has router';
-                }
-                // Ищем ссылки
-                const links = document.querySelectorAll('a[href*="sharing/link"]');
-                return {linksCount: links.length};
-            }""")
-            print(f"  Диагностика: {result}")
-        except Exception as e:
-            print(f"  Ошибка: {e}")
-
-        page.screenshot(path="/tmp/fail_all.png")
-        with open("/tmp/fail_all.html", "w", encoding="utf-8") as f:
-            f.write(page.content())
-        print("  Сохранены: /tmp/fail_all.png и .html")
+        page.screenshot(path="/tmp/final.png")
+        print(f"Скриншот: /tmp/final.png")
 
         browser.close()
 
     print("\n" + "=" * 70)
-    print("ТЕСТ ЗАВЕРШЁН БЕЗ УСПЕХА")
+    print("ТЕСТ ЗАВЕРШЁН УСПЕШНО")
     print("=" * 70)
-
-
-def _mouse_click_center(page, diag):
-    """Клик через mouse.click по координатам центра строки."""
-    if not diag:
-        raise Exception("нет diag")
-    d = diag[0]  # первая строка = папка "Программы"
-    # Кликаем в центр строки
-    x = d['x'] + d['w'] / 2
-    y = d['y'] + d['h'] / 2
-    print(f"    Клик по координатам ({x}, {y})")
-    page.mouse.move(x, y)
-    page.wait_for_timeout(100)
-    page.mouse.click(x, y)
-
-
-def _js_click(page):
-    """Вызов click() через JS с bubbles."""
-    result = page.evaluate("""() => {
-        const item = document.querySelector('.file-item-listmode');
-        if (!item) return 'no item';
-        const ev = new MouseEvent('click', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            detail: 1,
-        });
-        item.dispatchEvent(ev);
-        // Пробуем также dblclick
-        const ev2 = new MouseEvent('dblclick', {
-            bubbles: true,
-            cancelable: true,
-            view: window,
-            detail: 2,
-        });
-        item.dispatchEvent(ev2);
-        return 'dispatched';
-    }""")
-    print(f"    JS dispatchEvent: {result}")
-
-
-def _mouse_down_up(page, diag):
-    """Полная эмуляция: move → down → up."""
-    if not diag:
-        raise Exception("нет diag")
-    d = diag[0]
-    x = d['x'] + d['w'] / 2
-    y = d['y'] + d['h'] / 2
-    print(f"    Mouse: move → down → up в ({x}, {y})")
-    page.mouse.move(x, y)
-    page.wait_for_timeout(50)
-    page.mouse.down()
-    page.wait_for_timeout(50)
-    page.mouse.up()
-    page.wait_for_timeout(50)
-    # Пробуем двойной
-    page.mouse.down()
-    page.wait_for_timeout(50)
-    page.mouse.up()
 
 
 if __name__ == "__main__":
