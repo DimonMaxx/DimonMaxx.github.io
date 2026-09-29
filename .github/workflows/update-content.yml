@@ -40,7 +40,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # ─── Кэш обогащения (ускоряет повторные запуски книг в разы) ───
+      # ─── Кэш обогащения ───
       - name: Restore enrichment cache
         uses: actions/cache@v4
         with:
@@ -56,6 +56,7 @@ jobs:
       - name: Create credentials.json
         run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > credentials.json
 
+      # ─── Яндекс.Диск ───
       - name: Run yandex_disk_sync.py
         env:
           GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
@@ -69,14 +70,25 @@ jobs:
           PRESERVE_USER_EDITS:       "1"
           BACKUP_BEFORE_SYNC:        "1"
           BACKUP_KEEP_COUNT:         "3"
-
-          # ─── Селективная синхронизация ───
           SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
-
-          # ─── Fast mode ───
           SKIP_ENRICHMENT:           ${{ github.event.inputs.skip_enrichment == 'true' && '1' || '0' }}
         run: python yandex_disk_sync.py
 
+      # ─── TeraBox (независимый скрипт) ───
+      - name: Run terabox_sync.py
+        env:
+          GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SPREADSHEET_NAME:          "НаполнениеСайта"
+          SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
+          PRESERVE_USER_EDITS:       "1"
+          BACKUP_BEFORE_SYNC:        "1"
+          BACKUP_KEEP_COUNT:         "3"
+          SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
+          TERABOX_COOKIE:            ${{ secrets.TERABOX_COOKIE }}
+        run: python terabox_sync.py
+
+      # ─── Генерация JSON ───
       - name: Run generate_from_sheets.py
         env:
           GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
@@ -102,7 +114,6 @@ jobs:
 
           git commit -m "Auto-sync content $(date -u +'%Y-%m-%d %H:%M UTC')"
 
-          # Подтягиваем чужие изменения и повторяем коммит поверх них
           git pull --rebase origin main || {
             echo "Rebase conflict — оставляем свежую генерацию"
             git checkout --theirs _content/ 2>/dev/null || true
