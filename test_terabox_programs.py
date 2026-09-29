@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TeraBox: рабочий обход через page.evaluate + fetch на www.1024tera.com.
-Скачивает 1_Software.txt и belico.dll, обходит подпапки, сопоставляет
-файлы с описаниями.
+Перехватываем ответы Vue (не делаем свои запросы).
+Кликаем по папкам в UI → Vue сам грузит содержимое → мы парсим ответ.
 """
 
 import os
@@ -28,69 +27,48 @@ COOKIE_DOMAINS = [
 ]
 
 
-def share_list(page, surl, dir_path=None):
-    """
-    Делает fetch через page.evaluate к /share/list на текущем домене.
-    Возвращает распарсенный JSON (без обрезки).
-    """
-    js_code = """
-    async ({surl, dirPath}) => {
-        try {
-            const jsToken = window.jsToken || '';
-            const td = window.templateData || {};
-            if (!jsToken) return {error: 'no jsToken'};
+class Catcher:
+    """Собирает ответы Vue на /share/list."""
 
-            const params = new URLSearchParams({
-                clientfrom: 'h5',
-                psign: '0',
-                pcftoken: td.pcftoken || '',
-                clienttype: '0',
-                channel: 'dubox',
-                page: '1',
-                num: '100',
-                web: '1',
-                scene: '',
-                shorturl: surl,
-                by: 'time',
-                order: 'desc',
-                app_id: '250528',
-                jsToken: jsToken,
-                'dp-logid': String(Math.floor(Math.random() * 1e16)),
-            });
-            if (td.bdstoken) params.set('bdstoken', td.bdstoken);
-            if (dirPath) params.set('dir', dirPath);
+    def __init__(self):
+        self.responses = []
 
-            const url = '/share/list?' + params.toString();
-            const resp = await fetch(url, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json, text/plain, */*',
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-            });
-            const text = await resp.text();
-            try {
-                return {status: resp.status, data: JSON.parse(text)};
-            } catch (e) {
-                return {status: resp.status, error: 'not json: ' + String(e), text: text.slice(0, 200)};
-            }
-        } catch (e) {
-            return {error: String(e)};
-        }
-    }
-    """
-    return page.evaluate(js_code, {"surl": surl, "dirPath": dir_path})
+    def attach(self, page):
+        def on_response(resp):
+            if "/share/list" in resp.url and "/static/" not in resp.url:
+                try:
+                    data = resp.json()
+                    self.responses.append({
+                        "url": resp.url,
+                        "data": data,
+                        "ts": time.time(),
+                    })
+                except Exception:
+                    pass
+        page.on("response", on_response)
+
+    def count(self):
+        return len(self.responses)
+
+    def last(self):
+        return self.responses[-1] if self.responses else None
+
+    def wait_new(self, prev_count, timeout=15):
+        """Ждёт, пока появится новый ответ."""
+        start = time.time()
+        while time.time() - start < timeout:
+            if len(self.responses) > prev_count:
+                return self.responses[-1]
+            time.sleep(0.3)
+        return None
 
 
 def download_file(context, dlink, save_path):
-    """Скачивает файл через context.request (вне CORS, dlink подписан)."""
-    print(f"  GET {dlink[:110]}...")
+    """Скачивает файл через context.request (dlink подписан, CORS не важно)."""
+    print(f"  GET {dlink[:100]}...")
     t0 = time.time()
     resp = context.request.get(dlink, timeout=180000)
-    elapsed = round(time.time() - t0, 2)
-    print(f"  HTTP {resp.status} за {elapsed} сек")
+    print(f"  HTTP {resp.status} за {round(time.time() - t0, 2)} сек")
     if resp.status != 200:
         return None
     body = resp.body()
@@ -101,7 +79,6 @@ def download_file(context, dlink, save_path):
 
 
 def parse_software_txt(file_path):
-    """Парсит 1_Software.txt."""
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
@@ -137,17 +114,33 @@ def parse_software_txt(file_path):
     return programs
 
 
-def extract_surl(url):
-    m = re.search(r'/s/([A-Za-z0-9_\-]+)', url)
-    if not m:
-        return None
-    s = m.group(1)
-    if s.startswith("1") and len(s) > 20:
-        return s[1:]
-    return s
+def click_folder(page, folder_name):
+    """Кликает по папке с указанным именем. Возвращает True при успехе."""
+    for el in page.query_selector_all('.file-item-name'):
+        try:
+            txt = (el.inner_text() or "").strip()
+            if txt == folder_name:
+                el.click(timeout=5000)
+                return True
+        except Exception:
+            pass
+    return False
 
 
-def print_list(items, indent="    "):
+def click_breadcrumb(page, name):
+    """Кликает по breadcrumb с указанным именем (возврат)."""
+    for el in page.query_selector_all('.breadcrumb-item'):
+        try:
+            txt = (el.inner_text() or "").strip()
+            if txt == name:
+                el.click(timeout=5000)
+                return True
+        except Exception:
+            pass
+    return False
+
+
+def print_items(items, indent="    "):
     for i, it in enumerate(items):
         name = it.get("server_filename")
         is_dir = str(it.get("isdir")) == "1"
@@ -157,9 +150,30 @@ def print_list(items, indent="    "):
               f"{it.get('size', 0):>12} b  dlink:{has_dlink}")
 
 
+def navigate_and_capture(page, catcher, path, timeout=15):
+    """
+    Кликает по цепочке папок и возвращает ответ Vue.
+    :param path: список имён, например ['Программы', 'Text']
+    """
+    # Сбрасываем — ждём новый ответ
+    prev = catcher.count()
+
+    # Кликаем по каждой папке в пути
+    for name in path:
+        ok = click_folder(page, name)
+        if not ok:
+            print(f"  ✗ Не удалось кликнуть '{name}'")
+            return None
+        time.sleep(0.5)
+
+    # Ждём ответа
+    result = catcher.wait_new(prev, timeout=timeout)
+    return result
+
+
 def main():
     print("=" * 70)
-    print("ФИНАЛЬНЫЙ ТЕСТ: обход TeraBox и сопоставление с 1_Software.txt")
+    print("ПЕРЕХВАТ ОТВЕТОВ Vue (клики по UI)")
     print("=" * 70)
 
     with sync_playwright() as p:
@@ -181,66 +195,44 @@ def main():
                 pass
 
         page = context.new_page()
+        catcher = Catcher()
+        catcher.attach(page)
 
-        # ⚠️ Открываем через 1024terabox.com — Vue редиректит на 1024tera.com
+        # ─── Открываем страницу ───
         print(f"\nОткрываем {START_URL}")
         page.goto(START_URL, wait_until="domcontentloaded", timeout=60000)
         page.wait_for_timeout(7000)
-        final_url = page.url
-        print(f"Финальный URL: {final_url}")
+        print(f"Финальный URL: {page.url}")
 
-        state = page.evaluate("""() => ({
-            hasJsToken: !!window.jsToken,
-            hasBdstoken: !!(window.templateData && window.templateData.bdstoken),
-            username: (document.querySelector('.card-username') || {}).textContent || null,
-        })""")
-        print(f"Состояние: {state}")
-
-        surl = extract_surl(START_URL)
-        print(f"surl: {surl}")
-
-        # ─── ШАГ 1: корень ссылки ───
-        print(f"\n{'─' * 70}\nШАГ 1: Корень ссылки\n{'─' * 70}")
-        r1 = share_list(page, surl)
-        if "error" in r1:
-            print(f"✗ Ошибка: {r1}")
+        # Ждём первого ответа от Vue
+        initial = catcher.wait_new(0, timeout=10)
+        if not initial:
+            print("✗ Vue не сделал ни одного запроса /share/list")
             browser.close()
             return
-        data = r1["data"]
-        print(f"errno: {data.get('errno')}, errmsg: {data.get('errmsg', '')}")
-        items = data.get("list") or []
-        print(f"Элементов: {len(items)}")
-        print_list(items)
 
-        # Ищем папку Программы
-        prog_dir = None
-        for it in items:
-            if it.get("server_filename") == "Программы":
-                prog_dir = it.get("path")
-                break
-        if not prog_dir:
-            print("✗ Папка Программы не найдена")
+        data_root = initial["data"]
+        items_root = data_root.get("list") or []
+        print(f"\n✓ Корень ссылки — errno: {data_root.get('errno')}, "
+              f"элементов: {len(items_root)}")
+        print_items(items_root)
+
+        # ─── Кликаем "Программы" ───
+        print(f"\n{'─' * 70}\nШАГ 1: Клик по папке «Программы»\n{'─' * 70}")
+        res1 = navigate_and_capture(page, catcher, ["Программы"])
+        if not res1:
+            print("✗ Не удалось открыть папку")
             browser.close()
             return
-        print(f"\nПапка: {prog_dir}")
-
-        # ─── ШАГ 2: содержимое папки ───
-        print(f"\n{'─' * 70}\nШАГ 2: Содержимое папки Программы\n{'─' * 70}")
-        r2 = share_list(page, surl, dir_path=prog_dir)
-        if "error" in r2:
-            print(f"✗ Ошибка: {r2}")
-            browser.close()
-            return
-        data2 = r2["data"]
-        print(f"errno: {data2.get('errno')}, errmsg: {data2.get('errmsg', '')}")
-        items2 = data2.get("list") or []
-        print(f"Элементов: {len(items2)}")
-        print_list(items2)
+        data1 = res1["data"]
+        items1 = data1.get("list") or []
+        print(f"errno: {data1.get('errno')}, элементов: {len(items1)}")
+        print_items(items1)
 
         subdirs = []
         desc_file = None
         dll_file = None
-        for it in items2:
+        for it in items1:
             name = it.get("server_filename")
             if name == "1_Software.txt":
                 desc_file = it
@@ -249,80 +241,70 @@ def main():
             elif str(it.get("isdir")) == "1":
                 subdirs.append(it)
 
-        # ─── ШАГ 3: скачиваем 1_Software.txt ───
-        print(f"\n{'─' * 70}\nШАГ 3: 1_Software.txt\n{'─' * 70}")
+        # ─── Скачиваем 1_Software.txt ───
+        print(f"\n{'─' * 70}\nШАГ 2: Скачиваем 1_Software.txt\n{'─' * 70}")
         programs_map = {}
         if desc_file and desc_file.get("dlink"):
             save = download_file(context, desc_file["dlink"], "/tmp/1_Software.txt")
             if save:
                 programs_map = parse_software_txt(save)
                 print(f"  ✓ Программ в файле: {len(programs_map)}")
-                for i, (key, val) in enumerate(list(programs_map.items())[:15]):
+                for i, (key, val) in enumerate(list(programs_map.items())[:12]):
                     print(f"    [{i}] Name={val['name']}")
                     print(f"         Group={val['group']}  Ver={val['version']}")
                     print(f"         Hint={(val.get('hint') or '')[:100]}...")
-                if len(programs_map) > 15:
-                    print(f"    ... и ещё {len(programs_map) - 15}")
 
-        # ─── ШАГ 4: скачиваем belico.dll ───
-        print(f"\n{'─' * 70}\nШАГ 4: belico.dll\n{'─' * 70}")
+        # ─── Скачиваем belico.dll ───
+        print(f"\n{'─' * 70}\nШАГ 3: Скачиваем belico.dll\n{'─' * 70}")
         if dll_file and dll_file.get("dlink"):
             print(f"  Размер: {dll_file.get('size')} байт")
             download_file(context, dll_file["dlink"], "/tmp/belico.dll")
 
-        # ─── ШАГ 5: обход подпапок ───
-        print(f"\n{'─' * 70}\nШАГ 5: Обход подпапок\n{'─' * 70}")
-        for i, sub in enumerate(subdirs):
-            sub_dir = sub.get("path")
-            sub_name = sub.get("server_filename")
-            print(f"\n[{i}] Папка: {sub_name}  dir={sub_dir}")
-            r3 = share_list(page, surl, dir_path=sub_dir)
-            if "error" in r3:
-                print(f"    ✗ {r3}")
-                continue
-            data3 = r3["data"]
-            files = data3.get("list") or []
-            print(f"    errno: {data3.get('errno')}, файлов: {len(files)}")
-            for j, it in enumerate(files):
-                if str(it.get("isdir")) == "1":
-                    continue
-                fname = it.get("server_filename")
-                has_dlink = "✓" if it.get("dlink") else "✗"
-                print(f"      [{j:>2}] {fname:<40} {it.get('size', 0):>12} b  dlink:{has_dlink}")
+        # ─── Обходим подпапки ───
+        print(f"\n{'─' * 70}\nШАГ 4: Обход подпапок (клики по UI)\n{'─' * 70}")
 
-            # ─── Сопоставление ───
+        for i, sub in enumerate(subdirs):
+            sub_name = sub.get("server_filename")
+            print(f"\n[{i}] Подпапка: {sub_name}")
+
+            # Возвращаемся в папку "Программы" через breadcrumb
+            if i > 0:
+                print(f"    Возвращаемся в «Программы»...")
+                click_breadcrumb(page, "Программы")
+                time.sleep(2)
+
+            # Кликаем по подпапке
+            res_sub = navigate_and_capture(page, catcher, [sub_name])
+            if not res_sub:
+                print(f"    ✗ Не удалось открыть подпапку")
+                continue
+            data_sub = res_sub["data"]
+            items_sub = data_sub.get("list") or []
+            print(f"    errno: {data_sub.get('errno')}, файлов: {len(items_sub)}")
+            print_items(items_sub, indent="      ")
+
+            # Сопоставление
             if programs_map:
                 print(f"\n    Сопоставление с 1_Software.txt:")
                 matched = 0
-                for it in files:
-                    if str(it.get("isdir")) == "1":
-                        continue
+                files_only = [it for it in items_sub if str(it.get("isdir")) != "1"]
+                for it in files_only:
                     fname = it.get("server_filename") or ""
-                    # Убираем расширение
                     base = re.sub(r"\.(exe|msi|zip|rar|7z|txt|dll)$", "", fname, flags=re.IGNORECASE)
-                    # Убираем суффиксы -x86, -x64, .win, _setup, _portable
                     base_clean = re.sub(r"[\-_.](x86|x64|win|setup|installer|portable|install)$",
                                         "", base, flags=re.IGNORECASE)
                     base_lower = base_clean.lower()
 
-                    # Прямое совпадение
                     found = None
                     if base_lower in programs_map:
                         found = programs_map[base_lower]
                     else:
-                        # Частичное
                         for key, val in programs_map.items():
-                            # Пробуем разные варианты
-                            if base_lower == key:
-                                found = val
-                                break
-                            # Убираем точки и пробелы
                             key_clean = re.sub(r"[\s\.\-_]", "", key)
                             base_cleanest = re.sub(r"[\s\.\-_]", "", base_lower)
                             if key_clean == base_cleanest:
                                 found = val
                                 break
-                            # Вхождение подстроки (только если разница >3 символов)
                             if abs(len(key_clean) - len(base_cleanest)) < 5:
                                 if base_cleanest and (base_cleanest in key_clean or key_clean in base_cleanest):
                                     found = val
@@ -330,12 +312,11 @@ def main():
 
                     if found:
                         matched += 1
-                        print(f"      ✓ {fname}")
-                        print(f"        → Name: {found['name']}")
-                        print(f"        → Hint: {(found.get('hint') or '')[:120]}...")
+                        print(f"      ✓ {fname} → {found['name']}")
+                        print(f"        Hint: {(found.get('hint') or '')[:110]}...")
                     else:
-                        print(f"      ✗ {fname} → не найдено")
-                print(f"\n    Итого совпадений: {matched}/{len([it for it in files if str(it.get('isdir')) != '1'])}")
+                        print(f"      ✗ {fname}")
+                print(f"    Совпадений: {matched}/{len(files_only)}")
 
         browser.close()
 
