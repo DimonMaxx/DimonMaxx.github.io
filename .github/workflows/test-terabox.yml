@@ -35,7 +35,7 @@ jobs:
           TERABOX_COOKIE: ${{ secrets.TERABOX_COOKIE }}
         run: python test_terabox_playwright.py
 
-      - name: Upload screenshots and HTML
+      - name: Upload debug artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -43,5 +43,6 @@ jobs:
           path: |
             /tmp/*.png
             /tmp/*.html
+            /tmp/*.json
           retention-days: 3
           if-no-files-found: ignore
