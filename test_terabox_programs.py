@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Тера: используем context.request.get вместо page.evaluate/fetch.
-Обходим CORS, получаем список файлов и dlink для скачивания.
+TeraBox: получаем cookies через Playwright, затем делаем запросы через requests.
+Это даёт полный контроль над заголовками (Referer, Cookie) и обходит CORS.
 """
 
 import os
@@ -10,9 +10,10 @@ import re
 import sys
 import json
 import time
+import random
 import traceback
-from urllib.parse import quote
 
+import requests
 from playwright.sync_api import sync_playwright
 
 COOKIE = os.environ.get("TERABOX_COOKIE", "")
@@ -28,18 +29,28 @@ COOKIE_DOMAINS = [
 ]
 
 
-def get_tokens(page):
-    """Извлекает токены из window страницы."""
-    return page.evaluate("""() => ({
+def make_dp_logid():
+    """Генерирует уникальный dp-logid как в TeraBox."""
+    return str(random.randint(10**17, 10**18 - 1))
+
+
+def get_tokens_and_cookies(context, page):
+    """Собирает токены из window и cookies из context."""
+    tokens = page.evaluate("""() => ({
         jsToken: window.jsToken || '',
         bdstoken: (window.templateData && window.templateData.bdstoken) || '',
         pcftoken: (window.templateData && window.templateData.pcftoken) || '',
         uk: (window.templateData && window.templateData.uk) || '',
     })""")
 
+    cookies = context.cookies()
+    cookie_header = "; ".join(f"{c['name']}={c['value']}" for c in cookies)
 
-def share_list(context, tokens, surl, dir_path=None):
-    """Запрос к /share/list через context.request.get (без CORS)."""
+    return tokens, cookie_header
+
+
+def share_list(session, tokens, cookie_header, surl, referer, dir_path=None):
+    """Запрос к /share/list через requests (с Referer и Cookie)."""
     params = {
         "clientfrom": "h5",
         "psign": "0",
@@ -55,63 +66,99 @@ def share_list(context, tokens, surl, dir_path=None):
         "order": "desc",
         "app_id": "250528",
         "jsToken": tokens["jsToken"],
+        "dp-logid": make_dp_logid(),
     }
     if tokens["bdstoken"]:
         params["bdstoken"] = tokens["bdstoken"]
     if dir_path:
         params["dir"] = dir_path
 
-    qs = "&".join(f"{k}={quote(str(v), safe='')}" for k, v in params.items())
-    url = f"https://www.terabox.app/share/list?{qs}"
+    headers = {
+        "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                       "AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/120.0.0.0 Safari/537.36"),
+        "Referer": referer,
+        "Cookie": cookie_header,
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "ru-RU,ru;q=0.9,en;q=0.8",
+        "X-Requested-With": "XMLHttpRequest",
+    }
 
-    print(f"  GET {url[:140]}...")
-    resp = context.request.get(url, timeout=60000)
-    print(f"  HTTP {resp.status}")
-    if resp.status != 200:
-        return {"errno": -1, "errmsg": f"HTTP {resp.status}"}
+    url = "https://www.terabox.app/share/list"
+    resp = session.get(url, params=params, headers=headers, timeout=60)
+    print(f"  HTTP {resp.status}  (url len={len(resp.url)})")
     try:
         return resp.json()
     except Exception as e:
-        return {"errno": -1, "errmsg": f"not json: {e}"}
+        return {"errno": -1, "errmsg": f"not json: {e}", "text": resp.text[:300]}
 
 
-def download_file(context, dlink, save_path):
-    """Скачивает файл через context.request.get."""
-    print(f"  GET {dlink[:100]}...")
+def download_file(session, dlink, save_path, referer, cookie_header):
+    """Скачивает файл через requests."""
+    headers = {
+        "User-Agent": ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                       "AppleWebKit/537.36 (KHTML, like Gecko) "
+                       "Chrome/120.0.0.0 Safari/537.36"),
+        "Referer": referer,
+        "Cookie": cookie_header,
+        "Accept": "*/*",
+    }
+    print(f"  GET {dlink[:110]}...")
     t0 = time.time()
-    resp = context.request.get(dlink, timeout=180000)
+    resp = session.get(dlink, headers=headers, timeout=300, stream=True, allow_redirects=True)
     elapsed = round(time.time() - t0, 2)
     print(f"  HTTP {resp.status} за {elapsed} сек")
     if resp.status != 200:
         return None
-    body = resp.body()
     with open(save_path, "wb") as f:
-        f.write(body)
-    print(f"  ✓ Сохранено: {save_path} ({len(body)} байт)")
+        total = 0
+        for chunk in resp.iter_content(chunk_size=65536):
+            f.write(chunk)
+            total += len(chunk)
+    print(f"  ✓ Сохранено: {save_path} ({total} байт)")
     return save_path
 
 
 def parse_software_txt(file_path):
-    """Парсит 1_Software.txt: возвращает {name: {hint, ...}}."""
+    """Парсит 1_Software.txt в словарь {name_lower: {name, hint, icon, icon_index, ...}}."""
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
     programs = {}
     current = None
-    for line in content.split("\n"):
-        line = line.rstrip("\r")
+    for raw in content.split("\n"):
+        line = raw.rstrip("\r").strip()
+        if not line:
+            continue
         if line.startswith("Name="):
             name = line[5:].strip()
             if name:
-                current = {"name": name, "hint": "", "group": "", "version": ""}
+                current = {
+                    "name": name,
+                    "hint": "",
+                    "icon": "",
+                    "icon_index": "",
+                    "group": "",
+                    "version": "",
+                    "url": "",
+                    "key": "",
+                }
                 programs[name.lower()] = current
         elif current is not None:
             if line.startswith("Hint="):
                 current["hint"] = line[5:].strip().lstrip("|").strip()
+            elif line.startswith("Icon="):
+                current["icon"] = line[5:].strip()
+            elif line.startswith("IconIndex="):
+                current["icon_index"] = line[10:].strip()
             elif line.startswith("Group="):
                 current["group"] = line[6:].strip()
             elif line.startswith("Ver="):
                 current["version"] = line[4:].strip()
+            elif line.startswith("URL="):
+                current["url"] = line[4:].strip()
+            elif line.startswith("Key="):
+                current["key"] = line[4:].strip()
     return programs
 
 
@@ -127,15 +174,15 @@ def extract_surl(url):
 
 def main():
     print("=" * 70)
-    print("ТЕСТ TERABOX через context.request (без CORS)")
+    print("TERABOX через requests + cookies из Playwright")
     print("=" * 70)
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                       "AppleWebKit/537.36 (KHTML, like Gecko) "
-                       "Chrome/120.0.0.0 Safari/537.36",
+            user_agent=("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/120.0.0.0 Safari/537.36"),
             locale="ru-RU",
             viewport={"width": 1366, "height": 900},
         )
@@ -151,26 +198,34 @@ def main():
         page = context.new_page()
         print(f"\nОткрываем {PROGRAMS_URL}")
         page.goto(PROGRAMS_URL, wait_until="domcontentloaded", timeout=60000)
-        page.wait_for_timeout(5000)
+        page.wait_for_timeout(6000)
 
-        tokens = get_tokens(page)
+        tokens, cookie_header = get_tokens_and_cookies(context, page)
         print(f"Токены: jsToken={tokens['jsToken'][:30]}..., "
               f"bdstoken={tokens['bdstoken'][:20]}..., "
               f"pcftoken={tokens['pcftoken'][:20]}..., uk={tokens['uk']}")
+        print(f"Cookie: {cookie_header[:200]}...")
+
+        referer = page.url
+        print(f"Referer: {referer}")
 
         surl = extract_surl(PROGRAMS_URL)
         print(f"surl: {surl}")
 
-        # ─── Корень ссылки ───
-        print(f"\n{'─' * 70}\nШАГ 1: Корень ссылки\n{'─' * 70}")
-        data = share_list(context, tokens, surl)
-        print(f"errno: {data.get('errno')}, элементов: {len(data.get('list') or [])}")
-        for it in (data.get("list") or []):
-            print(f"  {it.get('server_filename')}  dir={it.get('isdir')}  path={it.get('path')}")
+        session = requests.Session()
 
-        # ─── Папка "Программы" ───
+        # ─── ШАГ 1: корень ссылки ───
+        print(f"\n{'─' * 70}\nШАГ 1: Корень ссылки\n{'─' * 70}")
+        data = share_list(session, tokens, cookie_header, surl, referer)
+        print(f"errno: {data.get('errno')}  errmsg: {data.get('errmsg', '')}")
+        items = data.get("list") or []
+        print(f"Элементов: {len(items)}")
+        for it in items:
+            print(f"  {it.get('server_filename')}  isdir={it.get('isdir')}  path={it.get('path')}")
+
+        # ─── ШАГ 2: содержимое папки Программы ───
         prog_dir = None
-        for it in (data.get("list") or []):
+        for it in items:
             if it.get("server_filename") == "Программы":
                 prog_dir = it.get("path")
                 break
@@ -181,15 +236,16 @@ def main():
             return
         print(f"\nНайдена папка: {prog_dir}")
 
-        # ─── Содержимое "Программы" ───
         print(f"\n{'─' * 70}\nШАГ 2: Содержимое папки Программы\n{'─' * 70}")
-        data2 = share_list(context, tokens, surl, dir_path=prog_dir)
-        print(f"errno: {data2.get('errno')}, элементов: {len(data2.get('list') or [])}")
+        data2 = share_list(session, tokens, cookie_header, surl, referer, dir_path=prog_dir)
+        print(f"errno: {data2.get('errno')}  errmsg: {data2.get('errmsg', '')}")
+        items2 = data2.get("list") or []
+        print(f"Элементов: {len(items2)}")
 
         programs_subdirs = []
         desc_file = None
         dll_file = None
-        for it in (data2.get("list") or []):
+        for it in items2:
             name = it.get("server_filename")
             is_dir = str(it.get("isdir")) == "1"
             has_dlink = "✓" if it.get("dlink") else "✗"
@@ -202,59 +258,79 @@ def main():
             elif is_dir:
                 programs_subdirs.append(it)
 
-        # ─── Скачиваем 1_Software.txt ───
+        # ─── ШАГ 3: скачиваем 1_Software.txt ───
         print(f"\n{'─' * 70}\nШАГ 3: 1_Software.txt\n{'─' * 70}")
         programs_map = {}
         if desc_file and desc_file.get("dlink"):
-            save_path = download_file(context, desc_file["dlink"], "/tmp/1_Software.txt")
-            if save_path:
-                programs_map = parse_software_txt(save_path)
+            save = download_file(session, desc_file["dlink"], "/tmp/1_Software.txt",
+                                 referer, cookie_header)
+            if save:
+                programs_map = parse_software_txt(save)
                 print(f"  ✓ Программ в файле: {len(programs_map)}")
-                for i, (key, val) in enumerate(list(programs_map.items())[:10]):
+                for i, (key, val) in enumerate(list(programs_map.items())[:12]):
                     print(f"    [{i}] Name={val['name']}")
+                    print(f"         Group={val['group']}  IconIndex={val['icon_index']}")
                     print(f"         Hint={(val.get('hint') or '')[:90]}...")
-                if len(programs_map) > 10:
-                    print(f"    ... и ещё {len(programs_map) - 10}")
         else:
-            print("  ✗ Нет 1_Software.txt или dlink отсутствует")
+            print("  ✗ Нет 1_Software.txt")
 
-        # ─── Скачиваем belico.dll ───
+        # ─── ШАГ 4: скачиваем belico.dll ───
         print(f"\n{'─' * 70}\nШАГ 4: belico.dll\n{'─' * 70}")
         if dll_file and dll_file.get("dlink"):
             print(f"  Размер: {dll_file.get('size')} байт")
-            download_file(context, dll_file["dlink"], "/tmp/belico.dll")
+            download_file(session, dll_file["dlink"], "/tmp/belico.dll",
+                          referer, cookie_header)
         else:
-            print("  ✗ Нет belico.dll или dlink отсутствует")
+            print("  ✗ Нет belico.dll")
 
-        # ─── Содержимое первой программы ───
-        print(f"\n{'─' * 70}\nШАГ 5: Содержимое подпапок-программ\n{'─' * 70}")
-        for i, sub in enumerate(programs_subdirs[:3]):
+        # ─── ШАГ 5: содержимое подпапок (программы) ───
+        print(f"\n{'─' * 70}\nШАГ 5: Содержимое подпапок (файлы программ)\n{'─' * 70}")
+        for i, sub in enumerate(programs_subdirs):
             sub_dir = sub.get("path")
             sub_name = sub.get("server_filename")
-            print(f"\n[{i}] {sub_name}  dir={sub_dir}")
-            data3 = share_list(context, tokens, surl, dir_path=sub_dir)
+            print(f"\n[{i}] Папка: {sub_name}  dir={sub_dir}")
+            data3 = share_list(session, tokens, cookie_header, surl, referer,
+                               dir_path=sub_dir)
             errno = data3.get("errno")
-            items = data3.get("list") or []
-            print(f"    errno: {errno}, элементов: {len(items)}")
-            for j, it in enumerate(items[:10]):
-                kind = "DIR " if str(it.get("isdir")) == "1" else "FILE"
+            files = data3.get("list") or []
+            print(f"    errno: {errno}, файлов: {len(files)}")
+            for j, it in enumerate(files[:15]):
+                if str(it.get("isdir")) == "1":
+                    continue
+                fname = it.get("server_filename")
                 has_dlink = "✓" if it.get("dlink") else "✗"
-                print(f"      [{j}] [{kind}] {it.get('server_filename'):<30} "
-                      f"{it.get('size', 0):>12} b  dlink:{has_dlink}")
+                print(f"      [{j}] {fname:<40} {it.get('size', 0):>12} b  dlink:{has_dlink}")
 
-            # Сопоставление с 1_Software.txt
+            # Пробуем сопоставить имена файлов с 1_Software.txt
             if programs_map:
-                key = sub_name.lower()
-                if key in programs_map:
-                    print(f"    ✓ Найдено в 1_Software.txt:")
-                    print(f"      Hint: {programs_map[key].get('hint', '')[:120]}...")
-                else:
-                    # Пробуем частичное совпадение
-                    matches = [k for k in programs_map if key in k or k in key]
-                    if matches:
-                        print(f"    ⚠ Частичные совпадения: {matches[:3]}")
+                print(f"    Сопоставление с 1_Software.txt:")
+                for it in files[:15]:
+                    if str(it.get("isdir")) == "1":
+                        continue
+                    fname = it.get("server_filename") or ""
+                    # Убираем расширение
+                    base = re.sub(r"\.(exe|msi|zip|rar|7z)$", "", fname, flags=re.IGNORECASE)
+                    # Убираем суффиксы типа -x86, -x64, .win, _setup
+                    base_clean = re.sub(r"[\-_.](x86|x64|win|setup|installer|portable)$",
+                                        "", base, flags=re.IGNORECASE)
+                    base_lower = base_clean.lower()
+
+                    # Ищем в 1_Software.txt
+                    found = None
+                    if base_lower in programs_map:
+                        found = programs_map[base_lower]
                     else:
-                        print(f"    ✗ Нет совпадения в 1_Software.txt")
+                        # Частичное совпадение
+                        for key, val in programs_map.items():
+                            if base_lower and (base_lower in key or key in base_lower):
+                                found = val
+                                break
+
+                    if found:
+                        print(f"      ✓ {fname} → Name={found['name']}")
+                        print(f"        Hint: {(found.get('hint') or '')[:100]}...")
+                    else:
+                        print(f"      ✗ {fname} → не найдено в 1_Software.txt")
 
         browser.close()
 
