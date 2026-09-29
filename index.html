@@ -54,6 +54,196 @@
         .section-title { font-size: 26px; font-weight: 700; margin: 0 0 20px 0; padding-bottom: 10px; border-bottom: 3px solid #e2e8f0; display: flex; align-items: center; gap: 12px; }
         .section-title i { color: #2563eb; }
 
+        /* ─── Инструкция на главной ─── */
+        .welcome-hero {
+            background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
+            border-radius: 20px;
+            padding: 32px 28px;
+            margin-bottom: 24px;
+            border: 1px solid #dbeafe;
+        }
+        .welcome-hero h1 {
+            font-size: 30px;
+            font-weight: 800;
+            color: #0f172a;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .welcome-hero h1 i { color: #2563eb; }
+        .welcome-hero .hero-subtitle {
+            font-size: 16px;
+            color: #475569;
+            margin-bottom: 22px;
+            line-height: 1.6;
+        }
+        .welcome-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 6px;
+        }
+        .welcome-card {
+            background: white;
+            border-radius: 16px;
+            padding: 22px 20px;
+            border: 2px solid #e2e8f0;
+            transition: 0.2s;
+        }
+        .welcome-card:hover {
+            border-color: #2563eb;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(37,99,235,0.12);
+        }
+        .welcome-card.guest { border-left: 5px solid #10b981; }
+        .welcome-card.user  { border-left: 5px solid #2563eb; }
+        .welcome-card .card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 12px;
+            color: white;
+        }
+        .welcome-card.guest .card-icon { background: #10b981; }
+        .welcome-card.user  .card-icon { background: #2563eb; }
+        .welcome-card h3 {
+            font-size: 17px;
+            font-weight: 700;
+            color: #0f172a;
+            margin-bottom: 12px;
+        }
+        .welcome-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .welcome-card li {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 6px 0;
+            font-size: 14px;
+            color: #334155;
+            line-height: 1.5;
+        }
+        .welcome-card li i {
+            color: #10b981;
+            font-size: 14px;
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+        .welcome-card.user li i { color: #2563eb; }
+        .welcome-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .welcome-actions a {
+            padding: 10px 22px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 14px;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+        .welcome-actions .btn-login {
+            background: #2563eb;
+            color: white;
+            box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+        }
+        .welcome-actions .btn-login:hover {
+            background: #1d4ed8;
+            transform: translateY(-2px);
+        }
+        .welcome-actions .btn-register {
+            background: #f59e0b;
+            color: #1e293b;
+            box-shadow: 0 4px 14px rgba(245,158,11,0.3);
+        }
+        .welcome-actions .btn-register:hover {
+            background: #d97706;
+            color: white;
+            transform: translateY(-2px);
+        }
+        .welcome-actions .btn-submit {
+            background: white;
+            color: #2563eb;
+            border: 2px solid #2563eb;
+        }
+        .welcome-actions .btn-submit:hover {
+            background: #eff6ff;
+        }
+
+        .welcome-hint {
+            margin-top: 20px;
+            padding: 14px 18px;
+            background: #f8fafc;
+            border-left: 4px solid #8b5cf6;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #475569;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .welcome-hint i { color: #8b5cf6; font-size: 18px; margin-top: 2px; }
+
+        /* ─── Баннер 152-ФЗ в подпапках Программ ─── */
+        .programs-notice {
+            background: #eff6ff;
+            border-left: 5px solid #2563eb;
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            line-height: 1.65;
+            color: #1e3a8a;
+        }
+        .programs-notice .notice-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
+            font-size: 15px;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+        .programs-notice .notice-title i {
+            color: #2563eb;
+            font-size: 18px;
+        }
+        .programs-notice p {
+            margin-bottom: 8px;
+        }
+        .programs-notice p:last-child { margin-bottom: 0; }
+        .programs-notice a {
+            color: #1d4ed8;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+        .programs-notice a:hover {
+            color: #1e3a8a;
+        }
+        .programs-notice.warning {
+            background: #fffbeb;
+            border-left-color: #f59e0b;
+            color: #78350f;
+        }
+        .programs-notice.warning .notice-title { color: #92400e; }
+        .programs-notice.warning .notice-title i { color: #d97706; }
+        .programs-notice.warning a { color: #b45309; }
+
+        /* ─── Папки ─── */
         .folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 10px; }
         .folder-card { background: white; border: 2px solid #e2e8f0; border-radius: 16px; padding: 22px 16px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
         .folder-card:hover { border-color: #2563eb; transform: translateY(-3px); box-shadow: 0 10px 24px rgba(37,99,235,0.15); }
@@ -103,7 +293,6 @@
             align-items: center;
             gap: 6px;
             min-width: 280px;
-            /* Запрещаем выделение и перетаскивание внутри плеера */
             -webkit-user-select: none;
             -moz-user-select: none;
             user-select: none;
@@ -113,7 +302,6 @@
             height: 40px;
             outline: none;
         }
-        /* Скрытие нативной кнопки скачивания и «трёх точек» в WebKit/Blink */
         .audio-cell audio::-webkit-media-controls-overflow-button,
         .audio-cell audio::-webkit-media-controls-download-button,
         .audio-cell audio::-internal-media-controls-download-button {
@@ -187,6 +375,9 @@
             .content-table { font-size: 12px; }
             .audio-cell { min-width: 0; }
             .audio-cell audio { width: 220px; height: 36px; }
+            .welcome-grid { grid-template-columns: 1fr; }
+            .welcome-hero { padding: 22px 18px; }
+            .welcome-hero h1 { font-size: 22px; }
         }
     </style>
 </head>
@@ -214,6 +405,7 @@
         <aside class="sidebar" id="sidebarNav">
             <nav class="sidebar-nav" id="sidebarNavInner">
                 <div class="nav-link active" data-tab="home"><i class="fas fa-home"></i> Главная</div>
+                <!-- Остальные пункты будут добавлены динамически из SECTIONS -->
             </nav>
 
             <div class="stats-panel" id="statsPanel">
@@ -231,20 +423,67 @@
         <div class="content-area">
             <div class="tab-content-wrapper" id="tabsWrapper">
                 <div id="home" class="tab-content active">
-                    <h1 style="font-size:28px; font-weight:800; margin-bottom:8px;">Добро пожаловать!</h1>
-                    <p style="font-size:17px; color:#334155; margin-bottom:20px;">
-                        Бесплатные материалы. Чтобы скачивать, <strong>зарегистрируйтесь</strong>.
-                    </p>
-                    <p style="font-size:15px; color:#64748b;">
-                        <i class="fas fa-info-circle"></i> Выберите раздел в меню слева.
-                    </p>
+                    <div class="welcome-hero">
+                        <h1><i class="fas fa-hand-sparkles"></i> Добро пожаловать на MyFiles!</h1>
+                        <p class="hero-subtitle">
+                            Крупная библиотека бесплатных материалов: программы, книги, музыка, игры и фильмы.
+                            Все файлы хранятся на облачном диске, доступ — по прямой ссылке.
+                        </p>
+
+                        <div class="welcome-grid">
+                            <div class="welcome-card guest">
+                                <div class="card-icon"><i class="fas fa-unlock"></i></div>
+                                <h3>Без регистрации</h3>
+                                <ul>
+                                    <li><i class="fas fa-check"></i> Просматривать каталог во всех разделах</li>
+                                    <li><i class="fas fa-check"></i> Слушать музыку прямо в браузере</li>
+                                    <li><i class="fas fa-check"></i> Искать и фильтровать материалы по папкам</li>
+                                    <li><i class="fas fa-check"></i> Смотреть описания, обложки и размер файлов</li>
+                                </ul>
+                            </div>
+
+                            <div class="welcome-card user">
+                                <div class="card-icon"><i class="fas fa-lock"></i></div>
+                                <h3>После регистрации</h3>
+                                <ul>
+                                    <li><i class="fas fa-check"></i> Скачивать любые файлы без ограничений</li>
+                                    <li><i class="fas fa-check"></i> Предлагать свои материалы для публикации</li>
+                                    <li><i class="fas fa-check"></i> Общаться на форуме и в комментариях</li>
+                                    <li><i class="fas fa-check"></i> Сохранять личный профиль и аватар</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="welcome-actions">
+                            <a href="login.html" class="btn-login">
+                                <i class="fas fa-sign-in-alt"></i> Войти
+                            </a>
+                            <a href="login.html" class="btn-register">
+                                <i class="fas fa-user-plus"></i> Зарегистрироваться
+                            </a>
+                            <a href="submit.html" class="btn-submit">
+                                <i class="fas fa-paper-plane"></i> Предложить материал
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="welcome-hint">
+                        <i class="fas fa-lightbulb"></i>
+                        <div>
+                            <strong>Как начать?</strong>
+                            Выберите раздел в меню слева — например, «Программы» или «Книги».
+                            Внутри раздела можно перейти в подпапку или воспользоваться поиском.
+                            Для скачивания любого файла нужна регистрация, для прослушивания музыки — нет.
+                        </div>
+                    </div>
                 </div>
+                <!-- Остальные вкладки будут созданы динамически -->
             </div>
         </div>
     </div>
 
     <footer style="text-align:center; font-size:14px; color:#94a3b8; border-top:2px solid #e5e7eb; padding:18px 30px; background:white;">
-        <span><i class="fas fa-copyright"></i> 2026 MyFiles</span>
+        <span><i class="fas fa-copyright"></i> 2026 MyFiles — все материалы бесплатны</span>
     </footer>
 </div>
 
@@ -261,14 +500,11 @@
     const loadedSections = new Set();
     const tableStates = {};
     let sectionRenderers = {};
-    let extraFolders = {};
+    let extraFolders = {}; // { sectionKey: [ {name, sort_order} ] }
 
     try { localStorage.removeItem('github_token'); } catch (e) {}
 
     // ─── ГЛОБАЛЬНАЯ ЗАЩИТА ОТ КОНТЕКСТНОГО МЕНЮ НА АУДИО ───
-    // Блокирует правый клик по <audio> и всем элементам внутри .audio-cell.
-    // В Chrome/Edge/Yandex полностью убирает меню, в Safari/FF оставляет
-    // только нейтральные пункты, убирая «Сохранить аудио как…».
     document.addEventListener('contextmenu', function (e) {
         const target = e.target;
         if (!target) return;
@@ -280,7 +516,6 @@
         }
     }, true);
 
-    // Дополнительно: глобальный запрет drag для audio (на всякий случай)
     document.addEventListener('dragstart', function (e) {
         if (e.target && e.target.tagName === 'AUDIO') {
             e.preventDefault();
@@ -577,6 +812,59 @@
             });
         });
     }
+
+    // ─── Формирование баннера 152-ФЗ для раздела Программы ───
+    // Показывается только внутри подпапки (не на уровне списка папок).
+    // В папке «Разные» — без упоминания автономной работы.
+    function buildProgramsNotice(folderName) {
+        const isRaznye = (folderName || '').trim().toLowerCase() === 'разные';
+        if (isRaznye) {
+            return `
+                <div class="programs-notice warning">
+                    <div class="notice-title">
+                        <i class="fas fa-shield-halved"></i>
+                        Важная информация о программах в папке «Разные»
+                    </div>
+                    <p>
+                        Инструменты, размещённые в этой папке, предназначены исключительно
+                        для работы с данными и <strong>не содержат персональных данных</strong>
+                        третьих лиц. Некоторые из них могут требовать подключения к сети
+                        Интернет для полноценной работы.
+                    </p>
+                    <p>
+                        Обработка любых сведений с помощью этих инструментов осуществляется
+                        вами самостоятельно и под вашу ответственность, в соответствии
+                        с <a href="http://www.consultant.ru/document/cons_doc_LAW_61801/"
+                              target="_blank" rel="noopener">Федеральным законом №152-ФЗ
+                        «О персональных данных»</a>.
+                    </p>
+                </div>
+            `;
+        }
+        return `
+            <div class="programs-notice">
+                <div class="notice-title">
+                    <i class="fas fa-shield-halved"></i>
+                    Важная информация о программах, макросах и плагинах
+                </div>
+                <p>
+                    Все инструменты, размещённые в этом разделе, предназначены
+                    исключительно для работы с данными и <strong>не содержат
+                    персональных данных</strong> третьих лиц. Использование
+                    инструментов <strong>не требует подключения к сети Интернет</strong> —
+                    они работают полностью автономно на вашем устройстве.
+                </p>
+                <p>
+                    Обработка любых сведений с помощью этих инструментов осуществляется
+                    вами самостоятельно и под вашу ответственность, в соответствии
+                    с <a href="http://www.consultant.ru/document/cons_doc_LAW_61801/"
+                          target="_blank" rel="noopener">Федеральным законом №152-ФЗ
+                    «О персональных данных»</a>.
+                </p>
+            </div>
+        `;
+    }
+
     function getFilteredSorted(state) {
         let result = state.data.slice();
         if (state.folderFilter) {
@@ -727,6 +1015,8 @@
 
         const paginationHtml = MF.renderPagination(containerId, totalItems, totalPages, state);
         let backBtnHtml = '';
+        let noticeHtml = '';
+
         if (state.sectionMeta?.folderable) {
             let label = 'Все материалы';
             if (state.folderFilter === '__NOFOLDER__') label = 'Без папки';
@@ -740,9 +1030,18 @@
                         <i class="fas fa-folder-open"></i> ${MF.escapeHtml(label)}
                     </span>
                 </div>`;
+
+            // ─── Баннер 152-ФЗ для раздела Программ (только внутри подпапки) ───
+            if (state.sectionKey === 'programs'
+                && state.folderFilter
+                && state.folderFilter !== '__NOFOLDER__') {
+                noticeHtml = buildProgramsNotice(state.folderFilter);
+            }
         }
+
         container.innerHTML = `
             ${backBtnHtml}
+            ${noticeHtml}
             <div class="content-table-wrapper">
                 <table class="content-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table>
             </div>
@@ -789,7 +1088,6 @@
             });
         });
 
-        // ─── Кнопки перемотки ±10 секунд ───
         container.querySelectorAll('.audio-seek-btn').forEach(btn => {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -815,7 +1113,6 @@
             });
         });
 
-        // ─── Локальные обработчики contextmenu на audio (доп. защита) ───
         container.querySelectorAll('.audio-cell audio').forEach(audio => {
             audio.addEventListener('contextmenu', e => {
                 e.preventDefault();
