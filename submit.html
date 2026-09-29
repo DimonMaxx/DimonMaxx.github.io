@@ -6,7 +6,7 @@
     <title>Предложить материал — MyFiles</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -116,12 +116,25 @@
             gap: 15px;
         }
 
-        .btn-submit {
+        .field-group-title {
+            font-size: 13px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #8b5cf6;
+            letter-spacing: 0.5px;
+            margin-bottom: 10px;
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px dashed #e2e8f0;
+        }
+
+        /* ─── Основная кнопка скачивания DOCX ─── */
+        .btn-download-docx {
             width: 100%;
-            padding: 15px 32px;
+            padding: 17px 32px;
             border-radius: 40px;
             border: none;
-            background: #2563eb;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
             color: white;
             font-size: 17px;
             font-weight: 700;
@@ -133,48 +146,17 @@
             align-items: center;
             justify-content: center;
             gap: 10px;
-            box-shadow: 0 4px 14px rgba(37,99,235,0.3);
+            box-shadow: 0 6px 20px rgba(37,99,235,0.35);
         }
-        .btn-submit:hover {
-            background: #1d4ed8;
+        .btn-download-docx:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(37,99,235,0.4);
+            box-shadow: 0 10px 28px rgba(37,99,235,0.45);
         }
-        .btn-submit:disabled {
+        .btn-download-docx:disabled {
             background: #94a3b8;
             cursor: not-allowed;
             transform: none;
             box-shadow: none;
-        }
-
-        .success-message {
-            display: none;
-            background: #dcfce7;
-            border: 1px solid #86efac;
-            color: #166534;
-            padding: 30px;
-            border-radius: 16px;
-            margin-top: 20px;
-            text-align: center;
-        }
-        .success-message.show { display: block; }
-        .success-message i {
-            font-size: 48px;
-            color: #16a34a;
-            margin-bottom: 12px;
-        }
-        .success-message h3 {
-            font-size: 22px;
-            margin-bottom: 8px;
-        }
-        .success-message p {
-            font-size: 15px;
-            margin-bottom: 15px;
-        }
-        .success-message .back-link {
-            color: #166534;
-            text-decoration: underline;
-            margin: 0;
         }
 
         .error-message {
@@ -190,22 +172,173 @@
         .error-message.show { display: block; }
         .error-message i { margin-right: 6px; }
 
-        .field-group-title {
-            font-size: 13px;
-            font-weight: 700;
+        /* ─── Инструкция по отправке ─── */
+        .howto-block {
+            margin-top: 30px;
+            background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
+            border: 1px solid #dbeafe;
+            border-radius: 20px;
+            padding: 30px 28px;
+        }
+        .howto-block h3 {
+            font-size: 20px;
+            font-weight: 800;
+            color: #1e3a8a;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .howto-block h3 i { color: #2563eb; }
+
+        .howto-steps {
+            list-style: none;
+            padding: 0;
+            margin: 0 0 20px 0;
+            counter-reset: step;
+        }
+        .howto-steps li {
+            counter-increment: step;
+            position: relative;
+            padding: 10px 0 10px 48px;
+            font-size: 15px;
+            color: #1e293b;
+            line-height: 1.55;
+            border-bottom: 1px solid rgba(37,99,235,0.08);
+        }
+        .howto-steps li:last-child { border-bottom: none; }
+        .howto-steps li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 8px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #2563eb;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            box-shadow: 0 3px 10px rgba(37,99,235,0.3);
+        }
+        .howto-steps li strong { color: #1d4ed8; }
+
+        .email-highlight {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: white;
+            border: 2px dashed #2563eb;
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+        .email-highlight .email-label {
+            font-size: 12px;
             text-transform: uppercase;
-            color: #8b5cf6;
+            color: #64748b;
+            font-weight: 700;
             letter-spacing: 0.5px;
-            margin-bottom: 10px;
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 1px dashed #e2e8f0;
+            margin-bottom: 3px;
+        }
+        .email-highlight .email-value {
+            font-family: 'Courier New', monospace;
+            font-size: 17px;
+            font-weight: 700;
+            color: #1e40af;
+            letter-spacing: 0.3px;
+            user-select: all;
+            word-break: break-all;
+        }
+        .email-highlight .copy-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: none;
+            background: #2563eb;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            white-space: nowrap;
+        }
+        .email-highlight .copy-btn:hover { background: #1d4ed8; }
+        .email-highlight .copy-btn.copied { background: #16a34a; }
+
+        .btn-open-mail {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border-radius: 40px;
+            border: 2px solid #2563eb;
+            background: white;
+            color: #2563eb;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 18px;
+            text-decoration: none;
+        }
+        .btn-open-mail:hover {
+            background: #2563eb;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37,99,235,0.3);
+        }
+        .btn-open-mail:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* ─── Успех ─── */
+        .success-block {
+            display: none;
+            background: #dcfce7;
+            border: 1px solid #86efac;
+            color: #166534;
+            padding: 24px 28px;
+            border-radius: 16px;
+            margin-top: 20px;
+        }
+        .success-block.show { display: block; }
+        .success-block .success-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .success-block .success-title i { font-size: 28px; color: #16a34a; }
+        .success-block .success-text {
+            font-size: 14px;
+            line-height: 1.55;
         }
 
         @media (max-width: 600px) {
             .container { padding: 25px 20px 30px; border-radius: 20px; }
             h1 { font-size: 24px; }
             .form-row { grid-template-columns: 1fr; }
+            .howto-block { padding: 22px 18px; }
+            .howto-block h3 { font-size: 17px; }
+            .howto-steps li { padding-left: 42px; font-size: 14px; }
+            .howto-steps li::before { width: 28px; height: 28px; font-size: 13px; }
+            .email-highlight { flex-direction: column; align-items: stretch; }
+            .email-highlight .copy-btn { justify-content: center; }
         }
     </style>
 </head>
@@ -215,25 +348,22 @@
 
     <h1><i class="fas fa-upload"></i> Предложить материал</h1>
     <p class="description">
-        Хотите поделиться полезной программой, книгой, музыкой, игрой или статьёй?
-        Заполните форму ниже. После проверки администратором материал появится на сайте.
+        Хотите поделиться полезной программой, книгой, музыкой, игрой или фильмом?
+        Заполните форму, скачайте заявку в формате DOCX и отправьте её на почту администратору.
+        После проверки материал появится на сайте.
     </p>
 
     <div class="info-block">
         <i class="fas fa-info-circle"></i>
         <div>
-            <strong>Обратите внимание:</strong> все поля со звёздочкой <span style="color:#dc2626;">*</span> обязательны.
+            <strong>Обратите внимание:</strong> все поля со звёздочкой
+            <span style="color:#dc2626;">*</span> обязательны.
             Ссылка должна вести на файл в публичном облаке (Яндекс.Диск, Google Drive и т.п.).
-            Скачивание материалов доступно только зарегистрированным пользователям.
+            Скачивание материалов доступно только зарегистрированным пользователям сайта.
         </div>
     </div>
 
     <form id="submitForm" name="submitForm" novalidate>
-        <!-- Honeypot для ботов: невидимое поле. Реальный пользователь его не заполнит. -->
-        <div style="position:absolute; left:-9999px; top:-9999px;" aria-hidden="true">
-            <label>Не заполняйте это поле: <input type="text" name="bot-field" tabindex="-1" autocomplete="off"></label>
-        </div>
-
         <div class="field-group-title">Контактные данные</div>
 
         <div class="form-row">
@@ -259,7 +389,6 @@
                 <option value="music">🎵 Музыка</option>
                 <option value="games">🎮 Игры</option>
                 <option value="movies">🎬 Фильмы</option>
-                <option value="articles">✍️ Статьи</option>
                 <option value="misc">📦 Разное</option>
             </select>
         </div>
@@ -355,8 +484,8 @@
             <textarea id="comment" name="comment" placeholder="Что-то ещё, что мы должны знать..."></textarea>
         </div>
 
-        <button type="submit" class="btn-submit" id="submitBtn">
-            <i class="fas fa-paper-plane"></i> Отправить на модерацию
+        <button type="submit" class="btn-download-docx" id="downloadDocxBtn">
+            <i class="fas fa-file-word"></i> Скачать заявку в DOCX
         </button>
 
         <div id="errorMessage" class="error-message">
@@ -364,11 +493,57 @@
         </div>
     </form>
 
-    <div class="success-message" id="successMessage">
-        <i class="fas fa-check-circle"></i>
-        <h3>Спасибо за заявку!</h3>
-        <p>Ваш материал отправлен на модерацию. Мы свяжемся с вами по указанному email.</p>
-        <a href="index.html" class="back-link">← Вернуться на главную</a>
+    <div class="success-block" id="successBlock">
+        <div class="success-title">
+            <i class="fas fa-check-circle"></i>
+            <span>Файл заявки успешно скачан!</span>
+        </div>
+        <div class="success-text">
+            Откройте скачанный файл и проверьте, что все данные заполнены верно.
+            Теперь отправьте его на почту администратору — следуйте инструкции ниже.
+        </div>
+    </div>
+
+    <!-- ─── Пошаговая инструкция по отправке ─── -->
+    <div class="howto-block">
+        <h3><i class="fas fa-paper-plane"></i> Как отправить заявку на почту</h3>
+
+        <ol class="howto-steps">
+            <li>
+                <strong>Заполните форму выше</strong> и нажмите кнопку
+                «Скачать заявку в DOCX» — файл сохранится на ваше устройство.
+            </li>
+            <li>
+                <strong>Откройте свою почту</strong> — подойдёт любой сервис:
+                Яндекс.Почта, Mail.ru, Gmail и т.д.
+            </li>
+            <li>
+                <strong>Создайте новое письмо</strong> и укажите адрес получателя,
+                скопированный ниже.
+            </li>
+            <li>
+                <strong>Прикрепите скачанный файл</strong> к письму
+                (кнопка «Прикрепить файл» / иконка скрепки).
+            </li>
+            <li>
+                <strong>Нажмите «Отправить»</strong> — администратор рассмотрит вашу
+                заявку в порядке очереди и свяжется с вами по указанному email.
+            </li>
+        </ol>
+
+        <div class="email-highlight">
+            <div>
+                <div class="email-label">Адрес получателя</div>
+                <div class="email-value" id="emailToCopy">Macsimenko@yandex.ru</div>
+            </div>
+            <button type="button" class="copy-btn" id="copyEmailBtn">
+                <i class="fas fa-copy"></i> Скопировать
+            </button>
+        </div>
+
+        <a href="#" class="btn-open-mail" id="openMailBtn">
+            <i class="fas fa-envelope-open-text"></i> Открыть почтовый клиент
+        </a>
     </div>
 
     <footer style="text-align:center; font-size:13px; color:#94a3b8; margin-top:30px; padding-top:20px; border-top:1px solid #eef2ff;">
@@ -390,14 +565,199 @@
         }
     });
 
-    // ─── Отправка формы через Supabase Edge Function ───
+    // ─── Справочники для DOCX ───
+    const CATEGORY_LABELS = {
+        programs: 'Программы',
+        books: 'Книги',
+        music: 'Музыка',
+        games: 'Игры',
+        movies: 'Фильмы',
+        misc: 'Разное',
+    };
+
+    const FIELD_LABELS = {
+        name: 'Имя отправителя',
+        email: 'Email отправителя',
+        category: 'Категория',
+        title: 'Название материала',
+        description: 'Описание',
+        download_link: 'Ссылка на файл',
+        author: 'Автор',
+        format: 'Формат',
+        version: 'Версия',
+        size: 'Размер',
+        artist: 'Исполнитель',
+        music_year: 'Год (музыка)',
+        platform: 'Платформа',
+        game_year: 'Год (игра)',
+        movie_year: 'Год (фильм)',
+        movie_format: 'Формат (фильм)',
+        comment: 'Дополнительная информация',
+    };
+
+    // ─── Генерация DOCX ───
+    async function buildDocxBlob(data) {
+        const docx = window.docx;
+        if (!docx) {
+            throw new Error('Библиотека docx.js не загружена. Обновите страницу.');
+        }
+        const {
+            Document, Packer, Paragraph, TextRun, AlignmentType,
+        } = docx;
+
+        const children = [];
+
+        // Заголовок
+        children.push(new Paragraph({
+            children: [new TextRun({
+                text: 'ЗАЯВКА НА РАЗМЕЩЕНИЕ МАТЕРИАЛА',
+                bold: true,
+                size: 32,
+                color: '2563EB',
+            })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 120 },
+        }));
+
+        children.push(new Paragraph({
+            children: [new TextRun({
+                text: `Отправлено: ${new Date().toLocaleString('ru-RU')}`,
+                italics: true,
+                size: 20,
+                color: '666666',
+            })],
+            alignment: AlignmentType.CENTER,
+            spacing: { after: 400 },
+        }));
+
+        // Раздел «Контактные данные»
+        children.push(new Paragraph({
+            children: [new TextRun({
+                text: 'Контактные данные',
+                bold: true,
+                size: 26,
+                color: '8B5CF6',
+            })],
+            spacing: { before: 200, after: 160 },
+        }));
+
+        children.push(fieldParagraph(data.name, data.email ? 'Имя отправителя' : 'Имя отправителя', docx));
+        children.push(fieldParagraph(data.email, 'Email отправителя', docx));
+
+        // Раздел «Материал»
+        children.push(new Paragraph({
+            children: [new TextRun({
+                text: 'Материал',
+                bold: true,
+                size: 26,
+                color: '8B5CF6',
+            })],
+            spacing: { before: 320, after: 160 },
+        }));
+
+        const categoryLabel = CATEGORY_LABELS[data.category] || data.category || '—';
+        children.push(fieldParagraph(categoryLabel, 'Категория', docx));
+        children.push(fieldParagraph(data.title, 'Название материала', docx));
+        children.push(fieldParagraph(data.description, 'Описание', docx));
+        children.push(fieldParagraph(data.download_link, 'Ссылка на файл', docx));
+
+        // Дополнительные поля категории (если заполнены)
+        const extraFields = [];
+        if (data.author) extraFields.push(['author', data.author]);
+        if (data.format) extraFields.push(['format', data.format]);
+        if (data.version) extraFields.push(['version', data.version]);
+        if (data.size) extraFields.push(['size', data.size]);
+        if (data.artist) extraFields.push(['artist', data.artist]);
+        if (data.music_year) extraFields.push(['music_year', data.music_year]);
+        if (data.platform) extraFields.push(['platform', data.platform]);
+        if (data.game_year) extraFields.push(['game_year', data.game_year]);
+        if (data.movie_year) extraFields.push(['movie_year', data.movie_year]);
+        if (data.movie_format) extraFields.push(['movie_format', data.movie_format]);
+
+        if (extraFields.length > 0) {
+            children.push(new Paragraph({
+                children: [new TextRun({
+                    text: 'Дополнительно о материале',
+                    bold: true,
+                    size: 26,
+                    color: '8B5CF6',
+                })],
+                spacing: { before: 320, after: 160 },
+            }));
+            for (const [key, value] of extraFields) {
+                children.push(fieldParagraph(value, FIELD_LABELS[key] || key, docx));
+            }
+        }
+
+        // Комментарий
+        if (data.comment && data.comment.trim()) {
+            children.push(new Paragraph({
+                children: [new TextRun({
+                    text: 'Дополнительная информация',
+                    bold: true,
+                    size: 26,
+                    color: '8B5CF6',
+                })],
+                spacing: { before: 320, after: 160 },
+            }));
+            children.push(fieldParagraph(data.comment, 'Комментарий отправителя', docx));
+        }
+
+        // Подпись
+        children.push(new Paragraph({
+            children: [new TextRun({
+                text: '— Отправлено через форму на сайте MyFiles —',
+                italics: true,
+                size: 18,
+                color: '999999',
+            })],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 600 },
+        }));
+
+        const doc = new Document({
+            creator: 'MyFiles',
+            title: `Заявка — ${data.title}`,
+            description: 'Заявка на размещение материала',
+            sections: [{ children }],
+        });
+
+        return await Packer.toBlob(doc);
+    }
+
+    // Вспомогательная функция: параграф «Метка: значение»
+    function fieldParagraph(value, label, docx) {
+        const { Paragraph, TextRun } = docx;
+        return new Paragraph({
+            children: [
+                new TextRun({ text: `${label}: `, bold: true }),
+                new TextRun({ text: String(value || '—') }),
+            ],
+            spacing: { after: 120 },
+        });
+    }
+
+    // ─── Санитайзер имени файла ───
+    function safeFileName(str) {
+        return String(str || 'заявка')
+            .replace(/[\\/:*?"<>|]/g, '')
+            .replace(/\s+/g, '-')
+            .slice(0, 60)
+            .trim() || 'заявка';
+    }
+
+    // ─── Основная логика формы ───
     (function() {
         const form = document.getElementById('submitForm');
-        const submitBtn = document.getElementById('submitBtn');
-        const successMessage = document.getElementById('successMessage');
+        const submitBtn = document.getElementById('downloadDocxBtn');
+        const successBlock = document.getElementById('successBlock');
         const errorBox = document.getElementById('errorMessage');
         const errorText = document.getElementById('errorText');
+        const copyBtn = document.getElementById('copyEmailBtn');
+        const openMailBtn = document.getElementById('openMailBtn');
         if (!form) return;
+
+        let lastDownloadedData = null;
 
         function showError(msg) {
             errorText.textContent = msg;
@@ -408,71 +768,119 @@
             errorBox.classList.remove('show');
         }
 
-        function showSuccess() {
-            form.style.display = 'none';
-            document.querySelector('.info-block').style.display = 'none';
-            successMessage.classList.add('show');
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        // ─── Копирование email ───
+        copyBtn.addEventListener('click', async () => {
+            const value = document.getElementById('emailToCopy').textContent.trim();
+            try {
+                await navigator.clipboard.writeText(value);
+                copyBtn.classList.add('copied');
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Скопировано';
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Скопировать';
+                }, 2000);
+            } catch (e) {
+                // Fallback для старых браузеров
+                const ta = document.createElement('textarea');
+                ta.value = value;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                try { document.execCommand('copy'); } catch (_) {}
+                document.body.removeChild(ta);
+                copyBtn.classList.add('copied');
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Скопировано';
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Скопировать';
+                }, 2000);
+            }
+        });
 
+        // ─── Открытие почтового клиента ───
+        openMailBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const data = lastDownloadedData;
+            if (!data) {
+                showError('Сначала скачайте заявку в DOCX, потом откройте почтовый клиент.');
+                return;
+            }
+            const subject = encodeURIComponent(`Заявка на материал: ${data.title || 'без названия'}`);
+            const body = encodeURIComponent(
+                `Здравствуйте!\n\n` +
+                `Отправляю заявку на размещение материала на сайте MyFiles.\n` +
+                `Файл заявки прикреплён к письму.\n\n` +
+                `Краткие данные:\n` +
+                `• Категория: ${CATEGORY_LABELS[data.category] || data.category || '—'}\n` +
+                `• Название: ${data.title || '—'}\n` +
+                `• Ссылка на файл: ${data.download_link || '—'}\n\n` +
+                `С уважением,\n${data.name || 'отправитель'}`
+            );
+            const mailto = `mailto:Macsimenko@yandex.ru?subject=${subject}&body=${body}`;
+            window.location.href = mailto;
+        });
+
+        // ─── Отправка формы (генерация DOCX) ───
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             hideError();
 
-            // Простая клиентская валидация
-            const required = ['name', 'email', 'category', 'title', 'description', 'download_link'];
-            for (const field of required) {
-                const el = form.elements[field];
-                if (!el || !String(el.value).trim()) {
-                    showError('Пожалуйста, заполните все обязательные поля.');
-                    return;
-                }
+            // Собираем данные
+            const formData = new FormData(form);
+            const data = {};
+            for (const [k, v] of formData.entries()) {
+                if (typeof v === 'string') data[k] = v.trim();
             }
-            const email = form.elements['email'].value.trim();
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showError('Пожалуйста, введите корректный email.');
+
+            // Валидация
+            const required = ['name', 'email', 'category', 'title', 'description', 'download_link'];
+            const missing = [];
+            for (const f of required) {
+                if (!data[f]) missing.push(FIELD_LABELS[f] || f);
+            }
+            if (missing.length > 0) {
+                showError('Заполните обязательные поля: ' + missing.join(', '));
+                return;
+            }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+                showError('Введите корректный email (например, ivan@example.com).');
+                return;
+            }
+            if (!/^https?:\/\//i.test(data.download_link)) {
+                showError('Ссылка на файл должна начинаться с http:// или https://');
                 return;
             }
 
             submitBtn.disabled = true;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
-
-            // Собираем данные формы (включая honeypot)
-            const formData = new FormData(form);
-            const payload = {};
-            for (const [k, v] of formData.entries()) {
-                if (typeof v === 'string') payload[k] = v;
-            }
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Генерация файла...';
 
             try {
-                const SUPABASE_URL = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_URL)
-                    || 'https://rmoonebbvpmvthvpcmpt.supabase.co';
-                const SUPABASE_ANON_KEY = (window.APP_CONFIG && window.APP_CONFIG.SUPABASE_ANON_KEY) || '';
+                const blob = await buildDocxBlob(data);
+                const fileName = `Заявка-MyFiles-${safeFileName(data.title)}.docx`;
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 4000);
 
-                const resp = await fetch(`${SUPABASE_URL}/functions/v1/submit-form`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                    },
-                    body: JSON.stringify(payload),
-                });
+                lastDownloadedData = data;
 
-                const result = await resp.json().catch(() => ({}));
+                // Показываем success-блок
+                successBlock.classList.add('show');
+                successBlock.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-                if (resp.ok && result.ok) {
-                    showSuccess();
-                } else {
-                    showError(result.error || 'Не удалось отправить заявку. Попробуйте позже.');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Отправить на модерацию';
-                }
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-file-word"></i> Скачать заявку снова';
             } catch (err) {
                 console.error(err);
-                showError('Ошибка сети. Проверьте соединение и попробуйте снова.');
+                showError('Не удалось создать файл: ' + (err.message || 'неизвестная ошибка'));
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Отправить на модерацию';
+                submitBtn.innerHTML = '<i class="fas fa-file-word"></i> Скачать заявку в DOCX';
             }
         });
     })();
