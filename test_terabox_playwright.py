@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Улучшенный тест TeraBox через Playwright.
-- Устанавливает cookie для всех доменов TeraBox
-- Выводит состояние авторизации
-- Извлекает список файлов из DOM
-- Кликает по папкам и показывает результат
+Финальный тест: получаем содержимое расшаренных папок TeraBox
+через fetch прямо со страницы, используя все токены (jsToken, bdstoken, pcftoken).
 """
 
 import os
 import sys
+import json
 import time
 import traceback
 
@@ -25,7 +23,6 @@ URLS = {
     "Программы":  "https://1024terabox.com/s/1y91_O-V1aszt69FeCBBcxA",
 }
 
-# ─── Домены, для которых устанавливаем cookie ───
 COOKIE_DOMAINS = [
     ".terabox.app",
     ".1024tera.com",
@@ -35,125 +32,137 @@ COOKIE_DOMAINS = [
 ]
 
 
-def dump_page_info(page, label):
-    """Собирает и печатает состояние страницы."""
-    print(f"\n  ── Состояние страницы ──")
+def fetch_share_list(page, surl, api_domain="https://www.1024tera.com"):
+    """
+    Выполняет fetch к /share/list прямо из браузера,
+    используя window.jsToken, window.templateData.bdstoken и cookie.
+    """
+    js_code = """
+    async ({surl, apiDomain}) => {
+        try {
+            const jsToken = window.jsToken || '';
+            const templateData = window.templateData || {};
+            const bdstoken = templateData.bdstoken || '';
+            const pcftoken = templateData.pcftoken || '';
+            const uk = templateData.uk || '';
 
-    # Title
-    try:
-        print(f"  Title: {page.title()}")
-    except Exception:
-        pass
+            if (!jsToken) {
+                return {error: 'jsToken не найден в window'};
+            }
 
-    # window.jsToken и другие глобальные
-    try:
-        state = page.evaluate("""() => ({
-            jsToken: window.jsToken || null,
-            bdstoken: window.bdstoken || null,
-            isLogin: window.isLogin || null,
-            hasUser: !!document.querySelector('.user-avatar, [class*="avatar"]'),
-            cookieStr: document.cookie,
-            url: window.location.href,
-        })""")
-        print(f"  URL: {state.get('url')}")
-        print(f"  window.jsToken: {str(state.get('jsToken'))[:60]}")
-        print(f"  window.bdstoken: {str(state.get('bdstoken'))[:60]}")
-        print(f"  isLogin: {state.get('isLogin')}")
-        print(f"  document.cookie: {str(state.get('cookieStr'))[:200]}")
+            const params = new URLSearchParams({
+                shorturl: surl,
+                root: '1',
+                web: '1',
+                app_id: '250528',
+                jsToken: jsToken,
+                page: '1',
+                num: '1000',
+            });
+            if (bdstoken) params.set('bdstoken', bdstoken);
+            if (pcftoken) params.set('pcftoken', pcftoken);
+            if (uk) params.set('uk', uk);
 
-        # Ищем кнопку "Войти"
-        login_btn = page.query_selector('text=Войти')
-        print(f"  Кнопка 'Войти' на странице: {'ДА (не авторизованы)' if login_btn else 'нет (авторизованы)'}")
-    except Exception as e:
-        print(f"  Ошибка сбора состояния: {e}")
+            const apiUrl = apiDomain + '/share/list?' + params.toString();
 
-    # Ищем элементы списка файлов
-    print(f"\n  ── Поиск элементов списка файлов ──")
-
-    # Смотрим, какие классы есть на странице
-    selectors_to_try = [
-        '.file-item',
-        '.list-item',
-        '.wp-sdk-file-list-item',
-        '[class*="file-list"]',
-        '[class*="file-item"]',
-        '[class*="wp-sdk"]',
-        'tr[data-id]',
-        'li[data-id]',
-        '[class*="item-row"]',
-    ]
-    for sel in selectors_to_try:
-        try:
-            items = page.query_selector_all(sel)
-            if items:
-                print(f"  '{sel}' → {len(items)} элементов")
-        except Exception:
-            pass
-
-    # Более широкий поиск — все элементы с data-атрибутами fs_id или file
-    try:
-        wide = page.query_selector_all('[data-id], [data-fs-id], [data-fsid]')
-        print(f"  Элементов с data-id/fs-id: {len(wide)}")
-        for i, el in enumerate(wide[:10]):
-            attrs = page.evaluate("el => Object.fromEntries([...el.attributes].map(a => [a.name, a.value]))", el)
-            text = (el.inner_text() or "").strip()[:60]
-            print(f"    [{i}] {text!r} attrs={attrs}")
-    except Exception as e:
-        print(f"  Ошибка: {e}")
-
-    # Выводим фрагмент HTML — ищем блок со списком файлов
-    try:
-        html = page.content()
-        # Ищем, где может быть контейнер списка
-        for marker in ("wp-sdk-file-list", "file-list", "share-list", "list-container"):
-            if marker in html:
-                idx = html.find(marker)
-                print(f"\n  Найден маркер '{marker}' на позиции {idx}")
-                print(f"  Контекст: ...{html[max(0, idx-100):idx+400]}...")
-                break
-    except Exception as e:
-        print(f"  Ошибка поиска в HTML: {e}")
+            const resp = await fetch(apiUrl, {
+                method: 'GET',
+                credentials: 'include',
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+            });
+            const text = await resp.text();
+            let json = null;
+            try { json = JSON.parse(text); } catch (e) {
+                return {
+                    error: 'not json',
+                    status: resp.status,
+                    text: text.slice(0, 500),
+                    tokens: {jsToken, bdstoken, pcftoken, uk},
+                };
+            }
+            return {
+                status: resp.status,
+                data: json,
+                tokens: {
+                    jsToken: jsToken.slice(0, 30) + '...',
+                    bdstoken: bdstoken.slice(0, 20) + '...',
+                    pcftoken: pcftoken.slice(0, 20) + '...',
+                    uk: uk,
+                },
+                apiUrl: apiUrl.slice(0, 200),
+            };
+        } catch (e) {
+            return {error: 'Exception: ' + String(e)};
+        }
+    }
+    """
+    return page.evaluate(js_code, {"surl": surl, "apiDomain": api_domain})
 
 
-def try_click_and_read(page, label):
-    """Пробует кликнуть по первой папке и посмотреть, что появится."""
-    print(f"\n  ── Попытка кликнуть на первую папку ──")
+def extract_surl(url):
+    """surl без ведущей 1."""
+    import re
+    m = re.search(r'/s/([A-Za-z0-9_\-]+)', url)
+    if not m:
+        return None
+    s = m.group(1)
+    if s.startswith("1") and len(s) > 20:
+        return s[1:]
+    return s
 
-    # Ищем кликабельные элементы
-    candidates = [
-        'text=Программы',
-        'text=Для сайта',
-        '[class*="folder"]',
-        '[class*="dir"]',
-    ]
-    clicked = False
-    for sel in candidates:
-        try:
-            els = page.query_selector_all(sel)
-            if els:
-                print(f"  Найдено '{sel}': {len(els)} элементов")
-                # Пробуем кликнуть по первому
-                try:
-                    els[0].click()
-                    page.wait_for_timeout(3000)
-                    print(f"  ✓ Клик выполнен, текущий URL: {page.url}")
-                    clicked = True
-                    break
-                except Exception as e:
-                    print(f"  ✗ Ошибка клика: {e}")
-        except Exception:
-            pass
 
-    if not clicked:
-        print(f"  Не удалось кликнуть ни по одному элементу")
+def pretty_print_result(result, label):
+    """Печатает результат в читаемом виде."""
+    print(f"\n  ── Результат для «{label}» ──")
+
+    if "error" in result:
+        print(f"  ✗ Ошибка: {result['error']}")
+        if "text" in result:
+            print(f"  Ответ (первые 500 символов): {result['text']}")
+        if "tokens" in result:
+            print(f"  Токены: {result['tokens']}")
+        return
+
+    print(f"  HTTP {result.get('status')}")
+    if "tokens" in result:
+        print(f"  Токены: {result['tokens']}")
+
+    data = result.get("data", {})
+    errno = data.get("errno")
+    errmsg = data.get("errmsg", "")
+    print(f"  errno: {errno} {('(' + errmsg + ')') if errmsg else ''}")
+
+    if errno != 0:
+        print(f"  Полный ответ: {json.dumps(data, ensure_ascii=False)[:500]}")
+        return
+
+    flist = data.get("list") or []
+    print(f"  📂 Элементов: {len(flist)}")
+
+    for i, item in enumerate(flist[:50]):
+        if not isinstance(item, dict):
+            print(f"    [{i}] (не dict): {item}")
+            continue
+        name = item.get("server_filename") or item.get("filename") or "?"
+        isdir = item.get("isdir") or 0
+        size = item.get("size") or 0
+        fs_id = item.get("fs_id") or 0
+        path = item.get("path") or ""
+        kind = "DIR " if str(isdir) == "1" else "FILE"
+        size_str = f"{size} b" if size else "—"
+        print(f"    [{i:>2}] [{kind}] {name:<40} {size_str:>12}  fs_id={fs_id}  path={path}")
+
+    if len(flist) > 50:
+        print(f"    ... и ещё {len(flist) - 50}")
 
 
 def main():
     print("=" * 70)
-    print("TEST TERABOX — версия 2 (с правильными cookie)")
+    print("ФИНАЛЬНЫЙ ТЕСТ TERABOX через Playwright + fetch")
     print("=" * 70)
-    print(f"TERABOX_COOKIE: {COOKIE[:20]}... (длина {len(COOKIE)})")
-    print(f"Будет установлен для доменов: {COOKIE_DOMAINS}")
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -165,7 +174,7 @@ def main():
             viewport={"width": 1366, "height": 900},
         )
 
-        # Устанавливаем cookie для ВСЕХ доменов
+        # Устанавливаем cookie для всех доменов
         for domain in COOKIE_DOMAINS:
             try:
                 context.add_cookies([{
@@ -176,9 +185,8 @@ def main():
                     "secure": True,
                     "sameSite": "None",
                 }])
-                print(f"  Cookie установлен для {domain}")
             except Exception as e:
-                print(f"  [!] Не удалось установить cookie для {domain}: {e}")
+                print(f"  [!] Cookie для {domain}: {e}")
 
         for label, url in URLS.items():
             print(f"\n{'=' * 70}")
@@ -188,31 +196,39 @@ def main():
 
             page = context.new_page()
             try:
-                # Открываем
+                # 1. Открываем share-страницу
                 t0 = time.time()
                 page.goto(url, wait_until="domcontentloaded", timeout=60000)
                 print(f"Страница загружена за {round(time.time() - t0, 2)} сек")
                 print(f"Финальный URL: {page.url}")
 
-                # Ждём побольше, чтобы JS успел подгрузить данные
-                page.wait_for_timeout(7000)
+                # 2. Ждём, чтобы JS полностью выполнился
+                page.wait_for_timeout(5000)
 
-                # Анализируем страницу
-                dump_page_info(page, label)
+                # 3. Проверяем, что мы авторизованы
+                state = page.evaluate("""() => ({
+                    jsToken: (window.jsToken || '').slice(0, 30) + '...',
+                    bdstoken: (window.templateData?.bdstoken || '').slice(0, 20) + '...',
+                    pcftoken: (window.templateData?.pcftoken || '').slice(0, 20) + '...',
+                    uk: window.templateData?.uk || null,
+                    username: document.querySelector('.card-username')?.textContent || null,
+                })""")
+                print(f"Состояние: {state}")
 
-                # Пробуем кликнуть на папку
-                try_click_and_read(page, label)
+                # 4. Извлекаем surl
+                surl = extract_surl(url)
+                print(f"surl: {surl}")
 
-                # Скриншот
-                screenshot_path = f"/tmp/{label.replace(' ', '_')}_v2.png"
-                page.screenshot(path=screenshot_path, full_page=True)
-                print(f"\n  Скриншот: {screenshot_path}")
+                # 5. Пробуем fetch с разных доменов
+                for api_domain in ["https://www.1024tera.com", "https://www.terabox.app"]:
+                    print(f"\n  → Запрос к {api_domain}/share/list ...")
+                    result = fetch_share_list(page, surl, api_domain)
+                    pretty_print_result(result, f"{label} ({api_domain})")
 
-                # Сохраняем HTML
-                html_path = f"/tmp/{label.replace(' ', '_')}_v2.html"
-                with open(html_path, "w", encoding="utf-8") as f:
-                    f.write(page.content())
-                print(f"  HTML: {html_path}")
+                    # Если получили errno=0, дальше искать не нужно
+                    if result.get("data", {}).get("errno") == 0:
+                        print(f"\n  ✅ Работает через {api_domain}")
+                        break
 
             except Exception as e:
                 print(f"✗ Ошибка: {e}")
@@ -223,7 +239,7 @@ def main():
         browser.close()
 
     print("\n" + "=" * 70)
-    print("ТЕСТ ЗАВЕРШЁН")
+    print("ФИНАЛЬНЫЙ ТЕСТ ЗАВЕРШЁН")
     print("=" * 70)
 
 
