@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Финальный тест: получаем содержимое папки "Программы" через /share/list
-с параметром dir. Находим 1_Software.txt и belico.dll.
+Перехватываем все XHR-запросы, которые делает Vue-приложение TeraBox,
+когда пользователь кликает по папке. Это покажет правильный endpoint
+и параметры для получения содержимого.
 """
 
 import os
@@ -18,7 +19,6 @@ if not COOKIE:
     print("✗ TERABOX_COOKIE не задан")
     sys.exit(1)
 
-# Ссылка на папку "Программы"
 PROGRAMS_URL = "https://1024terabox.com/s/1y91_O-V1aszt69FeCBBcxA"
 
 COOKIE_DOMAINS = [
@@ -30,104 +30,9 @@ COOKIE_DOMAINS = [
 ]
 
 
-def fetch_share_list(page, surl, dir_path=None, fs_id=None):
-    """
-    Выполняет fetch к /share/list через Playwright.
-    dir_path — путь внутри ссылки (например, "/Программы").
-    fs_id    — ID папки (альтернатива dir_path).
-    """
-    js_code = """
-    async ({surl, dirPath, fsId}) => {
-        try {
-            const jsToken = window.jsToken || '';
-            const templateData = window.templateData || {};
-            const bdstoken = templateData.bdstoken || '';
-            const pcftoken = templateData.pcftoken || '';
-            const uk = templateData.uk || '';
-
-            if (!jsToken) return {error: 'jsToken missing'};
-
-            const params = new URLSearchParams({
-                shorturl: surl,
-                root: '1',
-                web: '1',
-                app_id: '250528',
-                jsToken: jsToken,
-                page: '1',
-                num: '1000',
-            });
-            if (bdstoken) params.set('bdstoken', bdstoken);
-            if (pcftoken) params.set('pcftoken', pcftoken);
-            if (uk) params.set('uk', uk);
-            if (dirPath) params.set('dir', dirPath);
-            if (fsId) params.set('fs_id', String(fsId));
-
-            const apiUrl = 'https://www.terabox.app/share/list?' + params.toString();
-
-            const resp = await fetch(apiUrl, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'Accept': 'application/json, text/plain, */*',
-                    'X-Requested-With': 'XMLHttpRequest',
-                },
-            });
-            const text = await resp.text();
-            let json = null;
-            try { json = JSON.parse(text); } catch (e) {
-                return {error: 'not json', status: resp.status, text: text.slice(0, 300)};
-            }
-            return {status: resp.status, data: json};
-        } catch (e) {
-            return {error: 'Exception: ' + String(e)};
-        }
-    }
-    """
-    return page.evaluate(js_code, {
-        "surl": surl,
-        "dirPath": dir_path,
-        "fsId": fs_id,
-    })
-
-
-def extract_surl(url):
-    import re
-    m = re.search(r'/s/([A-Za-z0-9_\-]+)', url)
-    if not m:
-        return None
-    s = m.group(1)
-    if s.startswith("1") and len(s) > 20:
-        return s[1:]
-    return s
-
-
-def print_list(data, indent="  "):
-    """Печатает список элементов."""
-    errno = data.get("errno")
-    errmsg = data.get("errmsg", "")
-    print(f"{indent}errno: {errno} {('(' + errmsg + ')') if errmsg else ''}")
-
-    if errno != 0:
-        print(f"{indent}Ответ: {json.dumps(data, ensure_ascii=False)[:400]}")
-        return []
-
-    flist = data.get("list") or []
-    print(f"{indent}📂 Элементов: {len(flist)}")
-    for i, item in enumerate(flist[:60]):
-        name = item.get("server_filename") or "?"
-        isdir = item.get("isdir") or 0
-        size = item.get("size") or 0
-        fs_id = item.get("fs_id") or 0
-        path = item.get("path") or ""
-        kind = "DIR " if str(isdir) == "1" else "FILE"
-        size_str = f"{size} b" if size else "—"
-        print(f"{indent}  [{i:>2}] [{kind}] {name:<40} {size_str:>12}  fs_id={fs_id}  path={path}")
-    return flist
-
-
 def main():
     print("=" * 70)
-    print("ТЕСТ: содержимое папки «Программы» и её подпапок")
+    print("ПЕРЕХВАТ XHR-ЗАПРОСОВ TERABOX")
     print("=" * 70)
 
     with sync_playwright() as p:
@@ -150,123 +55,149 @@ def main():
 
         page = context.new_page()
 
-        # 1. Открываем страницу "Программы"
+        # ─── Перехватываем все запросы и ответы ───
+        captured = []
+
+        def on_request(req):
+            """Фиксируем все XHR/fetch-запросы."""
+            try:
+                rtype = req.resource_type
+                if rtype in ("xhr", "fetch"):
+                    captured.append({
+                        "kind": "request",
+                        "method": req.method,
+                        "url": req.url,
+                        "post_data": req.post_data,
+                        "headers": req.headers,
+                    })
+            except Exception:
+                pass
+
+        def on_response(resp):
+            """Фиксируем ответы на XHR/fetch."""
+            try:
+                req = resp.request
+                if req.resource_type in ("xhr", "fetch"):
+                    body_text = ""
+                    try:
+                        # Пробуем взять JSON
+                        body_text = resp.text()[:2000]
+                    except Exception:
+                        pass
+                    captured.append({
+                        "kind": "response",
+                        "url": resp.url,
+                        "status": resp.status,
+                        "content_type": resp.headers.get("content-type", ""),
+                        "body_preview": body_text,
+                    })
+            except Exception:
+                pass
+
+        page.on("request", on_request)
+        page.on("response", on_response)
+
+        # ─── 1. Открываем страницу ───
         print(f"\nОткрываем: {PROGRAMS_URL}")
         page.goto(PROGRAMS_URL, wait_until="domcontentloaded", timeout=60000)
         page.wait_for_timeout(5000)
         print(f"Финальный URL: {page.url}")
 
-        surl = extract_surl(PROGRAMS_URL)
-        print(f"surl: {surl}")
+        # Очищаем список — оставим только то, что пойдёт после клика
+        captured.clear()
 
-        # 2. Запрос к корню ссылки (без dir)
+        # ─── 2. Кликаем по папке "Программы" в интерфейсе ───
         print("\n" + "─" * 70)
-        print("ШАГ 1: Запрос без dir (корень ссылки)")
-        print("─" * 70)
-        r1 = fetch_share_list(page, surl)
-        if "error" in r1:
-            print(f"  ✗ Ошибка: {r1['error']}")
-            browser.close()
-            return
-        list1 = print_list(r1.get("data", {}))
-
-        # Запоминаем path и fs_id папки "Программы"
-        program_folder_path = None
-        program_folder_fs_id = None
-        if list1:
-            for item in list1:
-                if item.get("server_filename") == "Программы":
-                    program_folder_path = item.get("path")
-                    program_folder_fs_id = item.get("fs_id")
-                    break
-
-        print(f"\nНайдена папка Программы:")
-        print(f"  path:  {program_folder_path}")
-        print(f"  fs_id: {program_folder_fs_id}")
-
-        # 3. Пробуем разные варианты dir
-        print("\n" + "─" * 70)
-        print("ШАГ 2: Пробуем получить содержимое папки Программы")
+        print("ШАГ 1: Клик по папке «Программы» в интерфейсе")
         print("─" * 70)
 
-        variants = [
-            ("dir=/Программы",            {"dir_path": "/Программы"}),
-            ("dir=/Для сайта/Программы",  {"dir_path": "/Для сайта/Программы"}),
-            ("dir=Программы",             {"dir_path": "Программы"}),
-            (f"dir=fs_id({program_folder_fs_id})", {"fs_id": program_folder_fs_id}),
-            ("dir=/ (корень)",             {"dir_path": "/"}),
-        ]
+        # Ищем элементы с названием "Программы"
+        candidates = page.query_selector_all('text=Программы')
+        print(f"Найдено элементов с текстом 'Программы': {len(candidates)}")
 
-        working_variant = None
-        working_data = None
-
-        for name, kwargs in variants:
-            print(f"\n  Пробуем: {name}")
-            r = fetch_share_list(page, surl, **kwargs)
-            if "error" in r:
-                print(f"    ✗ {r['error']}")
-                continue
-            data = r.get("data", {})
-            errno = data.get("errno")
-            flist = data.get("list") or []
-            if errno == 0 and len(flist) > 1:
-                print(f"    ✅ РАБОТАЕТ! Элементов: {len(flist)}")
-                print_list(data, indent="      ")
-                working_variant = name
-                working_data = data
+        clicked = False
+        for el in candidates:
+            try:
+                # Пропускаем breadcrumb и левый сайдбар, кликаем только по основной папке
+                # Пробуем кликнуть по 2-му (обычно это папка в основном окне)
+                el.click()
+                page.wait_for_timeout(3000)
+                print(f"✓ Клик выполнен по элементу")
+                clicked = True
                 break
-            elif errno == 0:
-                print(f"    ⚠ errno=0, но элементов: {len(flist)} (похоже на корень ссылки)")
-            else:
-                errmsg = data.get("errmsg", "")
-                print(f"    ⚠ errno={errno} ({errmsg})")
+            except Exception as e:
+                print(f"  Ошибка клика: {e}")
 
-        if not working_variant:
-            print("\n❌ Ни один вариант не дал содержимое папки.")
-            print("Нужна дальнейшая диагностика.")
-            browser.close()
-            return
+        if not clicked:
+            print("✗ Не удалось кликнуть по папке")
 
-        print(f"\n✅ РАБОЧИЙ ВАРИАНТ: {working_variant}")
+        # Даём время на выполнение всех запросов
+        page.wait_for_timeout(4000)
 
-        # 4. Ищем 1_Software.txt и belico.dll
+        # ─── 3. Анализируем собранные запросы ───
         print("\n" + "─" * 70)
-        print("ШАГ 3: Анализ содержимого папки Программы")
+        print("ШАГ 2: Собранные XHR/fetch-запросы и ответы")
         print("─" * 70)
 
-        flist = working_data.get("list") or []
-        program_folders = []  # подпапки
-        desc_file = None      # 1_Software.txt
-        dll_file = None       # belico.dll
+        # Фильтруем — интересуют только запросы к API TeraBox
+        api_requests = [c for c in captured
+                        if c["kind"] == "request"
+                        and "/share/" in c.get("url", "")
+                        and "/static/" not in c.get("url", "")]
+        api_responses = [c for c in captured
+                         if c["kind"] == "response"
+                         and "/share/" in c.get("url", "")
+                         and "/static/" not in c.get("url", "")]
 
-        for item in flist:
-            name = item.get("server_filename") or ""
-            isdir = str(item.get("isdir") or 0) == "1"
-            if isdir:
-                program_folders.append(item)
-            elif name == "1_Software.txt":
-                desc_file = item
-            elif name == "belico.dll":
-                dll_file = item
+        print(f"\nВсего XHR/fetch-запросов: {len([c for c in captured if c['kind'] == 'request'])}")
+        print(f"Запросов к /share/: {len(api_requests)}")
 
-        print(f"\n📁 Подпапок (программ): {len(program_folders)}")
-        for i, p in enumerate(program_folders[:20]):
-            print(f"  [{i}] {p.get('server_filename')}  (fs_id={p.get('fs_id')})")
+        print("\n" + "─" * 70)
+        print("ЗАПРОСЫ к /share/:")
+        print("─" * 70)
+        for i, req in enumerate(api_requests):
+            print(f"\n[{i}] {req['method']} {req['url'][:200]}")
+            if req.get("post_data"):
+                print(f"     POST: {req['post_data'][:300]}")
 
-        print(f"\n📄 1_Software.txt:  {'✓ найден' if desc_file else '✗ НЕ найден'}")
-        if desc_file:
-            print(f"  fs_id={desc_file.get('fs_id')}, size={desc_file.get('size')} b")
+        print("\n" + "─" * 70)
+        print("ОТВЕТЫ от /share/:")
+        print("─" * 70)
+        for i, resp in enumerate(api_responses):
+            print(f"\n[{i}] HTTP {resp['status']}  {resp['url'][:200]}")
+            print(f"     Content-Type: {resp['content_type']}")
+            preview = resp.get("body_preview", "")
+            if preview:
+                # Красивый JSON
+                try:
+                    parsed = json.loads(preview)
+                    print(f"     JSON keys: {list(parsed.keys()) if isinstance(parsed, dict) else type(parsed).__name__}")
+                    if isinstance(parsed, dict):
+                        print(f"     errno: {parsed.get('errno')}")
+                        flist = parsed.get("list") or []
+                        print(f"     list length: {len(flist) if isinstance(flist, list) else 'not list'}")
+                        if isinstance(flist, list) and flist:
+                            for j, item in enumerate(flist[:10]):
+                                name = item.get("server_filename") or "?"
+                                isdir = item.get("isdir") or 0
+                                kind = "DIR" if str(isdir) == "1" else "FILE"
+                                print(f"       [{j}] [{kind}] {name}")
+                except Exception:
+                    print(f"     Body: {preview[:300]}")
 
-        print(f"\n🎨 belico.dll:     {'✓ найден' if dll_file else '✗ НЕ найден'}")
-        if dll_file:
-            print(f"  fs_id={dll_file.get('fs_id')}, size={dll_file.get('size')} b")
+        # ─── 4. Сохраняем все запросы для анализа ───
+        with open("/tmp/terabox_requests.json", "w", encoding="utf-8") as f:
+            json.dump(captured, f, ensure_ascii=False, indent=2, default=str)
+        print(f"\nВсе запросы сохранены в /tmp/terabox_requests.json")
 
-        print(f"\nВсего элементов: {len(flist)}")
+        # Делаем скриншот после клика
+        page.screenshot(path="/tmp/after_click.png", full_page=False)
+        print("Скриншот после клика: /tmp/after_click.png")
 
         browser.close()
 
     print("\n" + "=" * 70)
-    print("ТЕСТ ЗАВЕРШЁН")
+    print("ПЕРЕХВАТ ЗАВЕРШЁН")
     print("=" * 70)
 
 
