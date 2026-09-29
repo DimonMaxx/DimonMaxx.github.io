@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TeraBox: получаем cookies через Playwright, затем делаем запросы через requests.
-Это даёт полный контроль над заголовками (Referer, Cookie) и обходит CORS.
+TeraBox: получаем cookies через Playwright, запросы через requests.
+Исправлены: status_code, дедупликация cookies, referer из правильного домена.
 """
 
 import os
@@ -30,12 +30,11 @@ COOKIE_DOMAINS = [
 
 
 def make_dp_logid():
-    """Генерирует уникальный dp-logid как в TeraBox."""
     return str(random.randint(10**17, 10**18 - 1))
 
 
 def get_tokens_and_cookies(context, page):
-    """Собирает токены из window и cookies из context."""
+    """Собирает токены и уникальные cookies."""
     tokens = page.evaluate("""() => ({
         jsToken: window.jsToken || '',
         bdstoken: (window.templateData && window.templateData.bdstoken) || '',
@@ -43,14 +42,19 @@ def get_tokens_and_cookies(context, page):
         uk: (window.templateData && window.templateData.uk) || '',
     })""")
 
-    cookies = context.cookies()
-    cookie_header = "; ".join(f"{c['name']}={c['value']}" for c in cookies)
+    # Дедупликация: собираем пары name=value в dict, чтобы убрать повторы
+    cookies_raw = context.cookies()
+    seen = {}
+    for c in cookies_raw:
+        # Ключ — name; оставляем последнее значение (оно обычно самое свежее)
+        seen[c["name"]] = c["value"]
+    cookie_header = "; ".join(f"{k}={v}" for k, v in seen.items())
 
     return tokens, cookie_header
 
 
 def share_list(session, tokens, cookie_header, surl, referer, dir_path=None):
-    """Запрос к /share/list через requests (с Referer и Cookie)."""
+    """Запрос к /share/list через requests."""
     params = {
         "clientfrom": "h5",
         "psign": "0",
@@ -86,11 +90,16 @@ def share_list(session, tokens, cookie_header, surl, referer, dir_path=None):
 
     url = "https://www.terabox.app/share/list"
     resp = session.get(url, params=params, headers=headers, timeout=60)
-    print(f"  HTTP {resp.status}  (url len={len(resp.url)})")
+    # ✅ ИСПРАВЛЕНО: status_code вместо status
+    print(f"  HTTP {resp.status_code}")
     try:
         return resp.json()
     except Exception as e:
-        return {"errno": -1, "errmsg": f"not json: {e}", "text": resp.text[:300]}
+        return {
+            "errno": -1,
+            "errmsg": f"not json: {e}",
+            "text": resp.text[:300],
+        }
 
 
 def download_file(session, dlink, save_path, referer, cookie_header):
@@ -105,10 +114,12 @@ def download_file(session, dlink, save_path, referer, cookie_header):
     }
     print(f"  GET {dlink[:110]}...")
     t0 = time.time()
-    resp = session.get(dlink, headers=headers, timeout=300, stream=True, allow_redirects=True)
+    resp = session.get(dlink, headers=headers, timeout=300,
+                       stream=True, allow_redirects=True)
     elapsed = round(time.time() - t0, 2)
-    print(f"  HTTP {resp.status} за {elapsed} сек")
-    if resp.status != 200:
+    # ✅ ИСПРАВЛЕНО: status_code вместо status
+    print(f"  HTTP {resp.status_code} за {elapsed} сек")
+    if resp.status_code != 200:
         return None
     with open(save_path, "wb") as f:
         total = 0
@@ -120,7 +131,7 @@ def download_file(session, dlink, save_path, referer, cookie_header):
 
 
 def parse_software_txt(file_path):
-    """Парсит 1_Software.txt в словарь {name_lower: {name, hint, icon, icon_index, ...}}."""
+    """Парсит 1_Software.txt."""
     with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
         content = f.read()
 
@@ -134,14 +145,8 @@ def parse_software_txt(file_path):
             name = line[5:].strip()
             if name:
                 current = {
-                    "name": name,
-                    "hint": "",
-                    "icon": "",
-                    "icon_index": "",
-                    "group": "",
-                    "version": "",
-                    "url": "",
-                    "key": "",
+                    "name": name, "hint": "", "icon": "", "icon_index": "",
+                    "group": "", "version": "", "url": "", "key": "",
                 }
                 programs[name.lower()] = current
         elif current is not None:
@@ -204,9 +209,14 @@ def main():
         print(f"Токены: jsToken={tokens['jsToken'][:30]}..., "
               f"bdstoken={tokens['bdstoken'][:20]}..., "
               f"pcftoken={tokens['pcftoken'][:20]}..., uk={tokens['uk']}")
-        print(f"Cookie: {cookie_header[:200]}...")
+        print(f"Cookie: {cookie_header[:200]}")
 
+        # Referer должен быть с того же домена, куда мы шлём запрос.
+        # Наш запрос идёт на www.terabox.app. Берём текущий URL страницы,
+        # но если он на 1024tera.com — подменим на эквивалент terabox.app
         referer = page.url
+        if "1024tera.com" in referer:
+            referer = referer.replace("www.1024tera.com", "www.terabox.app")
         print(f"Referer: {referer}")
 
         surl = extract_surl(PROGRAMS_URL)
@@ -221,7 +231,8 @@ def main():
         items = data.get("list") or []
         print(f"Элементов: {len(items)}")
         for it in items:
-            print(f"  {it.get('server_filename')}  isdir={it.get('isdir')}  path={it.get('path')}")
+            print(f"  {it.get('server_filename')}  "
+                  f"isdir={it.get('isdir')}  path={it.get('path')}")
 
         # ─── ШАГ 2: содержимое папки Программы ───
         prog_dir = None
@@ -237,7 +248,8 @@ def main():
         print(f"\nНайдена папка: {prog_dir}")
 
         print(f"\n{'─' * 70}\nШАГ 2: Содержимое папки Программы\n{'─' * 70}")
-        data2 = share_list(session, tokens, cookie_header, surl, referer, dir_path=prog_dir)
+        data2 = share_list(session, tokens, cookie_header, surl, referer,
+                           dir_path=prog_dir)
         print(f"errno: {data2.get('errno')}  errmsg: {data2.get('errmsg', '')}")
         items2 = data2.get("list") or []
         print(f"Элементов: {len(items2)}")
@@ -271,6 +283,8 @@ def main():
                     print(f"    [{i}] Name={val['name']}")
                     print(f"         Group={val['group']}  IconIndex={val['icon_index']}")
                     print(f"         Hint={(val.get('hint') or '')[:90]}...")
+                if len(programs_map) > 12:
+                    print(f"    ... и ещё {len(programs_map) - 12}")
         else:
             print("  ✗ Нет 1_Software.txt")
 
@@ -283,8 +297,8 @@ def main():
         else:
             print("  ✗ Нет belico.dll")
 
-        # ─── ШАГ 5: содержимое подпапок (программы) ───
-        print(f"\n{'─' * 70}\nШАГ 5: Содержимое подпапок (файлы программ)\n{'─' * 70}")
+        # ─── ШАГ 5: содержимое подпапок ───
+        print(f"\n{'─' * 70}\nШАГ 5: Содержимое подпапок\n{'─' * 70}")
         for i, sub in enumerate(programs_subdirs):
             sub_dir = sub.get("path")
             sub_name = sub.get("server_filename")
@@ -301,26 +315,21 @@ def main():
                 has_dlink = "✓" if it.get("dlink") else "✗"
                 print(f"      [{j}] {fname:<40} {it.get('size', 0):>12} b  dlink:{has_dlink}")
 
-            # Пробуем сопоставить имена файлов с 1_Software.txt
             if programs_map:
                 print(f"    Сопоставление с 1_Software.txt:")
                 for it in files[:15]:
                     if str(it.get("isdir")) == "1":
                         continue
                     fname = it.get("server_filename") or ""
-                    # Убираем расширение
                     base = re.sub(r"\.(exe|msi|zip|rar|7z)$", "", fname, flags=re.IGNORECASE)
-                    # Убираем суффиксы типа -x86, -x64, .win, _setup
                     base_clean = re.sub(r"[\-_.](x86|x64|win|setup|installer|portable)$",
                                         "", base, flags=re.IGNORECASE)
                     base_lower = base_clean.lower()
 
-                    # Ищем в 1_Software.txt
                     found = None
                     if base_lower in programs_map:
                         found = programs_map[base_lower]
                     else:
-                        # Частичное совпадение
                         for key, val in programs_map.items():
                             if base_lower and (base_lower in key or key in base_lower):
                                 found = val
@@ -330,7 +339,7 @@ def main():
                         print(f"      ✓ {fname} → Name={found['name']}")
                         print(f"        Hint: {(found.get('hint') or '')[:100]}...")
                     else:
-                        print(f"      ✗ {fname} → не найдено в 1_Software.txt")
+                        print(f"      ✗ {fname} → не найдено")
 
         browser.close()
 
