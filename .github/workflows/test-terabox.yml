@@ -30,10 +30,15 @@ jobs:
           python -m playwright install chromium
           python -m playwright install-deps chromium
 
-      - name: Run Playwright test
+      - name: Install icoutils
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq icoutils
+
+      - name: Run diagnostic
         env:
           TERABOX_COOKIE: ${{ secrets.TERABOX_COOKIE }}
-        run: python test_terabox_playwright.py
+        run: python test_terabox_programs.py
 
       - name: Upload debug artifacts
         if: always()
@@ -44,5 +49,6 @@ jobs:
             /tmp/*.png
             /tmp/*.html
             /tmp/*.json
+            /tmp/*.dll
           retention-days: 3
           if-no-files-found: ignore
