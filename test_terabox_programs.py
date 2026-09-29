@@ -2,10 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 Финальный тест TeraBox:
-- Двойной клик по папкам (работает!)
-- Скачивание 1_Software.txt и belico.dll
-- Сопоставление файлов из TeraBox с описаниями из 1_Software.txt
-  по полю Patch (там реальное имя файла), а не по Name.
+- Двойной клик по папкам
+- Скачивание 1_Software.txt (UTF-16!) и belico.dll
+- Сопоставление файлов из TeraBox с описаниями из 1_Software.txt по полю Patch
 """
 
 import os
@@ -82,32 +81,66 @@ def download_file(context, dlink, save_path):
     return save_path
 
 
+def _decode_file(file_path):
+    """
+    Читает файл в бинарном режиме и подбирает кодировку.
+    Поддерживает: UTF-8 (с/без BOM), UTF-16 LE/BE, cp1251, koi8-r.
+    """
+    with open(file_path, "rb") as f:
+        raw = f.read()
+
+    print(f"\n  ── Диагностика кодировки ──")
+    print(f"  Размер файла: {len(raw)} байт")
+    print(f"  Первые 16 байт (hex): {raw[:16].hex()}")
+
+    # Признаки UTF-16 по BOM
+    if raw[:2] == b"\xff\xfe":
+        print(f"  ✓ Обнаружен BOM: UTF-16 LE")
+        return raw.decode("utf-16-le", errors="replace")
+    if raw[:2] == b"\xfe\xff":
+        print(f"  ✓ Обнаружен BOM: UTF-16 BE")
+        return raw.decode("utf-16-be", errors="replace")
+    if raw[:3] == b"\xef\xbb\xbf":
+        print(f"  ✓ Обнаружен BOM: UTF-8 with BOM")
+        return raw.decode("utf-8-sig", errors="replace")
+
+    # Пробуем разные кодировки по очереди
+    for enc in ("utf-8", "utf-16", "utf-16-le", "utf-16-be",
+                "cp1251", "koi8-r", "cp866"):
+        try:
+            text = raw.decode(enc)
+            if "[MInst]" in text or "Profile=" in text or "Name=" in text:
+                print(f"  ✓ Определена кодировка: {enc}")
+                return text
+        except (UnicodeDecodeError, UnicodeError):
+            continue
+
+    print(f"  ⚠ Кодировка не определена, fallback на UTF-8")
+    return raw.decode("utf-8", errors="replace")
+
+
 def parse_software_txt(file_path):
     """
-    Парсит 1_Software.txt.
-    Возвращает список dict:
-    {
-      "name": "Calibre",
-      "hint": "Calibre - простая и удобная программа...",
-      "patch": "{Patch}\\install\\text\\Calibre.win.exe",
-      "patch_filename": "Calibre.win.exe",   # извлечено из patch
-      "group": "11",
-      "version": "9.8.0",
-      "icon": "{Patch}\\userfiles\\belico.dll,312",
-      "icon_index": "162",
-    }
+    Парсит 1_Software.txt (в любой кодировке, включая UTF-16).
+    Возвращает список dict с полями:
+      name, hint, patch, patch_filename, group, version, icon, icon_index, url, key, section
     """
-    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-        content = f.read()
+    content = _decode_file(file_path)
+
+    # Диагностика: показываем первые строки
+    print(f"\n  ── Первые 500 символов файла ──")
+    preview = content[:500].replace("\r", "")
+    for i, line in enumerate(preview.split("\n")[:10]):
+        print(f"    | {line[:120]}")
 
     programs = []
     current = None
-    state = None  # какое поле сейчас парсим
+    state = None
 
     for raw in content.split("\n"):
-        line = raw.rstrip("\r").rstrip()
+        line = raw.rstrip("\r")
 
-        # Начало новой записи
+        # Начало новой записи [0], [1], ...
         m_section = re.match(r"^\[(\d+)\]$", line.strip())
         if m_section:
             if current and current.get("name"):
@@ -124,7 +157,6 @@ def parse_software_txt(file_path):
         if current is None:
             continue
 
-        # Парсим поля
         if line.startswith("Name="):
             current["name"] = line[5:].strip()
             state = None
@@ -152,8 +184,7 @@ def parse_software_txt(file_path):
         elif line.startswith("Key="):
             current["key"] = line[4:].strip()
             state = None
-        elif state == "hint" and line and not line.startswith("["):
-            # Продолжение многострочного Hint
+        elif state == "hint" and line.strip() and not line.startswith("["):
             current["hint"] += "\n" + line
         else:
             state = None
@@ -165,22 +196,18 @@ def parse_software_txt(file_path):
     for p in programs:
         patch = p.get("patch", "")
         if patch:
-            # {Patch}\install\text\Calibre.win.exe → Calibre.win.exe
-            # {Root}\apps\tools\tweaks\Tweaks.reg → Tweaks.reg
             parts = re.split(r"[\\/]", patch)
             p["patch_filename"] = parts[-1] if parts else ""
         else:
             p["patch_filename"] = ""
 
-    # Очищаем Hint от разделителей |
+    # Очищаем Hint
     for p in programs:
         hint = p.get("hint", "")
         if hint:
-            # Убираем ведущий | и разбиваем по |
             if hint.startswith("|"):
                 hint = hint[1:]
             hint = hint.replace("|", "\n")
-            # Схлопываем множественные переводы строк
             hint = re.sub(r"\n+", "\n", hint).strip()
             p["hint"] = hint
 
@@ -192,7 +219,6 @@ def normalize_filename(name):
     if not name:
         return ""
     name = name.lower()
-    # Убираем расширение
     name = re.sub(r"\.(exe|msi|zip|rar|7z|tar|gz|txt|dll)$", "", name)
     return name.strip()
 
@@ -206,9 +232,7 @@ def normalize_patch_filename(patch_fn):
     if not patch_fn:
         return ""
     fn = patch_fn.lower()
-    # Убираем расширение
     fn = re.sub(r"\.(exe|msi|zip|rar|7z|tar|gz|txt|dll)$", "", fn)
-    # Убираем {P} (placeholder разрядности)
     fn = fn.replace("-{p}", "")
     fn = fn.replace("_{p}", "")
     fn = fn.replace("{p}", "")
@@ -224,13 +248,13 @@ def match_file_to_program(filename, programs):
     if not file_norm:
         return None
 
-    # 1. Пробуем точное совпадение по patch_filename
+    # 1. Точное совпадение по patch_filename
     for p in programs:
         p_patch_norm = normalize_patch_filename(p.get("patch_filename", ""))
         if p_patch_norm and p_patch_norm == file_norm:
             return p
 
-    # 2. Пробуем совпадение без разделителей (тире, точки, подчёркивания)
+    # 2. Совпадение без разделителей
     file_clean = re.sub(r"[\s\.\-_]", "", file_norm)
     for p in programs:
         p_patch_norm = normalize_patch_filename(p.get("patch_filename", ""))
@@ -243,11 +267,10 @@ def match_file_to_program(filename, programs):
         p_patch_norm = normalize_patch_filename(p.get("patch_filename", ""))
         if not p_patch_norm:
             continue
-        if file_clean and p_clean:
-            # Ищем пересечение
-            if len(file_clean) >= 5 and len(p_clean) >= 5:
-                if file_clean in p_clean or p_clean in file_clean:
-                    return p
+        p_clean = re.sub(r"[\s\.\-_]", "", p_patch_norm)
+        if len(file_clean) >= 5 and len(p_clean) >= 5:
+            if file_clean in p_clean or p_clean in file_clean:
+                return p
 
     return None
 
@@ -341,13 +364,14 @@ def main():
             save = download_file(context, desc_file["dlink"], "/tmp/1_Software.txt")
             if save:
                 programs = parse_software_txt(save)
-                print(f"  ✓ Программ в файле: {len(programs)}")
-                print(f"\n  Первые 5 записей:")
-                for i, p in enumerate(programs[:5]):
-                    print(f"    [{i}] Name      = {p['name']}")
-                    print(f"         Patch     = {p['patch']}")
-                    print(f"         File      = {p['patch_filename']}")
-                    print(f"         Hint      = {p['hint'][:80]}...")
+                print(f"\n  ✓ Программ в файле: {len(programs)}")
+                if programs:
+                    print(f"\n  Первые 5 записей:")
+                    for i, p in enumerate(programs[:5]):
+                        print(f"    [{i}] Name  = {p['name']}")
+                        print(f"         Patch = {p['patch']}")
+                        print(f"         File  = {p['patch_filename']}")
+                        print(f"         Hint  = {p['hint'][:80]}...")
 
         # ═══ ШАГ 3: скачиваем belico.dll ═══
         print(f"\n{'─' * 70}\nШАГ 3: belico.dll\n{'─' * 70}")
@@ -404,7 +428,7 @@ def main():
                     print(f"    ✓ {fname}")
                     print(f"      → Name: {found['name']}")
                     print(f"      → Patch: {found['patch_filename']}")
-                    hint_short = found.get('hint', '')[:120].replace('\n', ' ')
+                    hint_short = (found.get('hint', '') or '')[:120].replace('\n', ' ')
                     print(f"      → Hint: {hint_short}...")
                     all_matched.append({
                         "subfolder": sub_name,
