@@ -1,18 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Диагностика содержимого папки «Программы» в TeraBox:
-- Список всех файлов и подпапок
-- Скачивание и вывод первых 5000 символов 1_Software.txt
-- Извлечение иконок из belico.dll
+Скачиваем 1_Software.txt и belico.dll через context.request.get(dlink).
+dlink уже приходит в ответе /share/list — просто используем его.
 """
 
 import os
+import re
 import sys
 import json
 import time
-import base64
-import subprocess
 import traceback
 
 from playwright.sync_api import sync_playwright
@@ -23,91 +20,40 @@ if not COOKIE:
     sys.exit(1)
 
 PROGRAMS_URL = "https://1024terabox.com/s/1y91_O-V1aszt69FeCBBcxA"
+
 COOKIE_DOMAINS = [
     ".terabox.app", ".1024tera.com", ".1024terabox.com",
-    ".terabox.com", ".4funbox.com",
+    ".terabox.com", ".4funbox.com", ".d.terabox.app",
 ]
 
-# JS-функция для получения списка через fetch
-FETCH_LIST_JS = """
-async ({surl, dirPath}) => {
-    try {
-        const jsToken = window.jsToken || '';
-        const templateData = window.templateData || {};
-        const bdstoken = templateData.bdstoken || '';
-        const pcftoken = templateData.pcftoken || '';
-        const uk = templateData.uk || '';
 
+def fetch_share_list(page, surl, dir_path=None):
+    """Получает содержимое папки через /share/list с параметром dir."""
+    js_code = """
+    async ({surl, dirPath}) => {
+        const jsToken = window.jsToken || '';
+        const td = window.templateData || {};
         const params = new URLSearchParams({
             clientfrom: 'h5', psign: '0',
-            pcftoken: pcftoken,
+            pcftoken: td.pcftoken || '',
             clienttype: '0', channel: 'dubox',
-            page: '1', num: '1000', web: '1',
-            scene: '',
+            page: '1', num: '1000', web: '1', scene: '',
             shorturl: surl,
             by: 'time', order: 'desc',
             app_id: '250528',
             jsToken: jsToken,
         });
+        if (td.bdstoken) params.set('bdstoken', td.bdstoken);
         if (dirPath) params.set('dir', dirPath);
-        if (bdstoken) params.set('bdstoken', bdstoken);
-        if (uk) params.set('uk', uk);
-
         const apiUrl = 'https://www.terabox.app/share/list?' + params.toString();
-        const resp = await fetch(apiUrl, {
-            method: 'GET',
-            credentials: 'include',
-            headers: { 'Accept': 'application/json, text/plain, */*' },
-        });
-        const json = await resp.json();
-        return {ok: true, data: json};
-    } catch (e) {
-        return {ok: false, error: String(e)};
+        const resp = await fetch(apiUrl, {credentials: 'include'});
+        return await resp.json();
     }
-}
-"""
-
-FETCH_DOWNLOAD_JS = """
-async ({dlink}) => {
-    try {
-        const resp = await fetch(dlink, {
-            method: 'GET',
-            credentials: 'include',
-        });
-        if (!resp.ok) return {ok: false, status: resp.status};
-        const blob = await resp.blob();
-        const arrayBuffer = await blob.arrayBuffer();
-        const bytes = new Uint8Array(arrayBuffer);
-        // Передаём как base64
-        let binary = '';
-        const chunkSize = 8192;
-        for (let i = 0; i < bytes.length; i += chunkSize) {
-            binary += String.fromCharCode.apply(null, bytes.subarray(i, i + chunkSize));
-        }
-        return {ok: true, base64: btoa(binary), size: bytes.length};
-    } catch (e) {
-        return {ok: false, error: String(e)};
-    }
-}
-"""
-
-
-def fetch_list(page, surl, dir_path=None):
-    return page.evaluate(FETCH_LIST_JS, {"surl": surl, "dirPath": dir_path})
-
-
-def fetch_download(page, dlink):
-    """Возвращает bytes из dlink."""
-    res = page.evaluate(FETCH_DOWNLOAD_JS, {"dlink": dlink})
-    if not res.get("ok"):
-        return None, res
-    import base64 as b64
-    data = b64.b64decode(res["base64"])
-    return data, {"size": res["size"]}
+    """
+    return page.evaluate(js_code, {"surl": surl, "dirPath": dir_path})
 
 
 def extract_surl(url):
-    import re
     m = re.search(r'/s/([A-Za-z0-9_\-]+)', url)
     if not m:
         return None
@@ -117,29 +63,56 @@ def extract_surl(url):
     return s
 
 
-def parse_software_txt(content_str):
-    """Парсит txt, возвращает список блоков {Name, Hint, GUID, Group, Ver, ...}."""
+def download_via_context(context, dlink, save_path):
+    """Скачивает файл через Playwright HTTP-клиент (без CORS)."""
+    print(f"  GET {dlink[:100]}...")
+    t0 = time.time()
+    try:
+        resp = context.request.get(dlink, timeout=120000)
+    except Exception as e:
+        print(f"  ✗ Ошибка запроса: {e}")
+        return None
+    print(f"  HTTP {resp.status} за {round(time.time() - t0, 2)} сек")
+    if resp.status != 200:
+        return None
+    body = resp.body()
+    with open(save_path, "wb") as f:
+        f.write(body)
+    print(f"  ✓ Сохранено: {save_path} ({len(body)} байт)")
+    return save_path
+
+
+def parse_software_txt(file_path):
+    """Парсит 1_Software.txt: возвращает список {name, hint}."""
+    try:
+        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+            content = f.read()
+    except Exception as e:
+        return [], f"Ошибка чтения: {e}"
+
     blocks = []
     current = {}
-    for line in content_str.split("\n"):
+    for line in content.split("\n"):
         line = line.strip()
-        if not line:
-            continue
-        if line.startswith("Group="):
-            if current:
+        if line.startswith("Name="):
+            if current.get("name"):
                 blocks.append(current)
-            current = {"Group": line[6:]}
-        elif "=" in line:
-            key, _, val = line.partition("=")
-            current[key.strip()] = val.strip()
-    if current:
+            current = {"name": line[5:].strip()}
+        elif line.startswith("Hint="):
+            current["hint"] = line[5:].strip().lstrip("|").strip()
+        elif line.startswith("Group="):
+            if current.get("name"):
+                blocks.append(current)
+                current = {}
+    if current.get("name"):
         blocks.append(current)
-    return blocks
+
+    return blocks, None
 
 
 def main():
     print("=" * 70)
-    print("ДИАГНОСТИКА ПАПКИ «Программы»")
+    print("СКАЧИВАНИЕ ФАЙЛОВ ЧЕРЕЗ context.request.get(dlink)")
     print("=" * 70)
 
     with sync_playwright() as p:
@@ -149,7 +122,6 @@ def main():
                        "AppleWebKit/537.36 (KHTML, like Gecko) "
                        "Chrome/120.0.0.0 Safari/537.36",
             locale="ru-RU",
-            viewport={"width": 1366, "height": 900},
         )
         for domain in COOKIE_DOMAINS:
             try:
@@ -161,121 +133,119 @@ def main():
                 pass
 
         page = context.new_page()
+        print(f"\nОткрываем {PROGRAMS_URL}")
         page.goto(PROGRAMS_URL, wait_until="domcontentloaded", timeout=60000)
         page.wait_for_timeout(5000)
-        print(f"Финальный URL: {page.url}")
 
         surl = extract_surl(PROGRAMS_URL)
         print(f"surl: {surl}")
 
-        # Получаем содержимое «Программы» через dir=/Для сайта/Программы
-        res = fetch_list(page, surl, "/Для сайта/Программы")
-        if not res.get("ok"):
-            print(f"✗ Ошибка: {res.get('error')}")
+        # Содержимое корня ссылки
+        data = fetch_share_list(page, surl)
+        print(f"errno: {data.get('errno')}")
+
+        # Папка "Программы"
+        program_folder = None
+        for item in data.get("list", []):
+            if item.get("server_filename") == "Программы":
+                program_folder = item
+                break
+
+        if not program_folder:
+            print("✗ Папка Программы не найдена")
             browser.close()
             return
 
-        data = res["data"]
-        print(f"errno: {data.get('errno')}")
-        flist = data.get("list") or []
-        print(f"Элементов: {len(flist)}\n")
+        prog_dir = program_folder.get("path")
+        print(f"Папка Программы: {prog_dir}")
 
-        # Собираем нужные файлы
-        desc_dlink = None
-        dll_dlink = None
-        folders = []
+        # Содержимое папки "Программы"
+        data2 = fetch_share_list(page, surl, dir_path=prog_dir)
+        if data2.get("errno") != 0:
+            print(f"✗ errno: {data2.get('errno')}")
+            browser.close()
+            return
+
+        flist = data2.get("list", [])
+        print(f"\n📂 Элементов в папке: {len(flist)}")
+        for i, it in enumerate(flist):
+            kind = "DIR " if str(it.get("isdir")) == "1" else "FILE"
+            has_dlink = "✓" if it.get("dlink") else "✗"
+            print(f"  [{i}] [{kind}] {it.get('server_filename'):<30} "
+                  f"{it.get('size', 0):>12} b  dlink:{has_dlink}")
+
+        # Ищем нужные файлы и подпапки
+        desc_file = None
+        dll_file = None
+        subfolders = []
         for item in flist:
-            name = item.get("server_filename") or ""
-            isdir = str(item.get("isdir") or 0) == "1"
-            if isdir:
-                folders.append(item)
-            elif name == "1_Software.txt":
-                desc_dlink = item.get("dlink")
+            name = item.get("server_filename")
+            if name == "1_Software.txt":
+                desc_file = item
             elif name == "belico.dll":
-                dll_dlink = item.get("dlink")
-
-        print(f"📁 Подпапок: {len(folders)}")
-        for i, f in enumerate(folders[:50]):
-            print(f"  [{i}] {f.get('server_filename')}  fs_id={f.get('fs_id')}")
-        if len(folders) > 50:
-            print(f"  ... и ещё {len(folders) - 50}")
+                dll_file = item
+            elif str(item.get("isdir")) == "1":
+                subfolders.append(item)
 
         # Скачиваем 1_Software.txt
-        if desc_dlink:
-            print("\n" + "─" * 70)
-            print("Скачивание 1_Software.txt")
-            print("─" * 70)
-            txt_data, info = fetch_download(page, desc_dlink)
-            if txt_data:
-                print(f"  ✓ Получено {len(txt_data)} байт")
-                # Декодируем
-                try:
-                    content = txt_data.decode("utf-8", errors="replace")
-                except Exception:
-                    content = txt_data.decode("cp1251", errors="replace")
-                print("\n  Первые 5000 символов:")
-                print("─" * 70)
-                print(content[:5000])
-                print("─" * 70)
-
-                blocks = parse_software_txt(content)
-                print(f"\n  Всего блоков (программ): {len(blocks)}")
-                for i, b in enumerate(blocks[:10]):
-                    print(f"\n  Блок #{i}:")
-                    for k, v in b.items():
-                        if len(str(v)) > 200:
-                            v = str(v)[:200] + "..."
-                        print(f"    {k}={v}")
-                if len(blocks) > 10:
-                    print(f"\n  ... и ещё {len(blocks) - 10} блоков")
+        if desc_file:
+            print(f"\n{'─' * 70}")
+            print(f"1_Software.txt")
+            print(f"{'─' * 70}")
+            if desc_file.get("dlink"):
+                save = download_via_context(context, desc_file["dlink"], "/tmp/1_Software.txt")
+                if save:
+                    blocks, err = parse_software_txt(save)
+                    if err:
+                        print(f"  ✗ {err}")
+                    else:
+                        print(f"  ✓ Блоков: {len(blocks)}")
+                        for i, b in enumerate(blocks[:15]):
+                            print(f"  [{i}] Name={b.get('name')}")
+                            print(f"       Hint={(b.get('hint','') or '')[:80]}...")
+                        if len(blocks) > 15:
+                            print(f"  ... и ещё {len(blocks) - 15}")
             else:
-                print(f"  ✗ Ошибка: {info}")
+                print("  ✗ Нет dlink в ответе")
 
-        # Скачиваем belico.dll (только если он не очень большой)
-        if dll_dlink:
-            print("\n" + "─" * 70)
-            print("Скачивание belico.dll")
-            print("─" * 70)
-            # Найдём его размер
-            dll_info = next((i for i in flist if i.get("server_filename") == "belico.dll"), None)
-            if dll_info:
-                size = dll_info.get("size") or 0
-                print(f"  Размер: {size} байт ({size // 1024 // 1024} МБ)")
-
-            dll_data, info = fetch_download(page, dll_dlink)
-            if dll_data:
-                print(f"  ✓ Получено {len(dll_data)} байт")
-                with open("/tmp/belico.dll", "wb") as f:
-                    f.write(dll_data)
-                print("  Сохранён в /tmp/belico.dll")
-
-                # Извлекаем иконки через icotool (icoutils)
-                try:
-                    # Устанавливаем icoutils если нет
-                    subprocess.run(["which", "icotool"], check=True, capture_output=True)
-                except Exception:
-                    print("  Устанавливаю icoutils...")
-                    subprocess.run(["sudo", "apt-get", "update", "-qq"], capture_output=True)
-                    subprocess.run(["sudo", "apt-get", "install", "-y", "-qq", "icoutils"], capture_output=True)
-
-                try:
-                    result = subprocess.run(
-                        ["icotool", "-l", "/tmp/belico.dll"],
-                        capture_output=True, text=True, timeout=30,
-                    )
-                    print(f"\n  ─── Список иконок в belico.dll ───")
-                    print(result.stdout[:3000])
-                    if result.stderr:
-                        print(f"  stderr: {result.stderr[:500]}")
-                except Exception as e:
-                    print(f"  ✗ Ошибка icotool: {e}")
+        # Скачиваем belico.dll
+        if dll_file:
+            print(f"\n{'─' * 70}")
+            print(f"belico.dll ({dll_file.get('size')} байт)")
+            print(f"{'─' * 70}")
+            if dll_file.get("dlink"):
+                download_via_context(context, dll_file["dlink"], "/tmp/belico.dll")
             else:
-                print(f"  ✗ Ошибка: {info}")
+                print("  ✗ Нет dlink")
+
+        # Подпапки = программы
+        print(f"\n{'─' * 70}")
+        print(f"ПРОГРАММЫ (подпапки в корне): {len(subfolders)}")
+        print(f"{'─' * 70}")
+        for i, sf in enumerate(subfolders):
+            print(f"  [{i}] {sf.get('server_filename')}")
+
+        # Смотрим содержимое первых 2 программ
+        print(f"\n{'─' * 70}")
+        print(f"СОДЕРЖИМОЕ ПРОГРАММ (первые 2)")
+        print(f"{'─' * 70}")
+        for i, sf in enumerate(subfolders[:2]):
+            sub_dir = sf.get("path")
+            print(f"\n[{i}] {sf.get('server_filename')}  dir={sub_dir}")
+            data3 = fetch_share_list(page, surl, dir_path=sub_dir)
+            if data3.get("errno") != 0:
+                print(f"    ✗ errno: {data3.get('errno')}")
+                continue
+            sub_list = data3.get("list", [])
+            print(f"    Элементов: {len(sub_list)}")
+            for j, it in enumerate(sub_list[:15]):
+                kind = "DIR " if str(it.get("isdir")) == "1" else "FILE"
+                print(f"      [{j}] [{kind}] {it.get('server_filename')}  ({it.get('size', 0)} b)")
 
         browser.close()
 
     print("\n" + "=" * 70)
-    print("ДИАГНОСТИКА ЗАВЕРШЕНА")
+    print("ТЕСТ ЗАВЕРШЁН")
     print("=" * 70)
 
 
