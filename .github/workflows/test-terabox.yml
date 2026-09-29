@@ -32,4 +32,4 @@ jobs:
       - name: Run test script
         env:
           TERABOX_COOKIE: ${{ secrets.TERABOX_COOKIE }}
-        run: python test_terabox.py
+        run: python test_terabox_html.py
