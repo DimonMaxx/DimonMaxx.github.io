@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TeraBox: получаем данные через page.evaluate + fetch (same-origin).
-Ключ: страница открывается на www.terabox.app, fetch идёт на относительный
-URL /share/list, поэтому CORS не применяется.
+Перехватываем реальный запрос Vue к /share/list и повторяем его 1-в-1.
+Так мы узнаем все заголовки, которые требует TeraBox.
 """
 
 import os
@@ -11,8 +10,6 @@ import re
 import sys
 import json
 import time
-import random
-import traceback
 
 from playwright.sync_api import sync_playwright
 
@@ -21,8 +18,8 @@ if not COOKIE:
     print("✗ TERABOX_COOKIE не задан")
     sys.exit(1)
 
-PROGRAMS_SURL = "y91_O-V1aszt69FeCBBcxA"   # без ведущей 1
-BASE_HOST = "https://www.terabox.app"
+# Открываем на 1024terabox.com — как в самом первом успешном тесте
+START_URL = "https://1024terabox.com/s/1y91_O-V1aszt69FeCBBcxA"
 
 COOKIE_DOMAINS = [
     ".terabox.app", ".1024tera.com", ".1024terabox.com",
@@ -30,123 +27,9 @@ COOKIE_DOMAINS = [
 ]
 
 
-def share_list_via_fetch(page, surl, dir_path=None):
-    """
-    Делает fetch из браузера к /share/list (относительный URL).
-    Возвращает распарсенный JSON.
-    """
-    js_code = """
-    async ({surl, dirPath}) => {
-        try {
-            const jsToken = window.jsToken || '';
-            const td = window.templateData || {};
-            if (!jsToken) return {error: 'no jsToken'};
-
-            const params = new URLSearchParams({
-                clientfrom: 'h5',
-                psign: '0',
-                pcftoken: td.pcftoken || '',
-                clienttype: '0',
-                channel: 'dubox',
-                page: '1',
-                num: '20',
-                web: '1',
-                scene: '',
-                shorturl: surl,
-                by: 'time',
-                order: 'desc',
-                app_id: '250528',
-                jsToken: jsToken,
-                'dp-logid': String(Math.floor(Math.random() * 1e16)),
-            });
-            if (td.bdstoken) params.set('bdstoken', td.bdstoken);
-            if (dirPath) params.set('dir', dirPath);
-
-            const url = '/share/list?' + params.toString();
-            const resp = await fetch(url, {
-                method: 'GET',
-                credentials: 'include',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json, text/plain, */*',
-                },
-            });
-            const text = await resp.text();
-            try {
-                return {status: resp.status, data: JSON.parse(text)};
-            } catch (e) {
-                return {status: resp.status, error: 'not json', text: text.slice(0, 300)};
-            }
-        } catch (e) {
-            return {error: String(e)};
-        }
-    }
-    """
-    return page.evaluate(js_code, {"surl": surl, "dirPath": dir_path})
-
-
-def download_via_fetch(page, dlink, save_path):
-    """Скачивание через context.request (вне CORS, работает для CDN)."""
-    # dlink уже подписан, поэтому можно качать через HTTP-клиент Playwright
-    return save_path  # placeholder — реальное скачивание ниже
-
-
-def download_file(context, dlink, save_path):
-    """Скачивает файл через context.request.get (без CORS, вне браузера)."""
-    print(f"  GET {dlink[:110]}...")
-    t0 = time.time()
-    resp = context.request.get(dlink, timeout=180000)
-    elapsed = round(time.time() - t0, 2)
-    print(f"  HTTP {resp.status} за {elapsed} сек")
-    if resp.status != 200:
-        return None
-    body = resp.body()
-    with open(save_path, "wb") as f:
-        f.write(body)
-    print(f"  ✓ Сохранено: {save_path} ({len(body)} байт)")
-    return save_path
-
-
-def parse_software_txt(file_path):
-    """Парсит 1_Software.txt."""
-    with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-        content = f.read()
-
-    programs = {}
-    current = None
-    for raw in content.split("\n"):
-        line = raw.rstrip("\r").strip()
-        if not line:
-            continue
-        if line.startswith("Name="):
-            name = line[5:].strip()
-            if name:
-                current = {
-                    "name": name, "hint": "", "icon": "", "icon_index": "",
-                    "group": "", "version": "", "url": "", "key": "",
-                }
-                programs[name.lower()] = current
-        elif current is not None:
-            if line.startswith("Hint="):
-                current["hint"] = line[5:].strip().lstrip("|").strip()
-            elif line.startswith("Icon="):
-                current["icon"] = line[5:].strip()
-            elif line.startswith("IconIndex="):
-                current["icon_index"] = line[10:].strip()
-            elif line.startswith("Group="):
-                current["group"] = line[6:].strip()
-            elif line.startswith("Ver="):
-                current["version"] = line[4:].strip()
-            elif line.startswith("URL="):
-                current["url"] = line[4:].strip()
-            elif line.startswith("Key="):
-                current["key"] = line[4:].strip()
-    return programs
-
-
 def main():
     print("=" * 70)
-    print("TERABOX через page.evaluate + fetch (same-origin)")
+    print("ПЕРЕХВАТ РЕАЛЬНОГО ЗАПРОСА VUE К /share/list")
     print("=" * 70)
 
     with sync_playwright() as p:
@@ -169,157 +52,157 @@ def main():
 
         page = context.new_page()
 
-        # ⚠️ Открываем СРАЗУ на www.terabox.app, а не на 1024terabox.com
-        # Это гарантирует, что fetch на /share/list будет same-origin.
-        url = f"{BASE_HOST}/russian/sharing/link?surl={PROGRAMS_SURL}"
-        print(f"\nОткрываем {url}")
-        page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        # Перехватываем все запросы/ответы
+        share_requests = []
+        share_responses = []
+
+        def on_request(req):
+            if "/share/list" in req.url and req.resource_type in ("xhr", "fetch"):
+                try:
+                    headers = req.all_headers()
+                except Exception:
+                    headers = {}
+                share_requests.append({
+                    "url": req.url,
+                    "method": req.method,
+                    "headers": headers,
+                    "post_data": req.post_data,
+                })
+
+        def on_response(resp):
+            if "/share/list" in resp.url:
+                try:
+                    body = resp.text()
+                except Exception:
+                    body = ""
+                share_responses.append({
+                    "url": resp.url,
+                    "status": resp.status,
+                    "body": body[:2000],
+                })
+
+        page.on("request", on_request)
+        page.on("response", on_response)
+
+        # ─── Открываем страницу ───
+        print(f"\nОткрываем {START_URL}")
+        page.goto(START_URL, wait_until="domcontentloaded", timeout=60000)
         page.wait_for_timeout(7000)
         print(f"Финальный URL: {page.url}")
 
-        # Проверяем состояние
-        state = page.evaluate("""() => ({
-            url: location.href,
-            hasJsToken: !!window.jsToken,
-            hasBdstoken: !!(window.templateData && window.templateData.bdstoken),
-            username: (document.querySelector('.card-username') || {}).textContent || null,
-        })""")
-        print(f"Состояние: {state}")
+        print(f"\nЗапросов /share/list при загрузке: {len(share_requests)}")
+        for i, req in enumerate(share_requests):
+            print(f"  [{i}] {req['method']} {req['url'][:150]}")
 
-        # ─── ШАГ 1: корень ссылки ───
-        print(f"\n{'─' * 70}\nШАГ 1: Корень ссылки\n{'─' * 70}")
-        r1 = share_list_via_fetch(page, PROGRAMS_SURL)
-        if "error" in r1:
-            print(f"  ✗ Ошибка: {r1['error']}")
-            if "text" in r1:
-                print(f"  Ответ: {r1['text']}")
-            browser.close()
-            return
+        # ─── Кликаем по папке «Программы» ───
+        print(f"\n{'─' * 70}")
+        print("Кликаем по папке «Программы»")
+        print(f"{'─' * 70}")
 
-        data = r1.get("data", {})
-        print(f"  HTTP {r1.get('status')}  errno: {data.get('errno')}  "
-              f"errmsg: {data.get('errmsg', '')}")
-        items = data.get("list") or []
-        print(f"  Элементов: {len(items)}")
-        for it in items:
-            print(f"    {it.get('server_filename')}  isdir={it.get('isdir')}  "
-                  f"path={it.get('path')}")
+        # Сбрасываем перехват, чтобы видеть только новые запросы
+        share_requests.clear()
+        share_responses.clear()
 
-        # Ищем папку Программы
-        prog_dir = None
-        for it in items:
-            if it.get("server_filename") == "Программы":
-                prog_dir = it.get("path")
-                break
+        target = None
+        for el in page.query_selector_all('.file-item-name'):
+            try:
+                if (el.inner_text() or "").strip() == "Программы":
+                    target = el
+                    break
+            except Exception:
+                pass
 
-        if not prog_dir:
+        if not target:
             print("✗ Папка 'Программы' не найдена")
             browser.close()
             return
-        print(f"\n  Найдена папка: {prog_dir}")
 
-        # ─── ШАГ 2: содержимое папки ───
-        print(f"\n{'─' * 70}\nШАГ 2: Содержимое папки Программы\n{'─' * 70}")
-        r2 = share_list_via_fetch(page, PROGRAMS_SURL, dir_path=prog_dir)
-        if "error" in r2:
-            print(f"  ✗ Ошибка: {r2['error']}")
-            browser.close()
-            return
+        target.click(timeout=5000)
+        page.wait_for_timeout(5000)
 
-        data2 = r2.get("data", {})
-        print(f"  HTTP {r2.get('status')}  errno: {data2.get('errno')}  "
-              f"errmsg: {data2.get('errmsg', '')}")
-        items2 = data2.get("list") or []
-        print(f"  Элементов: {len(items2)}")
+        print(f"\nПосле клика запросов /share/list: {len(share_requests)}")
 
-        subdirs = []
-        desc_file = None
-        dll_file = None
-        for it in items2:
-            name = it.get("server_filename")
-            is_dir = str(it.get("isdir")) == "1"
-            has_dlink = "✓" if it.get("dlink") else "✗"
-            kind = "DIR " if is_dir else "FILE"
-            print(f"    [{kind}] {name:<30} {it.get('size', 0):>12} b  dlink:{has_dlink}")
-            if name == "1_Software.txt":
-                desc_file = it
-            elif name == "belico.dll":
-                dll_file = it
-            elif is_dir:
-                subdirs.append(it)
+        # ─── Анализируем перехваченные запросы ───
+        for i, req in enumerate(share_requests):
+            print(f"\n{'═' * 70}")
+            print(f"ЗАПРОС #{i}")
+            print(f"{'═' * 70}")
+            print(f"URL: {req['url']}")
+            print(f"Method: {req['method']}")
+            if req.get("post_data"):
+                print(f"POST data: {req['post_data']}")
+            print(f"\nВСЕ ЗАГОЛОВКИ:")
+            for k, v in sorted(req["headers"].items()):
+                # Скрываем длинные токены в выводе
+                if k.lower() in ("cookie",) and len(v) > 200:
+                    print(f"  {k}: {v[:200]}...")
+                else:
+                    print(f"  {k}: {v}")
 
-        # ─── ШАГ 3: скачиваем 1_Software.txt ───
-        print(f"\n{'─' * 70}\nШАГ 3: 1_Software.txt\n{'─' * 70}")
-        programs_map = {}
-        if desc_file and desc_file.get("dlink"):
-            save = download_file(context, desc_file["dlink"], "/tmp/1_Software.txt")
-            if save:
-                programs_map = parse_software_txt(save)
-                print(f"  ✓ Программ в файле: {len(programs_map)}")
-                for i, (key, val) in enumerate(list(programs_map.items())[:15]):
-                    print(f"    [{i}] Name={val['name']}")
-                    print(f"         Group={val['group']}  Icon={val['icon'][:40]}")
-                    print(f"         Hint={(val.get('hint') or '')[:100]}...")
-                if len(programs_map) > 15:
-                    print(f"    ... и ещё {len(programs_map) - 15}")
+        # ─── Анализируем ответы ───
+        for i, resp in enumerate(share_responses):
+            print(f"\n{'═' * 70}")
+            print(f"ОТВЕТ #{i}")
+            print(f"{'═' * 70}")
+            print(f"URL: {resp['url']}")
+            print(f"Status: {resp['status']}")
+            print(f"Body (первые 500 символов):")
+            print(f"  {resp['body'][:500]}")
 
-        # ─── ШАГ 4: скачиваем belico.dll ───
-        print(f"\n{'─' * 70}\nШАГ 4: belico.dll\n{'─' * 70}")
-        if dll_file and dll_file.get("dlink"):
-            print(f"  Размер: {dll_file.get('size')} байт")
-            download_file(context, dll_file["dlink"], "/tmp/belico.dll")
+        # ─── Проверяем, что запрос от Vue сработал ───
+        if share_responses:
+            body = share_responses[0]["body"]
+            try:
+                data = json.loads(body)
+                errno = data.get("errno")
+                items = data.get("list") or []
+                print(f"\n✓ errno: {errno}, элементов: {len(items)}")
+                for it in items:
+                    print(f"    {it.get('server_filename')}  "
+                          f"isdir={it.get('isdir')}  dlink={'✓' if it.get('dlink') else '✗'}")
+            except Exception as e:
+                print(f"Не JSON: {e}")
 
-        # ─── ШАГ 5: содержимое подпапок ───
-        print(f"\n{'─' * 70}\nШАГ 5: Содержимое подпапок\n{'─' * 70}")
-        for i, sub in enumerate(subdirs):
-            sub_dir = sub.get("path")
-            sub_name = sub.get("server_filename")
-            print(f"\n[{i}] Папка: {sub_name}  dir={sub_dir}")
-            r3 = share_list_via_fetch(page, PROGRAMS_SURL, dir_path=sub_dir)
-            if "error" in r3:
-                print(f"    ✗ {r3['error']}")
-                continue
-            data3 = r3.get("data", {})
-            files = data3.get("list") or []
-            print(f"    errno: {data3.get('errno')}, файлов: {len(files)}")
-            for j, it in enumerate(files[:20]):
-                if str(it.get("isdir")) == "1":
-                    continue
-                fname = it.get("server_filename")
-                has_dlink = "✓" if it.get("dlink") else "✗"
-                print(f"      [{j}] {fname:<40} {it.get('size', 0):>12} b  dlink:{has_dlink}")
+        # ─── Пробуем повторить запрос через fetch ───
+        if share_requests:
+            last_req = share_requests[-1]
+            print(f"\n{'─' * 70}")
+            print("ПРОБУЕМ ПОВТОРИТЬ ЗАПРОС ЧЕРЕЗ fetch с теми же параметрами")
+            print(f"{'─' * 70}")
 
-            # Сопоставление с 1_Software.txt
-            if programs_map:
-                print(f"    Сопоставление с 1_Software.txt:")
-                for it in files[:20]:
-                    if str(it.get("isdir")) == "1":
-                        continue
-                    fname = it.get("server_filename") or ""
-                    base = re.sub(r"\.(exe|msi|zip|rar|7z)$", "", fname, flags=re.IGNORECASE)
-                    base_clean = re.sub(r"[\-_.](x86|x64|win|setup|installer|portable)$",
-                                        "", base, flags=re.IGNORECASE)
-                    base_lower = base_clean.lower()
+            # Извлекаем query-параметры из URL
+            from urllib.parse import urlparse, parse_qs
+            parsed = urlparse(last_req["url"])
+            params = parse_qs(parsed.query)
+            # Упрощаем до dict
+            params_simple = {k: v[0] for k, v in params.items()}
 
-                    found = None
-                    if base_lower in programs_map:
-                        found = programs_map[base_lower]
-                    else:
-                        for key, val in programs_map.items():
-                            if base_lower and (base_lower in key or key in base_lower):
-                                found = val
-                                break
+            result = page.evaluate("""async ({params}) => {
+                const search = new URLSearchParams();
+                for (const k in params) search.set(k, params[k]);
+                const url = '/share/list?' + search.toString();
+                try {
+                    const resp = await fetch(url, {
+                        method: 'GET',
+                        credentials: 'include',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json, text/plain, */*',
+                        },
+                    });
+                    const text = await resp.text();
+                    return {status: resp.status, body: text.slice(0, 500)};
+                } catch (e) {
+                    return {error: String(e)};
+                }
+            }""", {"params": params_simple})
 
-                    if found:
-                        print(f"      ✓ {fname} → Name={found['name']}")
-                        print(f"        Hint: {(found.get('hint') or '')[:100]}...")
-                    else:
-                        print(f"      ✗ {fname} → не найдено")
+            print(f"Ответ: {result}")
 
         browser.close()
 
     print("\n" + "=" * 70)
-    print("ТЕСТ ЗАВЕРШЁН")
+    print("ПЕРЕХВАТ ЗАВЕРШЁН")
     print("=" * 70)
 
 
