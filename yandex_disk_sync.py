@@ -1766,6 +1766,12 @@ def sync_section(section, gs_client, cache):
     print(f"manual_override: {manual_override}")
     print(f"strip_prefix:    {strip_mode}")
 
+    # ─── Пропускаем разделы, не относящиеся к Яндекс.Диску ───
+    if yandex_url and ("terabox.com" in yandex_url.lower()
+                       or "1024terabox.com" in yandex_url.lower()):
+        print("  [i] Раздел относится к TeraBox — обрабатывается terabox_sync.py.")
+        return
+
     if not yandex_url:
         print("  [!] yandex_url не задан — раздел пропускается.")
         return
