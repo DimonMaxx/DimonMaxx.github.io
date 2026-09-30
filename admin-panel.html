@@ -2035,74 +2035,89 @@
     // ---------- Массовое удаление осиротевших ----------
 
     async function deleteAllOrphans() {
-        const allItems = [];
-        orphansData.forEach(sectionItem => {
-            (sectionItem.orphans || []).forEach(o => {
-                if (o.link) {
-                    allItems.push({
-                        section: sectionItem.section_key,
-                        link: o.link,
-                    });
-                }
+    const allItems = [];
+    orphansData.forEach(sectionItem => {
+        (sectionItem.orphans || []).forEach(o => {
+            // Отправляем ТОЛЬКО (section, title) — этого достаточно,
+            // а размер inputs не превысит лимит GitHub.
+            const title = (o.title || '').trim();
+            if (!title) return;
+            allItems.push({
+                section: sectionItem.section_key,
+                title:   title,
             });
         });
+    });
 
-        if (allItems.length === 0) {
-            alert('Нет осиротевших строк для удаления.');
+    if (allItems.length === 0) {
+        alert('Нет осиротевших строк для удаления.');
+        return;
+    }
+
+    const totalCount = allItems.length;
+    const approxSize = JSON.stringify(allItems).length;
+    console.log('delete_all size (bytes):', approxSize);
+
+    if (approxSize > 60000) {
+        alert(
+            `Список слишком большой для одного запуска (${approxSize} байт, ` +
+            `лимит GitHub — 65 535).\n\n` +
+            `Разбейте удаление: сначала вручную удалите часть строк из ` +
+            `Google Sheets, потом повторите.`
+        );
+        return;
+    }
+
+    if (!confirm(
+        `Удалить ${totalCount} осиротевших строк из Google Sheets?\n\n` +
+        `Удаление выполняется через GitHub Actions (delete-content.yml).\n` +
+        `Это действие необратимо. Продолжить?`
+    )) return;
+
+    const btn = document.getElementById('deleteAllOrphansBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
+    }
+
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            alert('Сессия истекла. Войдите заново.');
             return;
         }
 
-        const totalCount = allItems.length;
-        if (!confirm(
-            `Удалить ${totalCount} осиротевших строк из Google Sheets?\n\n` +
-            `Удаление выполняется через GitHub Actions (delete-content.yml).\n` +
-            `Это действие необратимо. Продолжить?`
-        )) return;
-
-        const btn = document.getElementById('deleteAllOrphansBtn');
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
+        const resp = await fetch(`${SUPABASE_URL}/functions/v1/github-dispatch`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({
+                workflow: DELETE_WORKFLOW,
+                inputs: { delete_list: JSON.stringify(allItems) }
+            })
+        });
+        const result = await resp.json();
+        if (resp.ok && result.ok) {
+            alert(
+                `Запрос отправлен (${totalCount} строк).\n\n` +
+                `Через 1–2 минуты Google Sheets обновится.\n` +
+                `После следующей синхронизации с TeraBox ` +
+                `список осиротевших обновится автоматически.`
+            );
+        } else {
+            alert('Ошибка: ' + (result.error || `HTTP ${resp.status}`));
         }
-
-        try {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) {
-                alert('Сессия истекла. Войдите заново.');
-                return;
-            }
-
-            const resp = await fetch(`${SUPABASE_URL}/functions/v1/github-dispatch`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({
-                    workflow: DELETE_WORKFLOW,
-                    inputs: { delete_list: JSON.stringify(allItems) }
-                })
-            });
-            const result = await resp.json();
-            if (resp.ok && result.ok) {
-                alert(
-                    `Запрос отправлен (${totalCount} строк).\n\n` +
-                    `Через 1–2 минуты Google Sheets обновится.\n` +
-                    `После следующей синхронизации с Яндекс.Диском список ` +
-                    `осиротевших обновится автоматически.`
-                );
-            } else {
-                alert('Ошибка: ' + (result.error || `HTTP ${resp.status}`));
-            }
-        } catch (e) {
-            alert('Ошибка сети: ' + e.message);
-        } finally {
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = `<i class="fas fa-broom"></i> Удалить все осиротевшие (${totalCount})`;
-            }
+    } catch (e) {
+        alert('Ошибка сети: ' + e.message);
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = `<i class="fas fa-broom"></i> Удалить все осиротевшие (${totalCount})`;
         }
     }
+}
 
     // ============================================================
     // СТАТИСТИКА
