@@ -54,7 +54,6 @@
         .section-title { font-size: 26px; font-weight: 700; margin: 0 0 20px 0; padding-bottom: 10px; border-bottom: 3px solid #e2e8f0; display: flex; align-items: center; gap: 12px; }
         .section-title i { color: #2563eb; }
 
-        /* ─── Инструкция на главной ─── */
         .welcome-hero {
             background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
             border-radius: 20px;
@@ -198,7 +197,6 @@
         }
         .welcome-hint i { color: #8b5cf6; font-size: 18px; margin-top: 2px; }
 
-        /* ─── Баннер 152-ФЗ в подпапках Программ ─── */
         .programs-notice {
             background: #eff6ff;
             border-left: 5px solid #2563eb;
@@ -243,7 +241,6 @@
         .programs-notice.warning .notice-title i { color: #d97706; }
         .programs-notice.warning a { color: #b45309; }
 
-        /* ─── Папки ─── */
         .folder-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-top: 10px; }
         .folder-card { background: white; border: 2px solid #e2e8f0; border-radius: 16px; padding: 22px 16px; cursor: pointer; transition: 0.2s; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; }
         .folder-card:hover { border-color: #2563eb; transform: translateY(-3px); box-shadow: 0 10px 24px rgba(37,99,235,0.15); }
@@ -286,7 +283,6 @@
         .btn-download-sm.disabled { background: #94a3b8; cursor: not-allowed; }
         .empty-block { text-align: center; color: #94a3b8; padding: 40px 20px; font-style: italic; background: #f8fafc; border-radius: 12px; }
 
-        /* ─── Аудио-плеер ─── */
         .audio-cell {
             display: flex;
             flex-direction: column;
@@ -455,10 +451,10 @@
                         </div>
 
                         <div class="welcome-actions">
-                            <a href="login.html" class="btn-login">
+                            <a href="login.html" class="btn-login" id="heroLoginBtn">
                                 <i class="fas fa-sign-in-alt"></i> Войти
                             </a>
-                            <a href="login.html" class="btn-register">
+                            <a href="login.html" class="btn-register" id="heroRegisterBtn">
                                 <i class="fas fa-user-plus"></i> Зарегистрироваться
                             </a>
                             <a href="submit.html" class="btn-submit">
@@ -525,43 +521,50 @@
 
     // --- Прокси ---
     function buildProxyUrl(downloadUrl, fileName) {
-    if (!downloadUrl) return '';
-    try {
-        const parsed = new URL(downloadUrl);
-        const host = parsed.hostname.toLowerCase();
+        if (!downloadUrl) return '';
+        try {
+            const parsed = new URL(downloadUrl);
+            const host = parsed.hostname.toLowerCase();
 
-        // ─── TeraBox-ссылки ───
-        if (host.includes('terabox')
-            || host.includes('1024tera')
-            || host.includes('4funbox')
-            || host.includes('teraboxapp')) {
-            // Берём имя из аргумента, а не из pathname (там хеш)
-            let fname = fileName && String(fileName).trim();
-            if (!fname) {
-                // fallback: попытаться вытащить из ?path= или дать дефолт
-                const fromPath = parsed.searchParams.get('path');
-                fname = fromPath
-                    ? decodeURIComponent(fromPath).split('/').pop()
-                    : 'file.bin';
+            // ─── TeraBox-ссылки ───
+            if (host.includes('terabox')
+                || host.includes('1024tera')
+                || host.includes('4funbox')
+                || host.includes('teraboxapp')) {
+                let fname = fileName && String(fileName).trim();
+                if (!fname) {
+                    const fromPath = parsed.searchParams.get('path');
+                    fname = fromPath
+                        ? decodeURIComponent(fromPath).split('/').pop()
+                        : 'file.bin';
+                }
+                if (!/\.[a-z0-9]{1,6}$/i.test(fname)) {
+                    fname += '.bin';
+                }
+                return `${SUPABASE_URL}/functions/v1/terabox-download`
+                     + `?url=${encodeURIComponent(downloadUrl)}`
+                     + `&name=${encodeURIComponent(fname)}`;
             }
-            // Добавляем расширение, если его нет
-            if (!/\.[a-z0-9]{1,6}$/i.test(fname)) {
-                fname += '.bin';
-            }
-            return `${SUPABASE_URL}/functions/v1/terabox-download`
-                 + `?url=${encodeURIComponent(downloadUrl)}`
-                 + `&name=${encodeURIComponent(fname)}`;
-        }
 
-        // ─── Яндекс.Диск ───
-        const folder = `${parsed.origin}${parsed.pathname}`;
-        const path = parsed.searchParams.get('path');
-        if (!folder || !path) return downloadUrl;
-        return `${SUPABASE_URL}/functions/v1/yandex-download`
-             + `?folder=${encodeURIComponent(folder)}`
-             + `&path=${encodeURIComponent(path)}`;
-    } catch (e) { return downloadUrl; }
-}
+            // ─── Яндекс.Диск ───
+            const folder = `${parsed.origin}${parsed.pathname}`;
+            const path = parsed.searchParams.get('path');
+            if (!folder || !path) return downloadUrl;
+            return `${SUPABASE_URL}/functions/v1/yandex-download`
+                 + `?folder=${encodeURIComponent(folder)}`
+                 + `&path=${encodeURIComponent(path)}`;
+        } catch (e) { return downloadUrl; }
+    }
+    function getAudioMimeType(url) {
+        if (!url) return '';
+        const m = url.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+        const ext = m ? m[1].toLowerCase() : '';
+        const map = { mp3:'audio/mpeg', flac:'audio/flac', wav:'audio/wav',
+                      ogg:'audio/ogg', m4a:'audio/mp4', aac:'audio/aac',
+                      wma:'audio/x-ms-wma', opus:'audio/opus',
+                      ape:'audio/x-ape', aiff:'audio/aiff', alac:'audio/mp4' };
+        return map[ext] || '';
+    }
 
     function buildColumnsFromKeys(keys) {
         const labels = CFG.COLUMN_LABELS || {};
@@ -648,6 +651,7 @@
         currentProfile = profile || null;
         renderAuthWidget(true);
     }
+
     function renderAuthWidget(isLoggedIn) {
         const widget = document.getElementById('authWidget');
         if (!isLoggedIn) {
@@ -667,6 +671,13 @@
                 window.location.href = 'index.html';
             });
         }
+
+        // ─── Скрыть/показать кнопки на welcome-hero в зависимости от логина ───
+        const heroLogin    = document.getElementById('heroLoginBtn');
+        const heroRegister = document.getElementById('heroRegisterBtn');
+        if (heroLogin)    heroLogin.style.display    = isLoggedIn ? 'none' : 'inline-flex';
+        if (heroRegister) heroRegister.style.display = isLoggedIn ? 'none' : 'inline-flex';
+
         const isAdmin = isLoggedIn && currentProfile?.role === 'admin';
         const pl = document.getElementById('adminPanelLink');
         const ub = document.getElementById('adminUpdateBtn');
@@ -702,32 +713,25 @@
         });
     }
     async function incrementDownload(fileId, downloadUrl, fileName) {
-    if (!currentUser) {
-        alert('Для скачивания необходимо зарегистрироваться.');
-        return;
-    }
-    try {
-        const { data } = await supabaseClient.rpc(
-            'increment_download', { p_file_id: fileId }
-        );
-        downloadCounts[fileId] = data;
-        updateDownloadCountsDisplay();
-        await supabaseClient.from('download_logs').insert([{
-            file_id: fileId,
-            file_name: fileName || null,
-            user_id: currentUser.id,
-            username: currentProfile?.username || currentUser.email
-        }]);
-        if (downloadUrl && downloadUrl !== '#') {
-            // ─── передаём имя файла ───
-            MF.triggerDownload(buildProxyUrl(downloadUrl, fileName));
-        }
-    } catch (e) {
-        if (downloadUrl && downloadUrl !== '#') {
-            MF.triggerDownload(buildProxyUrl(downloadUrl, fileName), fileName);
+        if (!currentUser) { alert('Для скачивания необходимо зарегистрироваться.'); return; }
+        try {
+            const { data } = await supabaseClient.rpc('increment_download', { p_file_id: fileId });
+            downloadCounts[fileId] = data;
+            updateDownloadCountsDisplay();
+            await supabaseClient.from('download_logs').insert([{
+                file_id: fileId, file_name: fileName || null,
+                user_id: currentUser.id,
+                username: currentProfile?.username || currentUser.email
+            }]);
+            if (downloadUrl && downloadUrl !== '#') {
+                MF.triggerDownload(buildProxyUrl(downloadUrl, fileName), fileName);
+            }
+        } catch (e) {
+            if (downloadUrl && downloadUrl !== '#') {
+                MF.triggerDownload(buildProxyUrl(downloadUrl, fileName), fileName);
+            }
         }
     }
-}
 
     function initTableState(id, cols) {
         if (!tableStates[id]) {
@@ -840,9 +844,6 @@
         });
     }
 
-    // ─── Формирование баннера 152-ФЗ для раздела Программы ───
-    // Показывается только внутри подпапки (не на уровне списка папок).
-    // В папке «Разные» — без упоминания автономной работы.
     function buildProgramsNotice(folderName) {
         const isRaznye = (folderName || '').trim().toLowerCase() === 'разные';
         if (isRaznye) {
@@ -1058,7 +1059,6 @@
                     </span>
                 </div>`;
 
-            // ─── Баннер 152-ФЗ для раздела Программ (только внутри подпапки) ───
             if (state.sectionKey === 'programs'
                 && state.folderFilter
                 && state.folderFilter !== '__NOFOLDER__') {
