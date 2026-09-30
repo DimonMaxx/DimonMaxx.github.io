@@ -1,20 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-terabox_sync.py
+terabox_sync.py (v2)
 Синхронизация TeraBox → Google Sheets.
 
-Полностью независимый скрипт. Не использует и не изменяет логику
-yandex_disk_sync.py. Обрабатывает только те разделы из site_sections,
-у которых в yandex_url указан домен terabox.com или 1024terabox.com.
+Ключевые изменения против v1:
+- Используется Playwright (Chromium) вместо terabox-api/gateway,
+  т.к. только так можно обойти вложенные папки публичной ссылки.
+- Обходит ВСЕ подпапки разделов, формируя поле `folder` из имени папки TeraBox.
+- Скачивает и парсит 4 файла описаний (1_Software.txt + описание*.txt)
+  в любых кодировках (UTF-16 LE/BE, cp1251, utf-8).
+- Сопоставляет файлы TeraBox с описаниями по имени файла.
 
-Для аутентификации нужен cookie 'ndus' из аккаунта TeraBox владельца файлов.
-Передаётся через переменную окружения TERABOX_COOKIE.
+Обрабатываются только разделы из site_sections, у которых
+yandex_url содержит домен terabox.com или 1024terabox.com.
 
-Разделы с другими доменами (yandex.ru и т.д.) ИГНОРИРУЮТСЯ.
+TERABOX_COOKIE — cookie 'ndus' аккаунта TeraBox.
 """
 
 import os
+import re
 import sys
 import json
 import time
@@ -31,9 +36,9 @@ except ImportError:
     supa_create_client = None
 
 try:
-    from TeraboxDL import TeraboxDL
+    from playwright.sync_api import sync_playwright
 except ImportError:
-    TeraboxDL = None
+    sync_playwright = None
 
 
 # ============================================================
@@ -48,10 +53,8 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
 TERABOX_COOKIE = os.environ.get("TERABOX_COOKIE", "")
 
-# Домены, которые обрабатывает этот скрипт
 TERABOX_DOMAINS = ("terabox.com", "1024terabox.com")
 
-# Наследуем поведение от yandex_disk_sync для единообразия
 PRESERVE_USER_EDITS = os.environ.get("PRESERVE_USER_EDITS", "1") == "1"
 BACKUP_BEFORE_SYNC  = os.environ.get("BACKUP_BEFORE_SYNC", "1") == "1"
 BACKUP_KEEP_COUNT   = int(os.environ.get("BACKUP_KEEP_COUNT", "3"))
@@ -61,8 +64,6 @@ SYNC_SECTIONS_FILTER = [
     s.strip() for s in _raw_sync_sections.split(",") if s.strip()
 ] if _raw_sync_sections else []
 
-# Соответствие ключей (как в yandex_disk_sync.py) — чтобы JSON-файлы
-# генерировались одинаково, независимо от источника.
 RU_TO_EN = {
     "Название":              "title",
     "Автор":                 "author",
@@ -79,7 +80,6 @@ RU_TO_EN = {
 }
 EN_TO_RU = {v: k for k, v in RU_TO_EN.items()}
 
-# Колонки, которые перезаписываются всегда (не сохраняют ручные правки)
 ALWAYS_UPDATE_HEADERS = {
     "Ссылка для скачивания", "Ссылка",
     "Размер (МБ)", "Размер",
@@ -88,6 +88,19 @@ ALWAYS_UPDATE_HEADERS = {
 }
 
 TITLE_HEADER_CANDIDATES = ("Название", "название", "Title", "title")
+
+COOKIE_DOMAINS = [
+    ".terabox.app", ".1024tera.com", ".1024terabox.com",
+    ".terabox.com", ".4funbox.com", ".d.terabox.app",
+]
+
+DESC_FILE_PATTERNS = [
+    re.compile(r"^1_Software\.txt$", re.IGNORECASE),
+    re.compile(r"^описание( \d+)?\.txt$", re.IGNORECASE),
+]
+
+# Папки, которые НЕ являются контейнерами программ (служебные)
+SKIP_FOLDER_NAMES = set()
 
 
 # ============================================================
@@ -109,27 +122,27 @@ class Diag:
 
     def report(self):
         print("\n  ── ДИАГНОСТИКА ──")
-        print(f"  Найдено файлов:        {self.found}")
-        print(f"  Оставлено к записи:    {self.kept}")
-        print(f"  Обновлено строк:       {self.updated}")
-        print(f"  Добавлено строк:       {self.added}")
+        print(f"  Найдено файлов:          {self.found}")
+        print(f"  Оставлено к записи:      {self.kept}")
+        print(f"  Обновлено строк:         {self.updated}")
+        print(f"  Добавлено строк:         {self.added}")
         if self.preserved_edits:
             print(f"  Сохранено ручных правок: {self.preserved_edits}")
         if self.unchanged_rows:
-            print(f"  Без изменений:         {self.unchanged_rows}")
+            print(f"  Без изменений:           {self.unchanged_rows}")
         if self.orphans_found:
-            print(f"  Осиротевших строк:     {self.orphans_found}")
+            print(f"  Осиротевших строк:       {self.orphans_found}")
         if self.backup_name:
-            print(f"  Резервная копия:       {self.backup_name}")
+            print(f"  Резервная копия:         {self.backup_name}")
         if self.errors:
-            print(f"  Ошибок:                {len(self.errors)}")
+            print(f"  Ошибок:                  {len(self.errors)}")
             for e in self.errors[:5]:
                 print(f"    - {e}")
         print("  ───────────────────\n")
 
 
 # ============================================================
-# SUPABASE — читаем разделы
+# SUPABASE
 # ============================================================
 
 def load_sections_from_supabase():
@@ -162,9 +175,28 @@ def is_terabox_url(url):
     return any(d in url.lower() for d in TERABOX_DOMAINS)
 
 
+def save_orphans_to_supabase(section_key, section_label,
+                             sheet_name, orphans, headers=None):
+    if not supa_create_client or not SUPABASE_SERVICE_KEY:
+        return
+    try:
+        client = supa_create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+        payload = {
+            "section_key":   section_key,
+            "section_label": section_label,
+            "sheet_name":    sheet_name,
+            "orphans":       orphans or [],
+            "updated_at":    datetime.datetime.utcnow().isoformat() + "Z",
+        }
+        if headers is not None:
+            payload["headers"] = headers
+        client.table("sync_orphans").upsert(payload).execute()
+    except Exception as e:
+        print(f"    [!] Не удалось сохранить orphans: {e}")
+
+
 # ============================================================
-# GOOGLE SHEETS — копии функций из yandex_disk_sync.py
-# (сделаны локально, чтобы не импортировать главный модуль)
+# GOOGLE SHEETS
 # ============================================================
 
 def get_gspread_client():
@@ -204,7 +236,6 @@ def _col_letter(n):
 
 
 def ensure_headers(sheet, headers):
-    """Полностью перезаписывает первую строку до максимальной ширины листа."""
     try:
         current = sheet.row_values(1)
     except Exception:
@@ -234,8 +265,7 @@ def ensure_headers(sheet, headers):
     try:
         sheet.update(values=[new_row], range_name=range_a1,
                      value_input_option="USER_ENTERED")
-        print(f"    [+] Обновлены заголовки: {headers} "
-              f"(очищено до {max_cols} колонок)")
+        print(f"    [+] Обновлены заголовки: {headers}")
     except Exception as e:
         print(f"    [!] Заголовки: {e}")
 
@@ -419,140 +449,551 @@ def find_orphan_rows(existing_index, rows, headers, link_idx):
     return orphans
 
 
-def save_orphans_to_supabase(section_key, section_label,
-                             sheet_name, orphans, headers=None):
-    if not supa_create_client or not SUPABASE_SERVICE_KEY:
-        return
-    try:
-        client = supa_create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
-        payload = {
-            "section_key":   section_key,
-            "section_label": section_label,
-            "sheet_name":    sheet_name,
-            "orphans":       orphans or [],
-            "updated_at":    datetime.datetime.utcnow().isoformat() + "Z",
-        }
-        if headers is not None:
-            payload["headers"] = headers
-        client.table("sync_orphans").upsert(payload).execute()
-    except Exception as e:
-        print(f"    [!] Не удалось сохранить orphans: {e}")
-
-
 # ============================================================
-# TERABOX — получение файлов
+# PLAYWRIGHT: ПЕРЕХВАТ XHR
 # ============================================================
 
-def _parse_filename_simple(filename):
-    """Простое извлечение названия из имени файла."""
-    import re
-    stem = os.path.splitext(filename)[0].strip()
-    stem = re.sub(r"\s+", " ", stem).strip()
-    return {"title": stem}
+class Catcher:
+    def __init__(self):
+        self.responses = []
+
+    def attach(self, page):
+        def on_response(resp):
+            if "/share/list" in resp.url and "/static/" not in resp.url:
+                try:
+                    data = resp.json()
+                    self.responses.append({"data": data, "ts": time.time()})
+                except Exception:
+                    pass
+        page.on("response", on_response)
+
+    def count(self):
+        return len(self.responses)
+
+    def wait_new(self, page, prev_count, timeout_ms=15000):
+        elapsed = 0
+        while elapsed < timeout_ms:
+            if len(self.responses) > prev_count:
+                return self.responses[-1]
+            page.wait_for_timeout(200)
+            elapsed += 200
+        return None
 
 
-def _format_size_mb(size_bytes):
+def _double_click_folder(page, name):
+    loc = page.locator(f'.file-item-listmode:has-text("{name}")').first
+    if loc.count() == 0:
+        return False
     try:
-        return str(round(int(size_bytes) / (1024 * 1024), 1))
+        loc.scroll_into_view_if_needed(timeout=3000)
     except Exception:
-        return ""
-
-
-def extract_files_from_terabox(share_url, cookie, diag):
-    """
-    Возвращает список записей-словарей с ключами:
-        title, size, download_link, folder
-    """
-    if TeraboxDL is None:
-        print("  [!] Библиотека TeraboxDL не установлена.")
-        return []
-
+        pass
+    page.wait_for_timeout(200)
     try:
-        api = TeraboxDL(cookie)
-        print(f"  [i] Запрос к TeraBox: {share_url[:70]}...")
-        result = api.get_file_info(share_url)
-    except Exception as e:
-        print(f"  [!] Ошибка запроса TeraboxDL: {e}")
-        diag.errors.append(str(e))
-        return []
-
-    if not result:
-        print("  [!] Пустой ответ от TeraBox.")
-        return []
-
-    # Библиотека может вернуть:
-    # 1) словарь с одним файлом {'file_name', 'download_link', 'file_size'}
-    # 2) список файлов (если ссылка ведёт на папку)
-    items = []
-    if isinstance(result, dict):
-        if "error" in result:
-            print(f"  [!] TeraBox error: {result['error']}")
-            return []
-        items = [result]
-    elif isinstance(result, list):
-        items = result
-    else:
-        return []
-
-    files = []
-    for it in items:
-        if not isinstance(it, dict):
-            continue
-        name = it.get("file_name") or it.get("server_filename") or ""
-        dl = it.get("download_link") or it.get("dlink") or ""
-        size = it.get("file_size") or it.get("size") or 0
-
-        if not name or not dl:
-            continue
-
-        parsed = _parse_filename_simple(name)
-        files.append({
-            "title":         parsed["title"],
-            "size":          _format_size_mb(size),
-            "download_link": dl,
-            "folder":        "",
-            "description":   "",
-            "version":       "",
-        })
-    return files
+        loc.dblclick(timeout=5000)
+        return True
+    except Exception:
+        return False
 
 
 # ============================================================
-# СИНХРОНИЗАЦИЯ ОДНОГО РАЗДЕЛА
+# ДЕКОДИРОВАНИЕ ТЕКСТА
+# ============================================================
+
+def decode_bytes(raw):
+    if not raw:
+        return ""
+    if raw[:2] == b"\xff\xfe":
+        return raw.decode("utf-16-le", errors="replace")
+    if raw[:2] == b"\xfe\xff":
+        return raw.decode("utf-16-be", errors="replace")
+    if raw[:3] == b"\xef\xbb\xbf":
+        return raw.decode("utf-8-sig", errors="replace")
+
+    sample = raw[:400]
+    if len(sample) >= 8:
+        nulls_odd  = sum(1 for i in range(1, min(200, len(sample)), 2) if sample[i] == 0)
+        nulls_even = sum(1 for i in range(0, min(200, len(sample)), 2) if sample[i] == 0)
+        if nulls_odd > 40:
+            return raw.decode("utf-16-le", errors="replace")
+        if nulls_even > 40:
+            return raw.decode("utf-16-be", errors="replace")
+
+    markers = ("prog[pn]", "desc[pn]", "cmds[pn]", "[MInst]", "Name=", "Patch=")
+    for enc in ("cp1251", "utf-8", "koi8-r", "cp866"):
+        try:
+            text = raw.decode(enc)
+            if any(m in text for m in markers):
+                return text
+        except UnicodeDecodeError:
+            continue
+    return raw.decode("cp1251", errors="replace")
+
+
+def read_text_file(path):
+    with open(path, "rb") as f:
+        raw = f.read()
+    return decode_bytes(raw)
+
+
+# ============================================================
+# ОЧИСТКА ИМЁН ФАЙЛОВ
+# ============================================================
+
+def clean_patch_filename(name):
+    if not name:
+        return ""
+    s = name.strip()
+    s = re.sub(r'"\s+.*$', '"', s)
+    parts = re.split(r"[\\/]", s)
+    last = parts[-1] if parts else s
+    last = re.split(r"\s+", last)[0]
+    last = last.strip("\"'")
+    last = re.sub(r"-?\{P\}", "", last, flags=re.IGNORECASE)
+    return last.strip()
+
+
+# ============================================================
+# ПАРСИНГ ОПИСАНИЙ
+# ============================================================
+
+def parse_old_format(content):
+    programs = []
+    current = None
+    state = None
+
+    for raw_line in content.split("\n"):
+        line = raw_line.rstrip("\r")
+        if re.match(r"^\[\d+\]\s*$", line.strip()):
+            if current and current.get("name"):
+                programs.append(current)
+            current = {"name": "", "description": "",
+                       "patch": "", "patch_filename": ""}
+            state = None
+            continue
+        if current is None:
+            continue
+        if line.startswith("Name="):
+            current["name"] = line[5:].strip(); state = None
+        elif line.startswith("Hint="):
+            current["description"] = line[5:].strip(); state = "hint"
+        elif line.startswith("Patch="):
+            current["patch"] = line[6:].strip(); state = None
+        elif state == "hint" and line.strip() and not line.startswith("["):
+            current["description"] += "\n" + line
+        else:
+            state = None
+
+    if current and current.get("name"):
+        programs.append(current)
+
+    for p in programs:
+        p["patch_filename"] = clean_patch_filename(p.get("patch", ""))
+        hint = p.get("description", "")
+        if hint:
+            if hint.startswith("|"):
+                hint = hint[1:]
+            hint = hint.replace("|", "\n")
+            hint = re.sub(r"\n+", "\n", hint).strip()
+            p["description"] = hint
+    return programs
+
+
+def parse_wpi_format(content):
+    programs = []
+    blocks = re.split(r"\bpn\s*\+\+\s*;", content)
+    for block in blocks:
+        if "prog[pn]" not in block:
+            continue
+        entry = {"name": "", "description": "",
+                 "patch": "", "patch_filename": ""}
+        m = re.search(r"prog\[pn\]\s*=\s*\[(.+?)\]\s*;", block, re.DOTALL)
+        if m:
+            parts = re.findall(r"['\"]([^'\"]*)['\"]", m.group(1))
+            entry["name"] = "".join(parts).strip()
+        m = re.search(r"desc\[pn\]\s*=\s*\[(.+?)\]\s*;", block, re.DOTALL)
+        if m:
+            parts = re.findall(r"['\"]([^'\"]*)['\"]", m.group(1))
+            entry["description"] = "".join(parts).strip()
+        m = re.search(r"cmds\[pn\]\s*=\s*\[(.+?)\]\s*;", block, re.DOTALL)
+        if m:
+            parts = re.findall(r"['\"]([^'\"]*)['\"]", m.group(1))
+            cmds_str = "".join(parts)
+            entry["patch"] = cmds_str
+            entry["patch_filename"] = clean_patch_filename(cmds_str)
+        if entry["name"]:
+            programs.append(entry)
+    return programs
+
+
+def detect_format(content):
+    if "prog[pn]" in content:
+        return "wpi"
+    if "Name=" in content and re.search(r"^\[\d+\]", content, re.MULTILINE):
+        return "old"
+    return "unknown"
+
+
+# ============================================================
+# СОПОСТАВЛЕНИЕ
+# ============================================================
+
+def normalize_filename(name):
+    if not name:
+        return ""
+    name = name.lower()
+    name = re.sub(
+        r"\.(exe|msi|zip|rar|7z|tar|gz|txt|dll|bat|cmd|ps1)$", "", name
+    )
+    return name.strip()
+
+
+def normalize_aggressive(name):
+    return re.sub(r"[\s\.\-_]+", "", (name or "").lower())
+
+
+def match_file_to_program(filename, programs):
+    fn_norm = normalize_filename(filename)
+    fn_agg = normalize_aggressive(fn_norm)
+    if not fn_agg:
+        return None
+
+    for p in programs:
+        if normalize_filename(p.get("patch_filename", "")) == fn_norm:
+            return p
+    for p in programs:
+        if normalize_aggressive(p.get("patch_filename", "")) == fn_agg:
+            return p
+    for p in programs:
+        p_agg = normalize_aggressive(p.get("patch_filename", ""))
+        if len(fn_agg) >= 6 and len(p_agg) >= 6:
+            if fn_agg in p_agg or p_agg in fn_agg:
+                return p
+
+    # Fallback: по названию программы
+    fn_words = set(re.findall(r"[a-zа-яё0-9]{4,}", fn_norm.replace("ё", "е")))
+    if not fn_words:
+        return None
+    best, best_score = None, 0
+    for p in programs:
+        name_words = set(
+            re.findall(r"[a-zа-яё0-9]{4,}",
+                       (p.get("name", "") or "").lower().replace("ё", "е"))
+        )
+        if not name_words:
+            continue
+        inter = fn_words & name_words
+        if len(inter) >= 2:
+            score = len(inter) / len(name_words)
+            if score >= 0.6 and score > best_score:
+                best_score = score
+                best = p
+    return best
+
+
+def parse_filename_title(filename):
+    """Простое извлечение названия из имени файла, если описания нет."""
+    if not filename:
+        return ""
+    stem = os.path.splitext(filename)[0]
+    stem = re.sub(r"\s+", " ", stem).strip()
+    return stem
+
+
+# ============================================================
+# PLAYWRIGHT: ОБХОД TERABOX И СБОР ДАННЫХ
+# ============================================================
+
+def _download_desc_file(context, dlink, save_path):
+    resp = context.request.get(dlink, timeout=180000)
+    if resp.status != 200:
+        return None
+    body = resp.body()
+    with open(save_path, "wb") as f:
+        f.write(body)
+    return save_path
+
+
+def _load_all_programs(context, desc_items, diag):
+    all_programs = []
+    seen = set()
+    for item in desc_items:
+        name = item["name"]
+        dlink = item.get("dlink")
+        if not dlink:
+            continue
+        save = f"/tmp/{name}"
+        try:
+            if not _download_desc_file(context, dlink, save):
+                print(f"    [!] Не удалось скачать {name}")
+                continue
+        except Exception as e:
+            print(f"    [!] Ошибка скачивания {name}: {e}")
+            continue
+
+        content = read_text_file(save)
+        fmt = detect_format(content)
+        if fmt == "wpi":
+            programs = parse_wpi_format(content)
+        elif fmt == "old":
+            programs = parse_old_format(content)
+        else:
+            print(f"    [!] Неизвестный формат: {name}")
+            continue
+
+        print(f"    • {name}: {len(programs)} записей ({fmt})")
+        for p in programs:
+            key = (p.get("patch_filename") or "").lower()
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            all_programs.append(p)
+    return all_programs
+
+
+def _build_record(item, folder_name, programs):
+    """Формирует запись для Sheets из одного файла TeraBox."""
+    fname = item.get("server_filename") or ""
+    if not fname:
+        return None
+
+    matched = match_file_to_program(fname, programs) if programs else None
+
+    if matched:
+        title = matched["name"]
+        description = matched.get("description", "")
+    else:
+        title = parse_filename_title(fname)
+        description = ""
+
+    size_bytes = item.get("size") or 0
+    try:
+        size_mb = str(round(int(size_bytes) / (1024 * 1024), 1))
+    except Exception:
+        size_mb = ""
+
+    return {
+        "title":         title,
+        "description":   description,
+        "version":       "",
+        "size":          size_mb,
+        "download_link": item.get("dlink", ""),
+        "folder":        folder_name,
+    }
+
+
+def fetch_terabox_records(start_url, section, diag):
+    """
+    Открывает Playwright, обходит раздел TeraBox, возвращает список записей.
+    """
+    if sync_playwright is None:
+        print("  [!] playwright не установлен.")
+        return []
+
+    records = []
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        try:
+            context = browser.new_context(
+                user_agent=("Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                            "AppleWebKit/537.36 (KHTML, like Gecko) "
+                            "Chrome/120.0.0.0 Safari/537.36"),
+                locale="ru-RU",
+                viewport={"width": 1366, "height": 900},
+            )
+            for domain in COOKIE_DOMAINS:
+                try:
+                    context.add_cookies([{
+                        "name": "ndus", "value": TERABOX_COOKIE,
+                        "domain": domain, "path": "/",
+                        "secure": True, "sameSite": "None",
+                    }])
+                except Exception:
+                    pass
+
+            page = context.new_page()
+            catcher = Catcher()
+            catcher.attach(page)
+
+            print(f"  Открываю {start_url}")
+            page.goto(start_url, wait_until="domcontentloaded", timeout=60000)
+            page.wait_for_timeout(7000)
+
+            initial = catcher.wait_new(page, 0, timeout_ms=15000)
+            if not initial:
+                print("  [!] Нет ответа /share/list")
+                return []
+
+            items = initial["data"].get("list") or []
+            print(f"  Содержимое корня: {len(items)} элементов")
+
+            # ─── Определяем целевую подпапку ───
+            target_subfolder = None
+            yandex_path = (section.get("yandex_path") or "").strip("/")
+
+            if yandex_path:
+                # yandex_path = имя папки внутри шаренной ссылки
+                first_seg = yandex_path.split("/")[-1]
+                for it in items:
+                    if (str(it.get("isdir")) == "1"
+                            and it.get("server_filename") == first_seg):
+                        target_subfolder = first_seg
+                        break
+            else:
+                # Если в корне только одна папка «Программы» — заходим
+                subdir_names = [it.get("server_filename") for it in items
+                                if str(it.get("isdir")) == "1"]
+                if "Программы" in subdir_names:
+                    target_subfolder = "Программы"
+                elif len(subdir_names) == 1:
+                    target_subfolder = subdir_names[0]
+
+            if target_subfolder:
+                print(f"  Вход в подпапку: {target_subfolder}")
+                prev = catcher.count()
+                if not _double_click_folder(page, target_subfolder):
+                    print(f"  [!] Не удалось войти в {target_subfolder}")
+                    return []
+                page.wait_for_timeout(4000)
+                res = catcher.wait_new(page, prev, timeout_ms=15000)
+                if not res:
+                    print("  [!] Нет ответа после входа")
+                    return []
+                items = res["data"].get("list") or []
+                print(f"  Содержимое {target_subfolder}: {len(items)} элементов")
+
+            # ─── Разделяем содержимое ───
+            desc_items = []
+            root_files = []
+            subdirs = []
+
+            for it in items:
+                name = it.get("server_filename") or ""
+                if str(it.get("isdir")) == "1":
+                    subdirs.append(it)
+                elif any(p.match(name) for p in DESC_FILE_PATTERNS):
+                    desc_items.append({"name": name,
+                                       "dlink": it.get("dlink") or ""})
+                else:
+                    root_files.append(it)
+
+            print(f"  Файлов описаний: {len(desc_items)}, "
+                  f"файлов в корне: {len(root_files)}, "
+                  f"подпапок: {len(subdirs)}")
+
+            # ─── Парсим описания ───
+            programs = _load_all_programs(context, desc_items, diag)
+            print(f"  Программ из описаний: {len(programs)}")
+
+            # ─── Файлы в корне «Программы» (folder = "") ───
+            for it in root_files:
+                rec = _build_record(it, "", programs)
+                if rec:
+                    records.append(rec)
+
+            # ─── Обход подпапок ───
+            for i, sub in enumerate(subdirs):
+                sub_name = sub.get("server_filename")
+                print(f"\n  ── [{i+1}/{len(subdirs)}] {sub_name}")
+
+                # Возврат в родительскую папку
+                if i > 0 or target_subfolder:
+                    page.goto(start_url,
+                              wait_until="domcontentloaded", timeout=60000)
+                    page.wait_for_timeout(5000)
+                    if target_subfolder:
+                        prev = catcher.count()
+                        if not _double_click_folder(page, target_subfolder):
+                            print(f"    [!] Не удалось вернуться")
+                            continue
+                        page.wait_for_timeout(3000)
+                        catcher.wait_new(page, prev, timeout_ms=10000)
+
+                prev = catcher.count()
+                if not _double_click_folder(page, sub_name):
+                    print(f"    [!] Не удалось открыть '{sub_name}'")
+                    continue
+                page.wait_for_timeout(4000)
+
+                res_sub = catcher.wait_new(page, prev, timeout_ms=15000)
+                if not res_sub:
+                    print(f"    [!] Нет ответа")
+                    continue
+
+                items_sub = res_sub["data"].get("list") or []
+                files_only = [it for it in items_sub
+                              if str(it.get("isdir")) != "1"]
+                matched = 0
+                for it in files_only:
+                    rec = _build_record(it, sub_name, programs)
+                    if rec:
+                        records.append(rec)
+                        if match_file_to_program(
+                                it.get("server_filename", ""), programs):
+                            matched += 1
+                print(f"    Файлов: {len(files_only)}, "
+                      f"с описанием: {matched}")
+
+        except Exception as e:
+            print(f"  [!!!] Ошибка Playwright: {e}")
+            traceback.print_exc()
+        finally:
+            try:
+                browser.close()
+            except Exception:
+                pass
+
+    return records
+
+
+# ============================================================
+# СИНХРОНИЗАЦИЯ РАЗДЕЛА
 # ============================================================
 
 def sync_terabox_section(section, gs_client):
     label = section.get("label") or section.get("key")
     section_key = section.get("key")
-    yandex_url  = section.get("yandex_url") or ""
-    sheet_name  = section.get("sheet_name") or label
-    columns     = section.get("columns") or ["title", "description", "download_link"]
+    yandex_url = section.get("yandex_url") or ""
+    sheet_name = section.get("sheet_name") or label
+    columns = section.get("columns") or ["title", "description", "download_link"]
 
     print(f"\n=== Раздел TeraBox: {label} ({section_key}) ===")
-    print(f"Ссылка TeraBox: {yandex_url[:90]}...")
-    print(f"Лист Sheets:    {sheet_name}")
+    print(f"Ссылка:      {yandex_url[:100]}")
+    print(f"Лист Sheets: {sheet_name}")
 
     if not TERABOX_COOKIE:
-        print("  [!] TERABOX_COOKIE не задан. Пропускаем раздел.")
+        print("  [!] TERABOX_COOKIE не задан — пропускаю раздел.")
         return
 
     diag = Diag(label)
 
-    # Поддерживаем несколько ссылок через перенос строки
+    # Поддерживаем несколько ссылок через перевод строки
     urls = [u.strip() for u in yandex_url.split("\n") if u.strip()]
-    all_files = []
+    all_records = []
     for u in urls:
-        files = extract_files_from_terabox(u, TERABOX_COOKIE, diag)
-        all_files.extend(files)
+        print(f"\n  Загрузка TeraBox: {u[:90]}")
+        recs = fetch_terabox_records(u, section, diag)
+        print(f"  Получено записей: {len(recs)}")
+        all_records.extend(recs)
 
-    diag.found = len(all_files)
-    print(f"  Получено файлов из TeraBox: {len(all_files)}")
+    # Дедупликация по download_link
+    dedup = {}
+    for r in all_records:
+        link = r.get("download_link")
+        if link and link not in dedup:
+            dedup[link] = r
+    all_records = list(dedup.values())
 
+    diag.found = len(all_records)
+    print(f"\n  Итого уникальных записей: {len(all_records)}")
+
+    # ─── Формируем строки для Sheets ───
     headers = headers_from_columns(columns)
-    rows = [_row_from_record(rec, headers) for rec in all_files]
+    rows = [_row_from_record(rec, headers) for rec in all_records]
     diag.kept = len(rows)
 
-    # Открываем таблицу
+    # ─── Открываем таблицу ───
     try:
         sh = open_spreadsheet(gs_client)
     except Exception as e:
@@ -563,14 +1004,14 @@ def sync_terabox_section(section, gs_client):
     ensure_headers(sheet, headers)
 
     all_values, existing = load_sheet_snapshot(sheet)
-    print(f"  Существующих строк: {len(existing)}")
+    print(f"  Существующих строк в Sheets: {len(existing)}")
 
     link_ru = "Ссылка для скачивания"
     link_idx = headers.index(link_ru) if link_ru in headers else 0
     n_cols = len(headers)
     end_col_letter = _col_letter(n_cols - 1)
 
-    # Сироты
+    # ─── Сироты ───
     orphans = find_orphan_rows(existing, rows, headers, link_idx)
     diag.orphans_found = len(orphans)
     if orphans:
@@ -578,6 +1019,7 @@ def sync_terabox_section(section, gs_client):
     save_orphans_to_supabase(section_key, label, sheet_name,
                              orphans, headers)
 
+    # ─── Изменения ───
     updates = []
     to_add = []
     preserved = 0
@@ -623,7 +1065,8 @@ def sync_terabox_section(section, gs_client):
     diag.unchanged_rows  = unchanged
 
     if (updates or to_add) and BACKUP_BEFORE_SYNC:
-        diag.backup_name = backup_sheet(sh, sheet, section_key, all_values) or ""
+        diag.backup_name = backup_sheet(sh, sheet, section_key,
+                                        all_values) or ""
 
     if updates:
         diag.updated = batch_update_rows(sheet, updates)
@@ -640,7 +1083,7 @@ def sync_terabox_section(section, gs_client):
 
 def main():
     print("=" * 60)
-    print("terabox_sync.py — старт")
+    print("terabox_sync.py (v2) — старт")
     print("=" * 60)
     print(f"PRESERVE_USER_EDITS = {PRESERVE_USER_EDITS}")
     print(f"BACKUP_BEFORE_SYNC  = {BACKUP_BEFORE_SYNC}")
@@ -648,23 +1091,25 @@ def main():
     if SYNC_SECTIONS_FILTER:
         print(f"SYNC_SECTIONS_FILTER = {SYNC_SECTIONS_FILTER}")
 
-    if TeraboxDL is None:
-        print("[!] Библиотека terabox-downloader не установлена.")
-        print("    Добавьте её в requirements.txt и переустановите зависимости.")
+    if sync_playwright is None:
+        print("[!] playwright не установлен.")
+        print("    Добавьте 'playwright' в requirements.txt")
+        print("    и выполните: python -m playwright install chromium")
         return
 
     if not TERABOX_COOKIE:
-        print("[!] TERABOX_COOKIE не задан — ничего не делаем.")
+        print("[!] TERABOX_COOKIE не задан — выходим.")
         return
 
     print("\nЗагрузка разделов из Supabase...")
     sections = load_sections_from_supabase()
     if not sections:
-        print("[!] Нет разделов — выходим.")
+        print("[!] Нет активных разделов — выходим.")
         return
 
-    # Фильтруем только TeraBox-разделы
-    terabox_sections = [s for s in sections if is_terabox_url(s.get("yandex_url", ""))]
+    terabox_sections = [
+        s for s in sections if is_terabox_url(s.get("yandex_url", ""))
+    ]
     print(f"  Найдено TeraBox-разделов: {len(terabox_sections)}")
 
     if SYNC_SECTIONS_FILTER:
@@ -673,10 +1118,10 @@ def main():
             s for s in terabox_sections
             if s.get("key") in SYNC_SECTIONS_FILTER
         ]
-        print(f"  После фильтра SYNC_SECTIONS: {len(terabox_sections)} из {before}")
+        print(f"  После фильтра: {len(terabox_sections)} из {before}")
 
     if not terabox_sections:
-        print("  Нет TeraBox-разделов для синхронизации — выходим.")
+        print("  Нет TeraBox-разделов для синхронизации.")
         return
 
     for s in terabox_sections:
@@ -699,6 +1144,7 @@ def main():
 
     print("\n" + "=" * 60)
     print("terabox_sync.py — готово!")
+    print("=" * 60)
 
 
 if __name__ == "__main__":
