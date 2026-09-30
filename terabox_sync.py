@@ -107,7 +107,6 @@ ARCH_SUFFIXES = re.compile(
     re.IGNORECASE,
 )
 
-# Максимальное количество попыток открыть папку
 FOLDER_OPEN_ATTEMPTS = 3
 
 
@@ -156,6 +155,26 @@ class Diag:
             for e in self.errors[:5]:
                 print(f"    - {e}")
         print("  ───────────────────\n")
+
+
+# ============================================================
+# ОПРЕДЕЛЕНИЕ ИСТОЧНИКА ПО URL
+# ============================================================
+
+def _detect_source(link):
+    """
+    Определяет источник по URL.
+    Возвращает: 'terabox' | 'yandex' | 'unknown'.
+    """
+    if not link:
+        return "unknown"
+    s = str(link).lower()
+    if ("terabox" in s or "1024tera" in s
+            or "4funbox" in s or "teraboxapp" in s):
+        return "terabox"
+    if "disk.yandex" in s or "yadi.sk" in s:
+        return "yandex"
+    return "unknown"
 
 
 # ============================================================
@@ -305,7 +324,6 @@ def load_sheet_snapshot(sheet, headers):
     if not rows:
         return [], {}, {}
 
-    # Индексы колонок в самой таблице
     header = [(h or "").strip().lower() for h in rows[0]]
 
     link_idx = None
@@ -961,7 +979,6 @@ def fetch_terabox_records(start_url, section, diag):
             work_folder_name = None
 
             if yandex_path:
-                # Берём последнюю часть пути как имя папки
                 first_seg = yandex_path.split("/")[-1]
                 subdir_names = [
                     it.get("server_filename") for it in root_items
@@ -970,7 +987,6 @@ def fetch_terabox_records(start_url, section, diag):
                 if first_seg in subdir_names:
                     work_folder_name = first_seg
             else:
-                # Автоопределение: единственная папка в корне
                 subdirs_in_root = [
                     it for it in root_items
                     if str(it.get("isdir")) == "1"
@@ -1065,7 +1081,6 @@ def fetch_terabox_records(start_url, section, diag):
                 sub_name = sub.get("server_filename")
                 print(f"\n    ── [{i+1}/{len(subdirs)}] {sub_name}")
 
-                # Возврат в корень и рабочую папку
                 if i > 0 or work_folder_name:
                     page.goto(start_url, wait_until="domcontentloaded",
                               timeout=60000)
@@ -1078,7 +1093,6 @@ def fetch_terabox_records(start_url, section, diag):
                         page.wait_for_timeout(300)
                         elapsed += 300
 
-                    # Вернуться в рабочую папку если она была
                     if work_folder_name:
                         back = open_folder(page, catcher, work_folder_name)
                         if back is None:
@@ -1086,7 +1100,6 @@ def fetch_terabox_records(start_url, section, diag):
                             diag.failed_folders.append(sub_name)
                             continue
 
-                # Открыть саму подпапку
                 items_sub = open_folder(page, catcher, sub_name)
                 if items_sub is None:
                     print(f"      ✗ не удалось открыть '{sub_name}'")
@@ -1152,7 +1165,6 @@ def sync_terabox_section(section, gs_client):
         print(f"  Получено записей: {len(recs)}")
         all_records.extend(recs)
 
-    # Дедупликация по (folder, title) — оставляем первое вхождение
     dedup = {}
     for r in all_records:
         key = ((r.get("folder") or "").lower(),
@@ -1164,12 +1176,10 @@ def sync_terabox_section(section, gs_client):
     diag.found = len(all_records)
     print(f"\n  Итого уникальных записей: {len(all_records)}")
 
-    # ─── Формируем строки ───
     headers = headers_from_columns(columns)
     rows = [_row_from_record(rec, headers) for rec in all_records]
     diag.kept = len(rows)
 
-    # ─── Открываем таблицу ───
     try:
         sh = open_spreadsheet(gs_client)
     except Exception as e:
@@ -1191,9 +1201,7 @@ def sync_terabox_section(section, gs_client):
     n_cols = len(headers)
     end_col_letter = _col_letter(n_cols - 1)
 
-    # ─── Осиротевшие строки ───
-    # Новая логика: строка считается осиротевшей, если её (folder, title)
-    # отсутствует среди свежесобранных записей.
+    # ─── Осиротевшие строки (только «наши» — TeraBox) ───
     new_keys = set()
     for r in all_records:
         new_keys.add(((r.get("folder") or "").lower(),
@@ -1214,7 +1222,13 @@ def sync_terabox_section(section, gs_client):
     for (key, info) in existing_by_key.items():
         if key in new_keys:
             continue
+
+        # ─── КЛЮЧЕВОЕ: пропускаем строки чужого источника ───
         values = info["values"]
+        link_val = values[link_idx] if link_idx < len(values) else ""
+        if _detect_source(link_val) != "terabox":
+            continue
+
         title = ""
         if title_hdr_idx is not None and title_hdr_idx < len(values):
             title = str(values[title_hdr_idx]).strip()
@@ -1222,7 +1236,7 @@ def sync_terabox_section(section, gs_client):
         orphans.append({
             "row":    info["row"],
             "title":  title,
-            "link":   values[link_idx] if link_idx < len(values) else "",
+            "link":   link_val,
             "values": padded[:len(headers)],
         })
 
@@ -1242,7 +1256,6 @@ def sync_terabox_section(section, gs_client):
         row = _row_from_record(rec, headers)
         link = str(row[link_idx]).strip() if link_idx < len(row) else ""
 
-        # Ключ уникальности: (folder, title)
         key = ((rec.get("folder") or "").lower(),
                (rec.get("title") or "").lower())
 
