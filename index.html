@@ -524,27 +524,36 @@
     }, true);
 
     // --- Прокси ---
-    function buildProxyUrl(downloadUrl) {
+    function buildProxyUrl(downloadUrl, fileName) {
     if (!downloadUrl) return '';
     try {
         const parsed = new URL(downloadUrl);
         const host = parsed.hostname.toLowerCase();
 
         // ─── TeraBox-ссылки ───
-        // d.terabox.app / d.1024tera.com / d.4funbox.com и т.п.
         if (host.includes('terabox')
             || host.includes('1024tera')
             || host.includes('4funbox')
             || host.includes('teraboxapp')) {
-            const fileName = decodeURIComponent(
-                parsed.pathname.split('/').pop() || 'file.bin'
-            );
+            // Берём имя из аргумента, а не из pathname (там хеш)
+            let fname = fileName && String(fileName).trim();
+            if (!fname) {
+                // fallback: попытаться вытащить из ?path= или дать дефолт
+                const fromPath = parsed.searchParams.get('path');
+                fname = fromPath
+                    ? decodeURIComponent(fromPath).split('/').pop()
+                    : 'file.bin';
+            }
+            // Добавляем расширение, если его нет
+            if (!/\.[a-z0-9]{1,6}$/i.test(fname)) {
+                fname += '.bin';
+            }
             return `${SUPABASE_URL}/functions/v1/terabox-download`
                  + `?url=${encodeURIComponent(downloadUrl)}`
-                 + `&name=${encodeURIComponent(fileName)}`;
+                 + `&name=${encodeURIComponent(fname)}`;
         }
 
-        // ─── Яндекс.Диск (как было) ───
+        // ─── Яндекс.Диск ───
         const folder = `${parsed.origin}${parsed.pathname}`;
         const path = parsed.searchParams.get('path');
         if (!folder || !path) return downloadUrl;
@@ -693,21 +702,32 @@
         });
     }
     async function incrementDownload(fileId, downloadUrl, fileName) {
-        if (!currentUser) { alert('Для скачивания необходимо зарегистрироваться.'); return; }
-        try {
-            const { data } = await supabaseClient.rpc('increment_download', { p_file_id: fileId });
-            downloadCounts[fileId] = data;
-            updateDownloadCountsDisplay();
-            await supabaseClient.from('download_logs').insert([{
-                file_id: fileId, file_name: fileName || null,
-                user_id: currentUser.id,
-                username: currentProfile?.username || currentUser.email
-            }]);
-            if (downloadUrl && downloadUrl !== '#') MF.triggerDownload(buildProxyUrl(downloadUrl));
-        } catch (e) {
-            if (downloadUrl && downloadUrl !== '#') MF.triggerDownload(buildProxyUrl(downloadUrl));
+    if (!currentUser) {
+        alert('Для скачивания необходимо зарегистрироваться.');
+        return;
+    }
+    try {
+        const { data } = await supabaseClient.rpc(
+            'increment_download', { p_file_id: fileId }
+        );
+        downloadCounts[fileId] = data;
+        updateDownloadCountsDisplay();
+        await supabaseClient.from('download_logs').insert([{
+            file_id: fileId,
+            file_name: fileName || null,
+            user_id: currentUser.id,
+            username: currentProfile?.username || currentUser.email
+        }]);
+        if (downloadUrl && downloadUrl !== '#') {
+            // ─── передаём имя файла ───
+            MF.triggerDownload(buildProxyUrl(downloadUrl, fileName));
+        }
+    } catch (e) {
+        if (downloadUrl && downloadUrl !== '#') {
+            MF.triggerDownload(buildProxyUrl(downloadUrl, fileName));
         }
     }
+}
 
     function initTableState(id, cols) {
         if (!tableStates[id]) {
