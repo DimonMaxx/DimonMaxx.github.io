@@ -26,6 +26,7 @@ yandex_disk_sync.py
   • Детект «осиротевших» строк (файлы исчезли с Диска, строки остались
     в Sheets) с сохранением в Supabase-таблицу sync_orphans,
     включая полные значения строк и заголовки (для diff-view).
+    Терабокс-строки в листе игнорируются (обрабатываются terabox_sync.py).
   • ensure_headers полностью перезаписывает первую строку до максимальной
     ширины листа — устраняет «хвосты» старых колонок и дубликаты
     заголовков.
@@ -127,7 +128,6 @@ RU_TO_EN = {
     "Платформа":             "platform",
 }
 
-# Соответствие ключа колонки (как в Supabase) → русский заголовок
 EN_TO_RU = {v: k for k, v in RU_TO_EN.items()}
 
 
@@ -135,43 +135,21 @@ EN_TO_RU = {v: k for k, v in RU_TO_EN.items()}
 # РЕЖИМЫ СИНХРОНИЗАЦИИ
 # ============================================================
 
-# PRESERVE_USER_EDITS=1 (по умолчанию):
-#   при обновлении существующей строки непустые ячейки сохраняются
-#   (ручные правки), пустые — заполняются из Диска.
-# PRESERVE_USER_EDITS=0:
-#   строка перезаписывается целиком (старое поведение).
 PRESERVE_USER_EDITS = os.environ.get("PRESERVE_USER_EDITS", "1") == "1"
-
-# BACKUP_BEFORE_SYNC=1 (по умолчанию): перед записью изменений
-#   создаётся резервная копия листа.
 BACKUP_BEFORE_SYNC  = os.environ.get("BACKUP_BEFORE_SYNC", "1") == "1"
-
-# Сколько последних резервных копий хранить для каждого раздела.
 BACKUP_KEEP_COUNT   = int(os.environ.get("BACKUP_KEEP_COUNT", "3"))
 
-# STRIP_PREFIX_MODE — глобальный fallback, если у раздела нет
-# собственного strip_prefix_mode:
-#   'always' — всегда отрезать yandex_path от путей файлов.
-#   'never'  — не отрезать.
-#   'auto'   — старая логика через is_public_root_link.
 STRIP_PREFIX_MODE_DEFAULT = os.environ.get("STRIP_PREFIX_MODE", "always").lower()
 
-# SYNC_SECTIONS — список ключей разделов через запятую.
-# Пусто → синхронизировать все активные разделы.
 _raw_sync_sections = os.environ.get("SYNC_SECTIONS", "").strip()
 SYNC_SECTIONS_FILTER = [
     s.strip() for s in _raw_sync_sections.split(",") if s.strip()
 ] if _raw_sync_sections else []
 
-# SKIP_ENRICHMENT=1 — не ходить во внешние API (Fantlab, Wikipedia,
-# OpenLibrary, Google Books, LLM). Использовать только данные fb2/txt.
 SKIP_ENRICHMENT = os.environ.get("SKIP_ENRICHMENT", "0") == "1"
 
-# Таблица Supabase, в которую пишутся «осиротевшие» строки.
 SYNC_ORPHANS_TABLE  = "sync_orphans"
 
-# Колонки, которые ВСЕГДА перезаписываются данными из Яндекс.Диска:
-# их значения вычисляются из файла, ручные правки бессмысленны.
 ALWAYS_UPDATE_HEADERS = {
     "Ссылка для скачивания", "Ссылка",
     "Размер (МБ)", "Размер",
@@ -179,8 +157,6 @@ ALWAYS_UPDATE_HEADERS = {
     "download_link", "link", "size", "format",
 }
 
-# Кандидаты имён колонки «Название» — для извлечения title
-# при формировании списка осиротевших строк.
 TITLE_HEADER_CANDIDATES = ("Название", "название", "Title", "title")
 
 
@@ -200,7 +176,6 @@ class Diag:
         self.skipped   = {"bad_ext": 0, "garbage": 0, "wrong_ext": 0,
                           "dup_link": 0}
         self.skip_samples = []
-        # Дополнительные счётчики
         self.preserved_edits = 0
         self.unchanged_rows  = 0
         self.orphans_found   = 0
@@ -240,6 +215,31 @@ def log_skip(diag, reason, name):
     diag.skipped[reason] = diag.skipped.get(reason, 0) + 1
     if len(diag.skip_samples) < 30:
         diag.skip_samples.append(f"[{reason}] {name}")
+
+
+# ============================================================
+# ОПРЕДЕЛЕНИЕ ИСТОЧНИКА ПО URL
+# ============================================================
+
+def _detect_source(link):
+    """
+    Определяет источник по URL.
+    Возвращает: 'terabox' | 'yandex' | 'unknown'.
+    """
+    if not link:
+        return "unknown"
+    s = str(link).lower()
+    if ("terabox" in s or "1024tera" in s
+            or "4funbox" in s or "teraboxapp" in s):
+        return "terabox"
+    if "disk.yandex" in s or "yadi.sk" in s:
+        return "yandex"
+    return "unknown"
+
+
+def is_yandex_link(link):
+    """True, если ссылка ведёт на Яндекс.Диск."""
+    return _detect_source(link) == "yandex"
 
 
 # ============================================================
@@ -1047,7 +1047,6 @@ def _llm_lookup(title, author):
 
 
 def enrich_book(title, author, cache, diag):
-    # Fast mode: не ходим во внешние API
     if SKIP_ENRICHMENT:
         return {}
 
@@ -1109,7 +1108,6 @@ def upload_cover_to_supabase(cover_data, ext, book_title):
 # ============================================================
 
 def _get_supabase_client():
-    """Возвращает клиент Supabase или None, если не настроен."""
     if not supa_create_client:
         return None
     if not SUPABASE_SERVICE_KEY:
@@ -1122,10 +1120,6 @@ def _get_supabase_client():
 
 
 def load_sections_from_supabase():
-    """
-    Возвращает список активных разделов site_sections,
-    включая поля manual_override и strip_prefix_mode.
-    """
     client = _get_supabase_client()
     if client is None:
         print("[!] Supabase-клиент недоступен — не могу загрузить разделы.")
@@ -1142,7 +1136,6 @@ def load_sections_from_supabase():
         )
         return resp.data or []
     except Exception as e:
-        # Возможно, ещё нет колонки strip_prefix_mode — пробуем без неё
         print(f"[!] Ошибка загрузки разделов (с strip_prefix_mode): {e}")
         try:
             resp = (
@@ -1163,10 +1156,6 @@ def load_sections_from_supabase():
 
 def save_orphans_to_supabase(section_key, section_label,
                              sheet_name, orphans, headers=None):
-    """
-    Upsert в sync_orphans: одна строка на раздел.
-    Дополнительно сохраняем headers (для diff-view).
-    """
     client = _get_supabase_client()
     if client is None:
         return
@@ -1220,7 +1209,6 @@ def get_or_create_sheet(sh, name):
 
 
 def _col_letter(n):
-    """Индекс колонки (0-based) → буквенное обозначение A, B, ..., Z, AA, AB."""
     s = ""
     n += 1
     while n:
@@ -1230,18 +1218,11 @@ def _col_letter(n):
 
 
 def ensure_headers(sheet, headers):
-    """
-    Обновляет заголовки листа. Полностью перезаписывает первую строку
-    до максимальной ширины листа, чтобы не осталось «хвостов»
-    от старых версий схемы (иначе gspread.get_all_records()
-    ругается на дубликаты).
-    """
     try:
         current = sheet.row_values(1)
     except Exception:
         current = []
 
-    # Нужно ли обновлять?
     need_update = False
     if len(current) != len(headers):
         need_update = True
@@ -1253,7 +1234,6 @@ def ensure_headers(sheet, headers):
     if not need_update:
         return
 
-    # Определяем максимальную ширину листа (чтобы перезаписать «хвост»)
     try:
         all_values = sheet.get_all_values()
         max_cols = max((len(r) for r in all_values), default=len(headers))
@@ -1261,7 +1241,6 @@ def ensure_headers(sheet, headers):
         max_cols = len(headers)
     max_cols = max(max_cols, len(headers))
 
-    # Формируем строку: заголовки + пустые ячейки для «хвоста»
     new_row = list(headers) + [""] * (max_cols - len(headers))
 
     end_col_letter = _col_letter(max_cols - 1)
@@ -1276,14 +1255,6 @@ def ensure_headers(sheet, headers):
 
 
 def load_sheet_snapshot(sheet):
-    """
-    Возвращает (all_values, existing_index).
-
-      all_values     — list[list[str]] — все значения листа (вкл. заголовок).
-      existing_index — {download_link: {"row": int, "values": list[str]}}.
-
-    download_link ищется по первой подходящей колонке.
-    """
     try:
         rows = sheet.get_all_values()
     except Exception as e:
@@ -1313,17 +1284,6 @@ def load_sheet_snapshot(sheet):
 
 
 def merge_row(old_values, new_values, headers, always_update=None):
-    """
-    Объединяет старую (уже сохранённую в Sheets) и новую
-    (сгенерированную из Яндекс.Диска) строки.
-
-    Правила:
-      • Колонки из always_update → всегда значение из new_values.
-      • Остальные: если в old_values непустое значение — сохраняем его
-        (ручная правка), иначе берём значение из new_values.
-
-    Возвращает список значений длиной len(headers).
-    """
     if always_update is None:
         always_update = ALWAYS_UPDATE_HEADERS
 
@@ -1349,12 +1309,6 @@ def merge_row(old_values, new_values, headers, always_update=None):
 
 def backup_sheet(sh, worksheet, section_key, all_values,
                  max_backups=None):
-    """
-    Создаёт резервную копию листа с именем _backup_<section>_<ts>.
-    Удаляет самые старые копии, оставляя max_backups.
-
-    Возвращает имя созданного листа или None.
-    """
     if not all_values:
         print("    [b] Backup: лист пуст, копия не нужна.")
         return None
@@ -1381,7 +1335,6 @@ def backup_sheet(sh, worksheet, section_key, all_values,
         print(f"    [!] Backup: ошибка создания: {e}")
         return None
 
-    # Чистим старые резервные копии этого раздела
     try:
         prefix = f"_backup_{section_key}_"
         backups = [ws for ws in sh.worksheets()
@@ -1443,7 +1396,6 @@ def append_rows_safe(sheet, rows, batch_size=200):
 # ============================================================
 
 def _row_from_record(record, headers):
-    """Собирает строку таблицы в порядке русских заголовков."""
     row = []
     for ru in headers:
         en = RU_TO_EN.get(ru, ru)
@@ -1453,7 +1405,6 @@ def _row_from_record(record, headers):
 
 def build_rows_books(client, files, public_url, start_path, strip_prefix,
                      headers, cache, diag):
-    """Обработчик «books» — парсит fb2/txt, обогащает, тянет обложки."""
     rows = []
     seen_links = set()
     total = len(files)
@@ -1636,7 +1587,6 @@ def build_rows_programs(files, public_url, start_path, strip_prefix,
 
 def build_rows_universal(files, public_url, start_path, strip_prefix,
                          headers, diag):
-    """Универсальный обработчик — берёт все файлы."""
     rows = []
     seen_links = set()
 
@@ -1676,16 +1626,11 @@ def build_rows_universal(files, public_url, start_path, strip_prefix,
 # ============================================================
 
 def headers_from_columns(columns):
-    """
-    Преобразует список ключей (['title','description','download_link'])
-    в список русских заголовков для Google Sheets.
-    """
     headers = []
     for key in columns or []:
         ru = EN_TO_RU.get(key)
         if ru:
             headers.append(ru)
-    # Гарантируем наличие «Ссылка для скачивания»
     if "Ссылка для скачивания" not in headers:
         headers.append("Ссылка для скачивания")
     return headers
@@ -1697,9 +1642,10 @@ def headers_from_columns(columns):
 
 def find_orphan_rows(existing_index, rows, headers, link_idx):
     """
-    Возвращает список осиротевших строк:
-    строки Sheets, download_link которых отсутствует в свежесобранных rows.
-    Дополнительно сохраняем ПОЛНЫЕ значения строки (для diff-view).
+    Возвращает список осиротевших строк ТОЛЬКО для Яндекс-источника.
+
+    Строки, чья download_link ведёт на TeraBox (или другой не-Яндекс
+    источник), игнорируются — они обрабатываются terabox_sync.py.
     """
     new_links = set()
     for row in rows:
@@ -1708,7 +1654,6 @@ def find_orphan_rows(existing_index, rows, headers, link_idx):
             if v:
                 new_links.add(v)
 
-    # Ищем колонку с названием
     title_idx = None
     for cand in TITLE_HEADER_CANDIDATES:
         if cand in headers:
@@ -1719,11 +1664,15 @@ def find_orphan_rows(existing_index, rows, headers, link_idx):
     for link, info in existing_index.items():
         if link in new_links:
             continue
+
+        # ─── КЛЮЧЕВОЕ: только Яндекс-ссылки ───
+        if not is_yandex_link(link):
+            continue
+
         values = info["values"]
         title = ""
         if title_idx is not None and title_idx < len(values):
             title = str(values[title_idx]).strip()
-        # Дополняем до длины headers, чтобы diff-view мог сопоставить
         padded = list(values) + [""] * max(0, len(headers) - len(values))
         orphans.append({
             "row":    info["row"],
@@ -1739,7 +1688,6 @@ def find_orphan_rows(existing_index, rows, headers, link_idx):
 # ============================================================
 
 def sync_section(section, gs_client, cache):
-    """section — строка из таблицы site_sections."""
     label = section.get("label") or section.get("key")
     section_key = section.get("key")
     yandex_url  = section.get("yandex_url") or ""
@@ -1749,7 +1697,6 @@ def sync_section(section, gs_client, cache):
     columns     = section.get("columns") or ["title", "description", "download_link"]
     manual_override = bool(section.get("manual_override"))
 
-    # Режим отрезания префикса: сначала per-section, потом env-fallback.
     strip_mode = (
         section.get("strip_prefix_mode")
         or STRIP_PREFIX_MODE_DEFAULT
@@ -1766,7 +1713,6 @@ def sync_section(section, gs_client, cache):
     print(f"manual_override: {manual_override}")
     print(f"strip_prefix:    {strip_mode}")
 
-    # ─── Пропускаем разделы, не относящиеся к Яндекс.Диску ───
     if yandex_url and ("terabox.com" in yandex_url.lower()
                        or "1024terabox.com" in yandex_url.lower()):
         print("  [i] Раздел относится к TeraBox — обрабатывается terabox_sync.py.")
@@ -1786,7 +1732,6 @@ def sync_section(section, gs_client, cache):
         print("  [!] YADISK_TOKEN не задан.")
         return
 
-    # ─── Определение режима отрезания префикса ───
     sp = (start_path or "").strip("/")
 
     if not sp:
@@ -1841,7 +1786,6 @@ def sync_section(section, gs_client, cache):
     diag.kept = len(rows)
     print(f"\n  Сгенерировано строк: {len(rows)}")
 
-    # --- Открываем таблицу ---
     try:
         sh = open_spreadsheet(gs_client)
     except Exception as e:
@@ -1851,7 +1795,6 @@ def sync_section(section, gs_client, cache):
     sheet = get_or_create_sheet(sh, sheet_name)
     ensure_headers(sheet, headers)
 
-    # --- Снимок текущего состояния ---
     all_values, existing = load_sheet_snapshot(sheet)
     print(f"  Существующих строк: {len(existing)}")
 
@@ -1860,7 +1803,7 @@ def sync_section(section, gs_client, cache):
     n_cols = len(headers)
     end_col_letter = _col_letter(n_cols - 1)
 
-    # --- Детект сирот ---
+    # ─── Детект сирот (только Яндекс-строки, чужие игнорируются) ───
     orphans = find_orphan_rows(existing, rows, headers, link_idx)
     diag.orphans_found = len(orphans)
     if orphans:
@@ -1869,11 +1812,9 @@ def sync_section(section, gs_client, cache):
         save_orphans_to_supabase(section_key, label, sheet_name,
                                  orphans, headers)
     else:
-        # Очищаем запись — сирот нет
         save_orphans_to_supabase(section_key, label, sheet_name,
                                  [], headers)
 
-    # --- Формируем изменения ---
     updates = []
     to_add = []
     preserved_rows = 0
@@ -1890,14 +1831,12 @@ def sync_section(section, gs_client, cache):
         row_num = info["row"]
         old_values = info["values"]
 
-        # manual_override → существующие строки вообще не трогаем
         if manual_override:
             unchanged_rows += 1
             continue
 
         merged = merge_row(old_values, row, headers)
 
-        # Сравниваем только первые n_cols столбцов
         old_cmp = [str(v) for v in old_values[:n_cols]]
         new_cmp = [str(v) for v in merged]
 
@@ -1905,8 +1844,6 @@ def sync_section(section, gs_client, cache):
             unchanged_rows += 1
             continue
 
-        # Считаем, что была сохранена ручная правка:
-        # контентная колонка непустая в old и отличается от new
         if PRESERVE_USER_EDITS:
             for j, h in enumerate(headers):
                 if h in ALWAYS_UPDATE_HEADERS:
@@ -1935,12 +1872,10 @@ def sync_section(section, gs_client, cache):
     diag.preserved_edits = preserved_rows
     diag.unchanged_rows  = unchanged_rows
 
-    # --- Backup перед записью ---
     if (updates or to_add) and BACKUP_BEFORE_SYNC:
         diag.backup_name = backup_sheet(sh, sheet, section_key,
                                         all_values) or ""
 
-    # --- Применяем ---
     if updates:
         diag.updated = batch_update_rows(sheet, updates)
     if to_add:
@@ -1980,7 +1915,6 @@ def main():
         print("[!] Не удалось получить ни одного раздела — завершаю.")
         return
 
-    # ─── Фильтр по SYNC_SECTIONS ───
     if SYNC_SECTIONS_FILTER:
         before = len(sections)
         sections = [s for s in sections
