@@ -40,6 +40,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      # ─── Playwright: браузер для TeraBox ───
+      - name: Install Playwright Chromium
+        run: |
+          python -m playwright install chromium
+          python -m playwright install-deps chromium
+
       # ─── Кэш обогащения ───
       - name: Restore enrichment cache
         uses: actions/cache@v4
@@ -74,7 +80,7 @@ jobs:
           SKIP_ENRICHMENT:           ${{ github.event.inputs.skip_enrichment == 'true' && '1' || '0' }}
         run: python yandex_disk_sync.py
 
-      # ─── TeraBox (независимый скрипт) ───
+      # ─── TeraBox (Playwright + обход папок) ───
       - name: Run terabox_sync.py
         env:
           GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
