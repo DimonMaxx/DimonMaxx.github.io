@@ -525,27 +525,34 @@
 
     // --- Прокси ---
     function buildProxyUrl(downloadUrl) {
-        if (!downloadUrl) return '';
-        try {
-            const parsed = new URL(downloadUrl);
-            const folder = `${parsed.origin}${parsed.pathname}`;
-            const path = parsed.searchParams.get('path');
-            if (!folder || !path) return downloadUrl;
-            return `${SUPABASE_URL}/functions/v1/yandex-download` +
-                   `?folder=${encodeURIComponent(folder)}` +
-                   `&path=${encodeURIComponent(path)}`;
-        } catch (e) { return downloadUrl; }
-    }
-    function getAudioMimeType(url) {
-        if (!url) return '';
-        const m = url.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
-        const ext = m ? m[1].toLowerCase() : '';
-        const map = { mp3:'audio/mpeg', flac:'audio/flac', wav:'audio/wav',
-                      ogg:'audio/ogg', m4a:'audio/mp4', aac:'audio/aac',
-                      wma:'audio/x-ms-wma', opus:'audio/opus',
-                      ape:'audio/x-ape', aiff:'audio/aiff', alac:'audio/mp4' };
-        return map[ext] || '';
-    }
+    if (!downloadUrl) return '';
+    try {
+        const parsed = new URL(downloadUrl);
+        const host = parsed.hostname.toLowerCase();
+
+        // ─── TeraBox-ссылки ───
+        // d.terabox.app / d.1024tera.com / d.4funbox.com и т.п.
+        if (host.includes('terabox')
+            || host.includes('1024tera')
+            || host.includes('4funbox')
+            || host.includes('teraboxapp')) {
+            const fileName = decodeURIComponent(
+                parsed.pathname.split('/').pop() || 'file.bin'
+            );
+            return `${SUPABASE_URL}/functions/v1/terabox-download`
+                 + `?url=${encodeURIComponent(downloadUrl)}`
+                 + `&name=${encodeURIComponent(fileName)}`;
+        }
+
+        // ─── Яндекс.Диск (как было) ───
+        const folder = `${parsed.origin}${parsed.pathname}`;
+        const path = parsed.searchParams.get('path');
+        if (!folder || !path) return downloadUrl;
+        return `${SUPABASE_URL}/functions/v1/yandex-download`
+             + `?folder=${encodeURIComponent(folder)}`
+             + `&path=${encodeURIComponent(path)}`;
+    } catch (e) { return downloadUrl; }
+}
 
     function buildColumnsFromKeys(keys) {
         const labels = CFG.COLUMN_LABELS || {};
