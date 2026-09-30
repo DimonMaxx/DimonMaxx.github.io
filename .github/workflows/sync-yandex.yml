@@ -1,0 +1,113 @@
+name: Sync Yandex.Disk
+
+on:
+  workflow_dispatch:
+    inputs:
+      sections:
+        description: 'Разделы через запятую (пусто = все). Например: books,music'
+        required: false
+        default: ''
+        type: string
+      skip_enrichment:
+        description: 'Пропустить обогащение из внешних API (для книг)'
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # Раз в сутки в 03:00 UTC
+    - cron: '0 3 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-content
+  cancel-in-progress: false
+
+jobs:
+  sync-yandex:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Restore enrichment cache
+        uses: actions/cache@v4
+        with:
+          path: _cache
+          key: enrichment-${{ github.ref }}-${{ hashFiles('_content/*.json') }}
+          restore-keys: |
+            enrichment-${{ github.ref }}-
+            enrichment-
+
+      - name: Ensure cache dir exists
+        run: mkdir -p _cache
+
+      - name: Create credentials.json
+        run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > credentials.json
+
+      - name: Run yandex_disk_sync.py
+        env:
+          GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          YADISK_TOKEN:              ${{ secrets.YADISK_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GOOGLE_BOOKS_API_KEY:      ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+          SPREADSHEET_NAME:          "НаполнениеСайта"
+          SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
+          WIKI_LANG:                 "ru"
+          ENABLE_LLM_FALLBACK:       "0"
+          PRESERVE_USER_EDITS:       "1"
+          BACKUP_BEFORE_SYNC:        "1"
+          BACKUP_KEEP_COUNT:         "3"
+          SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
+          SKIP_ENRICHMENT:           ${{ github.event.inputs.skip_enrichment == 'true' && '1' || '0' }}
+        run: python yandex_disk_sync.py
+
+      - name: Run generate_from_sheets.py
+        env:
+          GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
+        run: python generate_from_sheets.py
+
+      - name: Commit and push changes
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add _content/ || true
+          if [ -d _cache ]; then
+            git add _cache/ || true
+          fi
+
+          if git diff --staged --quiet; then
+            echo "Нет изменений для коммита."
+            exit 0
+          fi
+
+          git commit -m "Auto-sync Yandex content $(date -u +'%Y-%m-%d %H:%M UTC')"
+
+          git pull --rebase origin main || {
+            echo "Rebase conflict — оставляем свежую генерацию"
+            git checkout --theirs _content/ 2>/dev/null || true
+            git add _content/ || true
+            GIT_EDITOR=true git rebase --continue || git rebase --skip || true
+          }
+
+          git push
