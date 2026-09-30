@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-terabox_sync.py (v2)
-Синхронизация TeraBox → Google Sheets.
+terabox_sync.py (v3)
+Синхронизация TeraBox → Google Sheets через Playwright.
 
-Ключевые изменения против v1:
-- Используется Playwright (Chromium) вместо terabox-api/gateway,
-  т.к. только так можно обойти вложенные папки публичной ссылки.
-- Обходит ВСЕ подпапки разделов, формируя поле `folder` из имени папки TeraBox.
-- Скачивает и парсит 4 файла описаний (1_Software.txt + описание*.txt)
-  в любых кодировках (UTF-16 LE/BE, cp1251, utf-8).
-- Сопоставляет файлы TeraBox с описаниями по имени файла.
+Логика:
+  1. Читает активные разделы из Supabase (site_sections).
+  2. Оставляет только те, чей yandex_url содержит terabox.com / 1024terabox.com.
+  3. Для каждого раздела:
+       • Открывает Chromium, авторизуется cookie 'ndus'.
+       • Заходит в рабочую папку (yandex_path или автоматически «Программы»).
+       • Скачивает и парсит файлы описаний (1_Software.txt, описание*.txt).
+       • Обходит все подпапки, собирая файлы (folder = имя подпапки).
+       • Пишет результаты в Google Sheets.
+       • Делает backup, находит orphans, сохраняет их в Supabase.
 
-Обрабатываются только разделы из site_sections, у которых
-yandex_url содержит домен terabox.com или 1024terabox.com.
-
-TERABOX_COOKIE — cookie 'ndus' аккаунта TeraBox.
+Переменные окружения:
+  TERABOX_COOKIE, GOOGLE_CREDENTIALS_JSON, SPREADSHEET_ID,
+  SUPABASE_SERVICE_ROLE_KEY, PRESERVE_USER_EDITS, BACKUP_BEFORE_SYNC,
+  BACKUP_KEEP_COUNT, SYNC_SECTIONS.
 """
 
 import os
@@ -27,7 +30,6 @@ import datetime
 import traceback
 
 import gspread
-import requests
 from google.oauth2.service_account import Credentials
 
 try:
@@ -87,7 +89,8 @@ ALWAYS_UPDATE_HEADERS = {
     "download_link", "link", "size", "format",
 }
 
-TITLE_HEADER_CANDIDATES = ("Название", "название", "Title", "title")
+TITLE_HEADER_CANDIDATES  = ("Название", "название", "Title", "title")
+FOLDER_HEADER_CANDIDATES = ("Папка", "папка", "Folder", "folder")
 
 COOKIE_DOMAINS = [
     ".terabox.app", ".1024tera.com", ".1024terabox.com",
@@ -99,8 +102,13 @@ DESC_FILE_PATTERNS = [
     re.compile(r"^описание( \d+)?\.txt$", re.IGNORECASE),
 ]
 
-# Папки, которые НЕ являются контейнерами программ (служебные)
-SKIP_FOLDER_NAMES = set()
+ARCH_SUFFIXES = re.compile(
+    r"[-_.]?(x86|x64|x32|win32|win64|32|64|32bit|64bit)$",
+    re.IGNORECASE,
+)
+
+# Максимальное количество попыток открыть папку
+FOLDER_OPEN_ATTEMPTS = 3
 
 
 # ============================================================
@@ -119,11 +127,16 @@ class Diag:
         self.orphans_found   = 0
         self.backup_name     = ""
         self.errors    = []
+        self.matched_with_desc = 0
+        self.without_desc      = 0
+        self.failed_folders    = []
 
     def report(self):
         print("\n  ── ДИАГНОСТИКА ──")
         print(f"  Найдено файлов:          {self.found}")
         print(f"  Оставлено к записи:      {self.kept}")
+        print(f"    в т.ч. с описанием:    {self.matched_with_desc}")
+        print(f"    без описания:          {self.without_desc}")
         print(f"  Обновлено строк:         {self.updated}")
         print(f"  Добавлено строк:         {self.added}")
         if self.preserved_edits:
@@ -134,6 +147,10 @@ class Diag:
             print(f"  Осиротевших строк:       {self.orphans_found}")
         if self.backup_name:
             print(f"  Резервная копия:         {self.backup_name}")
+        if self.failed_folders:
+            print(f"  Не открыто папок:        {len(self.failed_folders)}")
+            for f in self.failed_folders[:10]:
+                print(f"    • {f}")
         if self.errors:
             print(f"  Ошибок:                  {len(self.errors)}")
             for e in self.errors[:5]:
@@ -270,33 +287,70 @@ def ensure_headers(sheet, headers):
         print(f"    [!] Заголовки: {e}")
 
 
-def load_sheet_snapshot(sheet):
+def load_sheet_snapshot(sheet, headers):
+    """
+    Возвращает (all_values, existing_by_link, existing_by_key).
+
+      existing_by_link — {download_link: {"row":N, "values":[...]}}
+      existing_by_key  — {(folder_lower, title_lower): {...}}
+                         используется как первичный ключ для TeraBox,
+                         чтобы пережить смену dlink между синхронизациями.
+    """
     try:
         rows = sheet.get_all_values()
     except Exception as e:
         print(f"    [!] Не удалось прочитать лист: {e}")
-        return [], {}
+        return [], {}, {}
 
     if not rows:
-        return [], {}
+        return [], {}, {}
 
-    header = [h.strip().lower() for h in rows[0]]
-    idx = None
-    for cand in ("ссылка для скачивания", "ссылка",
-                 "download_link", "link"):
+    # Индексы колонок в самой таблице
+    header = [(h or "").strip().lower() for h in rows[0]]
+
+    link_idx = None
+    for cand in ("ссылка для скачивания", "ссылка", "download_link", "link"):
         if cand in header:
-            idx = header.index(cand)
+            link_idx = header.index(cand)
             break
 
-    existing = {}
-    if idx is not None and len(rows) >= 2:
+    title_idx = None
+    for cand in [c.lower() for c in TITLE_HEADER_CANDIDATES]:
+        if cand in header:
+            title_idx = header.index(cand)
+            break
+
+    folder_idx = None
+    for cand in [c.lower() for c in FOLDER_HEADER_CANDIDATES]:
+        if cand in header:
+            folder_idx = header.index(cand)
+            break
+
+    existing_by_link = {}
+    existing_by_key  = {}
+
+    if len(rows) >= 2:
         for i, r in enumerate(rows[1:], start=2):
-            if len(r) > idx and r[idx].strip():
-                existing[r[idx].strip()] = {
-                    "row":    i,
-                    "values": list(r),
-                }
-    return rows, existing
+            info = {"row": i, "values": list(r)}
+
+            link = ""
+            if link_idx is not None and link_idx < len(r):
+                link = (r[link_idx] or "").strip()
+            if link:
+                existing_by_link[link] = info
+
+            title = ""
+            if title_idx is not None and title_idx < len(r):
+                title = (r[title_idx] or "").strip().lower()
+
+            folder = ""
+            if folder_idx is not None and folder_idx < len(r):
+                folder = (r[folder_idx] or "").strip().lower()
+
+            if title or folder:
+                existing_by_key[(folder, title)] = info
+
+    return rows, existing_by_link, existing_by_key
 
 
 def merge_row(old_values, new_values, headers, always_update=None):
@@ -417,40 +471,8 @@ def _row_from_record(record, headers):
     return row
 
 
-def find_orphan_rows(existing_index, rows, headers, link_idx):
-    new_links = set()
-    for row in rows:
-        if link_idx < len(row):
-            v = str(row[link_idx]).strip()
-            if v:
-                new_links.add(v)
-
-    title_idx = None
-    for cand in TITLE_HEADER_CANDIDATES:
-        if cand in headers:
-            title_idx = headers.index(cand)
-            break
-
-    orphans = []
-    for link, info in existing_index.items():
-        if link in new_links:
-            continue
-        values = info["values"]
-        title = ""
-        if title_idx is not None and title_idx < len(values):
-            title = str(values[title_idx]).strip()
-        padded = list(values) + [""] * max(0, len(headers) - len(values))
-        orphans.append({
-            "row":    info["row"],
-            "title":  title,
-            "link":   link,
-            "values": padded[:len(headers)],
-        })
-    return orphans
-
-
 # ============================================================
-# PLAYWRIGHT: ПЕРЕХВАТ XHR
+# PLAYWRIGHT: ПЕРЕХВАТ И СБОР
 # ============================================================
 
 class Catcher:
@@ -470,34 +492,150 @@ class Catcher:
     def count(self):
         return len(self.responses)
 
-    def wait_new(self, page, prev_count, timeout_ms=15000):
-        elapsed = 0
-        while elapsed < timeout_ms:
-            if len(self.responses) > prev_count:
-                return self.responses[-1]
-            page.wait_for_timeout(200)
-            elapsed += 200
-        return None
+
+def collect_items(page, catcher, start_resp_idx,
+                  max_iters=40, iter_wait_ms=700):
+    """
+    Собирает элементы через скролл. Vue подгружает по 20 штук.
+    Возвращает список уникальных элементов.
+    """
+    seen = {}
+    last_total = 0
+    stable = 0
+
+    for _ in range(max_iters):
+        for resp in catcher.responses[start_resp_idx:]:
+            for it in resp.get("data", {}).get("list") or []:
+                name = it.get("server_filename") or ""
+                if name and name not in seen:
+                    seen[name] = it
+
+        total = len(seen)
+        if total == last_total and total > 0:
+            stable += 1
+            if stable >= 4:
+                break
+        else:
+            stable = 0
+            last_total = total
+
+        try:
+            page.mouse.wheel(0, 2500)
+        except Exception:
+            pass
+        page.wait_for_timeout(iter_wait_ms)
+
+    for resp in catcher.responses[start_resp_idx:]:
+        for it in resp.get("data", {}).get("list") or []:
+            name = it.get("server_filename") or ""
+            if name and name not in seen:
+                seen[name] = it
+
+    pages = catcher.count() - start_resp_idx
+    if pages > 0:
+        print(f"    [collect] страниц: {pages}, элементов: {len(seen)}")
+
+    return list(seen.values())
 
 
-def _double_click_folder(page, name):
-    loc = page.locator(f'.file-item-listmode:has-text("{name}")').first
-    if loc.count() == 0:
-        return False
+def scroll_list_top(page):
     try:
-        loc.scroll_into_view_if_needed(timeout=3000)
+        page.mouse.wheel(0, -100000)
     except Exception:
         pass
-    page.wait_for_timeout(200)
-    try:
-        loc.dblclick(timeout=5000)
-        return True
-    except Exception:
-        return False
+    page.wait_for_timeout(400)
+
+
+def find_folder_locator(page, name):
+    selectors = [
+        f'.file-item-listmode:has(.file-item-name:text-is("{name}"))',
+        f'.file-item-listmode:has-text("{name}")',
+    ]
+    for sel in selectors:
+        try:
+            loc = page.locator(sel).first
+            if loc.count() > 0:
+                return loc
+        except Exception:
+            continue
+    return None
+
+
+def open_folder(page, catcher, name, max_attempts=FOLDER_OPEN_ATTEMPTS):
+    """
+    Открывает папку и возвращает все её элементы (с догрузкой).
+    """
+    for attempt in range(max_attempts):
+        prev_resp = catcher.count()
+        scroll_list_top(page)
+        page.wait_for_timeout(300)
+
+        loc = find_folder_locator(page, name)
+        if loc is None:
+            print(f"    [open] попытка {attempt+1}: '{name}' не в DOM")
+            page.mouse.wheel(0, 2500)
+            page.wait_for_timeout(700)
+            continue
+
+        try:
+            loc.scroll_into_view_if_needed(timeout=3000)
+        except Exception:
+            pass
+        page.wait_for_timeout(250)
+
+        clicked = False
+        try:
+            loc.dblclick(timeout=6000)
+            clicked = True
+        except Exception:
+            try:
+                loc.click(timeout=4000)
+                clicked = True
+            except Exception:
+                pass
+
+        if not clicked:
+            page.wait_for_timeout(800)
+            continue
+
+        page.wait_for_timeout(2500)
+
+        elapsed = 0
+        while elapsed < 12000:
+            if catcher.count() > prev_resp:
+                break
+            page.wait_for_timeout(200)
+            elapsed += 200
+
+        if catcher.count() <= prev_resp:
+            print(f"    [open] попытка {attempt+1}: нет /share/list")
+            continue
+
+        items = collect_items(page, catcher, prev_resp)
+        if not items:
+            print(f"    [open] попытка {attempt+1}: пусто")
+            continue
+
+        return items
+
+    return None
+
+
+def download_file(context, dlink, save_path):
+    print(f"    GET {dlink[:100]}...")
+    resp = context.request.get(dlink, timeout=180000)
+    if resp.status != 200:
+        print(f"    HTTP {resp.status}")
+        return None
+    body = resp.body()
+    with open(save_path, "wb") as f:
+        f.write(body)
+    print(f"    ✓ {save_path} ({len(body)} байт)")
+    return save_path
 
 
 # ============================================================
-# ДЕКОДИРОВАНИЕ ТЕКСТА
+# КОДИРОВКИ И ПАРСИНГ ОПИСАНИЙ
 # ============================================================
 
 def decode_bytes(raw):
@@ -519,14 +657,21 @@ def decode_bytes(raw):
         if nulls_even > 40:
             return raw.decode("utf-16-be", errors="replace")
 
-    markers = ("prog[pn]", "desc[pn]", "cmds[pn]", "[MInst]", "Name=", "Patch=")
-    for enc in ("cp1251", "utf-8", "koi8-r", "cp866"):
+    try:
+        text = raw.decode("utf-8")
+        markers = ("prog[pn]", "desc[pn]", "cmds[pn]",
+                   "[MInst]", "Name=", "Patch=", "// WPI")
+        if any(m in text for m in markers):
+            return text
+    except UnicodeDecodeError:
+        pass
+
+    for enc in ("cp1251", "koi8-r", "cp866"):
         try:
-            text = raw.decode(enc)
-            if any(m in text for m in markers):
-                return text
+            return raw.decode(enc)
         except UnicodeDecodeError:
             continue
+
     return raw.decode("cp1251", errors="replace")
 
 
@@ -536,26 +681,18 @@ def read_text_file(path):
     return decode_bytes(raw)
 
 
-# ============================================================
-# ОЧИСТКА ИМЁН ФАЙЛОВ
-# ============================================================
-
 def clean_patch_filename(name):
     if not name:
         return ""
     s = name.strip()
     s = re.sub(r'"\s+.*$', '"', s)
+    s = re.split(r"\s+", s)[0]
+    s = s.strip("\"'")
     parts = re.split(r"[\\/]", s)
     last = parts[-1] if parts else s
-    last = re.split(r"\s+", last)[0]
-    last = last.strip("\"'")
-    last = re.sub(r"-?\{P\}", "", last, flags=re.IGNORECASE)
+    last = re.sub(r"-?\{[^}]+\}", "", last)
     return last.strip()
 
-
-# ============================================================
-# ПАРСИНГ ОПИСАНИЙ
-# ============================================================
 
 def parse_old_format(content):
     programs = []
@@ -602,25 +739,30 @@ def parse_old_format(content):
 def parse_wpi_format(content):
     programs = []
     blocks = re.split(r"\bpn\s*\+\+\s*;", content)
+
     for block in blocks:
         if "prog[pn]" not in block:
             continue
         entry = {"name": "", "description": "",
                  "patch": "", "patch_filename": ""}
+
         m = re.search(r"prog\[pn\]\s*=\s*\[(.+?)\]\s*;", block, re.DOTALL)
         if m:
             parts = re.findall(r"['\"]([^'\"]*)['\"]", m.group(1))
             entry["name"] = "".join(parts).strip()
+
         m = re.search(r"desc\[pn\]\s*=\s*\[(.+?)\]\s*;", block, re.DOTALL)
         if m:
             parts = re.findall(r"['\"]([^'\"]*)['\"]", m.group(1))
             entry["description"] = "".join(parts).strip()
+
         m = re.search(r"cmds\[pn\]\s*=\s*\[(.+?)\]\s*;", block, re.DOTALL)
         if m:
             parts = re.findall(r"['\"]([^'\"]*)['\"]", m.group(1))
             cmds_str = "".join(parts)
             entry["patch"] = cmds_str
             entry["patch_filename"] = clean_patch_filename(cmds_str)
+
         if entry["name"]:
             programs.append(entry)
     return programs
@@ -634,27 +776,74 @@ def detect_format(content):
     return "unknown"
 
 
+def load_all_programs(context, desc_items):
+    all_programs = []
+    seen = set()
+
+    for item in desc_items:
+        name = item["name"]
+        dlink = item.get("dlink")
+        if not dlink:
+            continue
+
+        save = f"/tmp/{name}"
+        try:
+            if not download_file(context, dlink, save):
+                continue
+        except Exception as e:
+            print(f"    [!] скачивание {name}: {e}")
+            continue
+
+        content = read_text_file(save)
+        fmt = detect_format(content)
+
+        if fmt == "wpi":
+            programs = parse_wpi_format(content)
+        elif fmt == "old":
+            programs = parse_old_format(content)
+        else:
+            print(f"  ── {name} ── формат неизвестен, пропуск")
+            continue
+
+        print(f"  ── {name} ── формат: {fmt}, программ: {len(programs)}")
+
+        for p in programs:
+            key = normalize_filename(p.get("patch_filename", "")) or \
+                  p.get("name", "").lower()
+            if not key or key in seen:
+                continue
+            seen.add(key)
+            all_programs.append(p)
+
+    return all_programs
+
+
 # ============================================================
 # СОПОСТАВЛЕНИЕ
 # ============================================================
+
+def strip_arch_suffix(name):
+    return ARCH_SUFFIXES.sub("", name)
+
 
 def normalize_filename(name):
     if not name:
         return ""
     name = name.lower()
     name = re.sub(
-        r"\.(exe|msi|zip|rar|7z|tar|gz|txt|dll|bat|cmd|ps1)$", "", name
+        r"\.(exe|msi|zip|rar|7z|tar|gz|txt|dll|bat|cmd|ps1|iso|bin)$", "", name
     )
     return name.strip()
 
 
 def normalize_aggressive(name):
-    return re.sub(r"[\s\.\-_]+", "", (name or "").lower())
+    return re.sub(r"[\s\.\-_+]+", "", (name or "").lower())
 
 
 def match_file_to_program(filename, programs):
     fn_norm = normalize_filename(filename)
-    fn_agg = normalize_aggressive(fn_norm)
+    fn_nosuf = strip_arch_suffix(fn_norm)
+    fn_agg = normalize_aggressive(fn_nosuf)
     if not fn_agg:
         return None
 
@@ -662,133 +851,67 @@ def match_file_to_program(filename, programs):
         if normalize_filename(p.get("patch_filename", "")) == fn_norm:
             return p
     for p in programs:
-        if normalize_aggressive(p.get("patch_filename", "")) == fn_agg:
+        pn = strip_arch_suffix(normalize_filename(p.get("patch_filename", "")))
+        if pn and pn == fn_nosuf:
             return p
     for p in programs:
-        p_agg = normalize_aggressive(p.get("patch_filename", ""))
-        if len(fn_agg) >= 6 and len(p_agg) >= 6:
-            if fn_agg in p_agg or p_agg in fn_agg:
+        pa = normalize_aggressive(
+            strip_arch_suffix(normalize_filename(p.get("patch_filename", "")))
+        )
+        if pa and pa == fn_agg:
+            return p
+    for p in programs:
+        pa = normalize_aggressive(
+            strip_arch_suffix(normalize_filename(p.get("patch_filename", "")))
+        )
+        if len(fn_agg) >= 5 and len(pa) >= 5:
+            if fn_agg in pa or pa in fn_agg:
                 return p
 
-    # Fallback: по названию программы
-    fn_words = set(re.findall(r"[a-zа-яё0-9]{4,}", fn_norm.replace("ё", "е")))
+    fn_words = set(re.findall(r"[a-zа-яё0-9]{3,}",
+                              fn_nosuf.replace("ё", "е")))
+    fn_words -= {"win", "exe", "setup", "install", "full", "pro", "portable"}
     if not fn_words:
         return None
+
     best, best_score = None, 0
     for p in programs:
-        name_words = set(
-            re.findall(r"[a-zа-яё0-9]{4,}",
-                       (p.get("name", "") or "").lower().replace("ё", "е"))
-        )
+        name_norm = (p.get("name", "") or "").lower().replace("ё", "е")
+        name_words = set(re.findall(r"[a-zа-яё0-9]{3,}", name_norm))
         if not name_words:
             continue
         inter = fn_words & name_words
-        if len(inter) >= 2:
-            score = len(inter) / len(name_words)
-            if score >= 0.6 and score > best_score:
+        if len(inter) >= 1:
+            score = len(inter) / max(len(fn_words), 1)
+            if score >= 0.5 and score > best_score:
                 best_score = score
                 best = p
     return best
 
 
 def parse_filename_title(filename):
-    """Простое извлечение названия из имени файла, если описания нет."""
     if not filename:
         return ""
     stem = os.path.splitext(filename)[0]
-    stem = re.sub(r"\s+", " ", stem).strip()
-    return stem
+    return re.sub(r"\s+", " ", stem).strip()
 
 
 # ============================================================
-# PLAYWRIGHT: ОБХОД TERABOX И СБОР ДАННЫХ
+# ГЛАВНАЯ ФУНКЦИЯ: ОБХОД РАЗДЕЛА ЧЕРЕЗ PLAYWRIGHT
 # ============================================================
-
-def _download_desc_file(context, dlink, save_path):
-    resp = context.request.get(dlink, timeout=180000)
-    if resp.status != 200:
-        return None
-    body = resp.body()
-    with open(save_path, "wb") as f:
-        f.write(body)
-    return save_path
-
-
-def _load_all_programs(context, desc_items, diag):
-    all_programs = []
-    seen = set()
-    for item in desc_items:
-        name = item["name"]
-        dlink = item.get("dlink")
-        if not dlink:
-            continue
-        save = f"/tmp/{name}"
-        try:
-            if not _download_desc_file(context, dlink, save):
-                print(f"    [!] Не удалось скачать {name}")
-                continue
-        except Exception as e:
-            print(f"    [!] Ошибка скачивания {name}: {e}")
-            continue
-
-        content = read_text_file(save)
-        fmt = detect_format(content)
-        if fmt == "wpi":
-            programs = parse_wpi_format(content)
-        elif fmt == "old":
-            programs = parse_old_format(content)
-        else:
-            print(f"    [!] Неизвестный формат: {name}")
-            continue
-
-        print(f"    • {name}: {len(programs)} записей ({fmt})")
-        for p in programs:
-            key = (p.get("patch_filename") or "").lower()
-            if not key or key in seen:
-                continue
-            seen.add(key)
-            all_programs.append(p)
-    return all_programs
-
-
-def _build_record(item, folder_name, programs):
-    """Формирует запись для Sheets из одного файла TeraBox."""
-    fname = item.get("server_filename") or ""
-    if not fname:
-        return None
-
-    matched = match_file_to_program(fname, programs) if programs else None
-
-    if matched:
-        title = matched["name"]
-        description = matched.get("description", "")
-    else:
-        title = parse_filename_title(fname)
-        description = ""
-
-    size_bytes = item.get("size") or 0
-    try:
-        size_mb = str(round(int(size_bytes) / (1024 * 1024), 1))
-    except Exception:
-        size_mb = ""
-
-    return {
-        "title":         title,
-        "description":   description,
-        "version":       "",
-        "size":          size_mb,
-        "download_link": item.get("dlink", ""),
-        "folder":        folder_name,
-    }
-
 
 def fetch_terabox_records(start_url, section, diag):
     """
-    Открывает Playwright, обходит раздел TeraBox, возвращает список записей.
+    Открывает раздел TeraBox и возвращает список записей:
+      [{"folder": "...", "title": "...", "description": "...",
+        "size": "...", "download_link": "..."}]
     """
     if sync_playwright is None:
         print("  [!] playwright не установлен.")
         return []
+
+    handler = section.get("handler_type") or "universal"
+    yandex_path = (section.get("yandex_path") or "").strip("/")
 
     records = []
 
@@ -816,124 +939,174 @@ def fetch_terabox_records(start_url, section, diag):
             catcher = Catcher()
             catcher.attach(page)
 
+            # ─── Открываем корень ───
             print(f"  Открываю {start_url}")
             page.goto(start_url, wait_until="domcontentloaded", timeout=60000)
             page.wait_for_timeout(7000)
 
-            initial = catcher.wait_new(page, 0, timeout_ms=15000)
-            if not initial:
-                print("  [!] Нет ответа /share/list")
+            elapsed = 0
+            while elapsed < 15000 and catcher.count() == 0:
+                page.wait_for_timeout(300)
+                elapsed += 300
+
+            if catcher.count() == 0:
+                print("  [!] нет ответа /share/list")
                 return []
 
-            items = initial["data"].get("list") or []
-            print(f"  Содержимое корня: {len(items)} элементов")
+            root_items = collect_items(page, catcher, 0)
+            print(f"  Корень: {len(root_items)} элементов")
 
-            # ─── Определяем целевую подпапку ───
-            target_subfolder = None
-            yandex_path = (section.get("yandex_path") or "").strip("/")
+            # ─── Определяем рабочую папку ───
+            work_items = root_items
+            work_folder_name = None
 
             if yandex_path:
-                # yandex_path = имя папки внутри шаренной ссылки
+                # Берём последнюю часть пути как имя папки
                 first_seg = yandex_path.split("/")[-1]
-                for it in items:
-                    if (str(it.get("isdir")) == "1"
-                            and it.get("server_filename") == first_seg):
-                        target_subfolder = first_seg
-                        break
+                subdir_names = [
+                    it.get("server_filename") for it in root_items
+                    if str(it.get("isdir")) == "1"
+                ]
+                if first_seg in subdir_names:
+                    work_folder_name = first_seg
             else:
-                # Если в корне только одна папка «Программы» — заходим
-                subdir_names = [it.get("server_filename") for it in items
-                                if str(it.get("isdir")) == "1"]
-                if "Программы" in subdir_names:
-                    target_subfolder = "Программы"
-                elif len(subdir_names) == 1:
-                    target_subfolder = subdir_names[0]
+                # Автоопределение: единственная папка в корне
+                subdirs_in_root = [
+                    it for it in root_items
+                    if str(it.get("isdir")) == "1"
+                ]
+                if len(subdirs_in_root) == 1 and not any(
+                    str(it.get("isdir")) != "1" for it in root_items
+                ):
+                    work_folder_name = subdirs_in_root[0].get("server_filename")
 
-            if target_subfolder:
-                print(f"  Вход в подпапку: {target_subfolder}")
-                prev = catcher.count()
-                if not _double_click_folder(page, target_subfolder):
-                    print(f"  [!] Не удалось войти в {target_subfolder}")
+            if work_folder_name:
+                print(f"  Вход в рабочую папку: {work_folder_name}")
+                work_items = open_folder(page, catcher, work_folder_name)
+                if work_items is None:
+                    print(f"  [!] не удалось войти в {work_folder_name}")
                     return []
-                page.wait_for_timeout(4000)
-                res = catcher.wait_new(page, prev, timeout_ms=15000)
-                if not res:
-                    print("  [!] Нет ответа после входа")
-                    return []
-                items = res["data"].get("list") or []
-                print(f"  Содержимое {target_subfolder}: {len(items)} элементов")
 
-            # ─── Разделяем содержимое ───
+            print(f"  Содержимое рабочей папки: {len(work_items)} элементов")
+
+            # ─── Разделяем ───
             desc_items = []
             root_files = []
             subdirs = []
 
-            for it in items:
+            for it in work_items:
                 name = it.get("server_filename") or ""
                 if str(it.get("isdir")) == "1":
                     subdirs.append(it)
-                elif any(p.match(name) for p in DESC_FILE_PATTERNS):
-                    desc_items.append({"name": name,
-                                       "dlink": it.get("dlink") or ""})
+                elif handler == "programs" and any(
+                    p.match(name) for p in DESC_FILE_PATTERNS
+                ):
+                    desc_items.append({
+                        "name": name,
+                        "dlink": it.get("dlink") or "",
+                    })
                 else:
                     root_files.append(it)
 
-            print(f"  Файлов описаний: {len(desc_items)}, "
-                  f"файлов в корне: {len(root_files)}, "
-                  f"подпапок: {len(subdirs)}")
+            print(f"    Файлов-описаний: {len(desc_items)}")
+            for d in desc_items:
+                print(f"      • {d['name']}")
+            print(f"    Прочих файлов:   {len(root_files)}")
+            print(f"    Подпапок:        {len(subdirs)}")
 
             # ─── Парсим описания ───
-            programs = _load_all_programs(context, desc_items, diag)
-            print(f"  Программ из описаний: {len(programs)}")
+            programs = []
+            if handler == "programs" and desc_items:
+                print(f"\n  Парсинг описаний...")
+                programs = load_all_programs(context, desc_items)
+                print(f"  Программ с описанием: {len(programs)}")
 
-            # ─── Файлы в корне «Программы» (folder = "") ───
+            def _make_record(item, folder_name):
+                fname = item.get("server_filename") or ""
+                if not fname:
+                    return None
+
+                matched = None
+                if programs:
+                    matched = match_file_to_program(fname, programs)
+
+                if matched:
+                    title = matched["name"]
+                    description = matched.get("description", "")
+                    diag.matched_with_desc += 1
+                else:
+                    title = parse_filename_title(fname)
+                    description = ""
+                    diag.without_desc += 1
+
+                size_bytes = item.get("size") or 0
+                try:
+                    size_mb = str(round(int(size_bytes) / (1024 * 1024), 1))
+                except Exception:
+                    size_mb = ""
+
+                return {
+                    "folder":        folder_name or "",
+                    "title":         title,
+                    "description":   description,
+                    "version":       "",
+                    "size":          size_mb,
+                    "download_link": item.get("dlink", ""),
+                }
+
+            # ─── Файлы в корне рабочей папки (folder = "") ───
             for it in root_files:
-                rec = _build_record(it, "", programs)
+                rec = _make_record(it, "")
                 if rec:
                     records.append(rec)
 
             # ─── Обход подпапок ───
             for i, sub in enumerate(subdirs):
                 sub_name = sub.get("server_filename")
-                print(f"\n  ── [{i+1}/{len(subdirs)}] {sub_name}")
+                print(f"\n    ── [{i+1}/{len(subdirs)}] {sub_name}")
 
-                # Возврат в родительскую папку
-                if i > 0 or target_subfolder:
-                    page.goto(start_url,
-                              wait_until="domcontentloaded", timeout=60000)
+                # Возврат в корень и рабочую папку
+                if i > 0 or work_folder_name:
+                    page.goto(start_url, wait_until="domcontentloaded",
+                              timeout=60000)
                     page.wait_for_timeout(5000)
-                    if target_subfolder:
-                        prev = catcher.count()
-                        if not _double_click_folder(page, target_subfolder):
-                            print(f"    [!] Не удалось вернуться")
+
+                    elapsed = 0
+                    start_idx = catcher.count()
+                    while (elapsed < 10000
+                           and catcher.count() == start_idx):
+                        page.wait_for_timeout(300)
+                        elapsed += 300
+
+                    # Вернуться в рабочую папку если она была
+                    if work_folder_name:
+                        back = open_folder(page, catcher, work_folder_name)
+                        if back is None:
+                            print(f"      ✗ не вернулись в {work_folder_name}")
+                            diag.failed_folders.append(sub_name)
                             continue
-                        page.wait_for_timeout(3000)
-                        catcher.wait_new(page, prev, timeout_ms=10000)
 
-                prev = catcher.count()
-                if not _double_click_folder(page, sub_name):
-                    print(f"    [!] Не удалось открыть '{sub_name}'")
-                    continue
-                page.wait_for_timeout(4000)
-
-                res_sub = catcher.wait_new(page, prev, timeout_ms=15000)
-                if not res_sub:
-                    print(f"    [!] Нет ответа")
+                # Открыть саму подпапку
+                items_sub = open_folder(page, catcher, sub_name)
+                if items_sub is None:
+                    print(f"      ✗ не удалось открыть '{sub_name}'")
+                    diag.failed_folders.append(sub_name)
                     continue
 
-                items_sub = res_sub["data"].get("list") or []
-                files_only = [it for it in items_sub
-                              if str(it.get("isdir")) != "1"]
-                matched = 0
+                files_only = [
+                    it for it in items_sub
+                    if str(it.get("isdir")) != "1"
+                ]
+                matched_here = 0
                 for it in files_only:
-                    rec = _build_record(it, sub_name, programs)
+                    rec = _make_record(it, sub_name)
                     if rec:
                         records.append(rec)
-                        if match_file_to_program(
-                                it.get("server_filename", ""), programs):
-                            matched += 1
-                print(f"    Файлов: {len(files_only)}, "
-                      f"с описанием: {matched}")
+                        if rec["description"]:
+                            matched_here += 1
+
+                print(f"      файлов: {len(files_only)}, "
+                      f"с описанием: {matched_here}")
 
         except Exception as e:
             print(f"  [!!!] Ошибка Playwright: {e}")
@@ -956,11 +1129,14 @@ def sync_terabox_section(section, gs_client):
     section_key = section.get("key")
     yandex_url = section.get("yandex_url") or ""
     sheet_name = section.get("sheet_name") or label
-    columns = section.get("columns") or ["title", "description", "download_link"]
+    columns = section.get("columns") or ["folder", "title", "description",
+                                          "download_link"]
 
     print(f"\n=== Раздел TeraBox: {label} ({section_key}) ===")
     print(f"Ссылка:      {yandex_url[:100]}")
     print(f"Лист Sheets: {sheet_name}")
+    print(f"Handler:     {section.get('handler_type') or 'universal'}")
+    print(f"yandex_path: {section.get('yandex_path') or '(авто)'}")
 
     if not TERABOX_COOKIE:
         print("  [!] TERABOX_COOKIE не задан — пропускаю раздел.")
@@ -968,7 +1144,6 @@ def sync_terabox_section(section, gs_client):
 
     diag = Diag(label)
 
-    # Поддерживаем несколько ссылок через перевод строки
     urls = [u.strip() for u in yandex_url.split("\n") if u.strip()]
     all_records = []
     for u in urls:
@@ -977,18 +1152,19 @@ def sync_terabox_section(section, gs_client):
         print(f"  Получено записей: {len(recs)}")
         all_records.extend(recs)
 
-    # Дедупликация по download_link
+    # Дедупликация по (folder, title) — оставляем первое вхождение
     dedup = {}
     for r in all_records:
-        link = r.get("download_link")
-        if link and link not in dedup:
-            dedup[link] = r
+        key = ((r.get("folder") or "").lower(),
+               (r.get("title") or "").lower())
+        if key not in dedup:
+            dedup[key] = r
     all_records = list(dedup.values())
 
     diag.found = len(all_records)
     print(f"\n  Итого уникальных записей: {len(all_records)}")
 
-    # ─── Формируем строки для Sheets ───
+    # ─── Формируем строки ───
     headers = headers_from_columns(columns)
     rows = [_row_from_record(rec, headers) for rec in all_records]
     diag.kept = len(rows)
@@ -1003,16 +1179,53 @@ def sync_terabox_section(section, gs_client):
     sheet = get_or_create_sheet(sh, sheet_name)
     ensure_headers(sheet, headers)
 
-    all_values, existing = load_sheet_snapshot(sheet)
-    print(f"  Существующих строк в Sheets: {len(existing)}")
+    all_values, existing_by_link, existing_by_key = load_sheet_snapshot(
+        sheet, headers
+    )
+    print(f"  Существующих строк в Sheets: "
+          f"{len(existing_by_link)} (по ссылке), "
+          f"{len(existing_by_key)} (по папке+названию)")
 
     link_ru = "Ссылка для скачивания"
     link_idx = headers.index(link_ru) if link_ru in headers else 0
     n_cols = len(headers)
     end_col_letter = _col_letter(n_cols - 1)
 
-    # ─── Сироты ───
-    orphans = find_orphan_rows(existing, rows, headers, link_idx)
+    # ─── Осиротевшие строки ───
+    # Новая логика: строка считается осиротевшей, если её (folder, title)
+    # отсутствует среди свежесобранных записей.
+    new_keys = set()
+    for r in all_records:
+        new_keys.add(((r.get("folder") or "").lower(),
+                      (r.get("title") or "").lower()))
+
+    title_hdr_idx = None
+    for cand in TITLE_HEADER_CANDIDATES:
+        if cand in headers:
+            title_hdr_idx = headers.index(cand)
+            break
+    folder_hdr_idx = None
+    for cand in FOLDER_HEADER_CANDIDATES:
+        if cand in headers:
+            folder_hdr_idx = headers.index(cand)
+            break
+
+    orphans = []
+    for (key, info) in existing_by_key.items():
+        if key in new_keys:
+            continue
+        values = info["values"]
+        title = ""
+        if title_hdr_idx is not None and title_hdr_idx < len(values):
+            title = str(values[title_hdr_idx]).strip()
+        padded = list(values) + [""] * max(0, len(headers) - len(values))
+        orphans.append({
+            "row":    info["row"],
+            "title":  title,
+            "link":   values[link_idx] if link_idx < len(values) else "",
+            "values": padded[:len(headers)],
+        })
+
     diag.orphans_found = len(orphans)
     if orphans:
         print(f"  Осиротевших строк: {len(orphans)}")
@@ -1025,14 +1238,23 @@ def sync_terabox_section(section, gs_client):
     preserved = 0
     unchanged = 0
 
-    for row in rows:
+    for rec in all_records:
+        row = _row_from_record(rec, headers)
         link = str(row[link_idx]).strip() if link_idx < len(row) else ""
-        if not link or link not in existing:
+
+        # Ключ уникальности: (folder, title)
+        key = ((rec.get("folder") or "").lower(),
+               (rec.get("title") or "").lower())
+
+        existing_info = existing_by_key.get(key)
+        if existing_info is None and link:
+            existing_info = existing_by_link.get(link)
+
+        if existing_info is None:
             to_add.append(row)
             continue
 
-        info = existing[link]
-        old_values = info["values"]
+        old_values = existing_info["values"]
         merged = merge_row(old_values, row, headers)
 
         old_cmp = [str(v) for v in old_values[:n_cols]]
@@ -1051,7 +1273,7 @@ def sync_terabox_section(section, gs_client):
                     preserved += 1
                     break
 
-        rng = f"A{info['row']}:{end_col_letter}{info['row']}"
+        rng = f"A{existing_info['row']}:{end_col_letter}{existing_info['row']}"
         updates.append({"range": rng, "values": [merged]})
 
     print(f"\n    К обновлению:      {len(updates)}")
@@ -1083,7 +1305,7 @@ def sync_terabox_section(section, gs_client):
 
 def main():
     print("=" * 60)
-    print("terabox_sync.py (v2) — старт")
+    print("terabox_sync.py (v3) — старт")
     print("=" * 60)
     print(f"PRESERVE_USER_EDITS = {PRESERVE_USER_EDITS}")
     print(f"BACKUP_BEFORE_SYNC  = {BACKUP_BEFORE_SYNC}")
@@ -1093,8 +1315,8 @@ def main():
 
     if sync_playwright is None:
         print("[!] playwright не установлен.")
-        print("    Добавьте 'playwright' в requirements.txt")
-        print("    и выполните: python -m playwright install chromium")
+        print("    Добавьте 'playwright' в requirements.txt и выполните")
+        print("    python -m playwright install chromium")
         return
 
     if not TERABOX_COOKIE:
@@ -1121,7 +1343,7 @@ def main():
         print(f"  После фильтра: {len(terabox_sections)} из {before}")
 
     if not terabox_sections:
-        print("  Нет TeraBox-разделов для синхронизации.")
+        print("  Нет TeraBox-разделов для синхронизации — выходим.")
         return
 
     for s in terabox_sections:
