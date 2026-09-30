@@ -724,7 +724,7 @@
         }
     } catch (e) {
         if (downloadUrl && downloadUrl !== '#') {
-            MF.triggerDownload(buildProxyUrl(downloadUrl, fileName));
+            MF.triggerDownload(buildProxyUrl(downloadUrl, fileName), fileName);
         }
     }
 }
