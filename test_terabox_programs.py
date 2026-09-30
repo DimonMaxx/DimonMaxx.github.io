@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Тест TeraBox v2:
-- Скачивание 4 файлов описаний из папки «Программы»:
-    * 1_Software.txt  (UTF-16 LE/BE, старый формат [N]/Name=/Patch=/Hint=)
-    * описание.txt    (ANSI/cp1251, WPI-формат prog[pn]=/desc[pn]=/cmds[pn]=)
-    * описание 1.txt
-    * описание 2.txt
-- Парсинг обоих форматов, объединение в единый список программ
-- Обход ВСЕХ подпапок в «Программы» (динамически, без хардкода)
-- Сопоставление файлов TeraBox с описаниями
-- Распределение по папкам (folder = имя подпапки TeraBox)
+Тест TeraBox v3:
+- Полное сканирование корня шары и папки «Программы»
+- Пагинация: если элементов >20, скроллим и собираем все
+- Поиск ВСЕХ файлов *.txt (описания)
+- Парсинг 2 форматов (old WPI и WPI prog[pn])
+- Обход ВСЕХ подпапок, распределение по папкам
 """
 
 import os
@@ -33,27 +29,24 @@ COOKIE_DOMAINS = [
     ".terabox.com", ".4funbox.com", ".d.terabox.app",
 ]
 
-# Регулярки имён файлов-описаний
-DESC_FILE_PATTERNS = [
-    re.compile(r"^1_Software\.txt$", re.IGNORECASE),
-    re.compile(r"^описание( \d+)?\.txt$", re.IGNORECASE),
-]
+# Любые *.txt-файлы считаем потенциальными описаниями
+DESC_EXTS = (".txt",)
 
-
-# ============================================================
-# ПЕРЕХВАТ XHR
-# ============================================================
 
 class Catcher:
     def __init__(self):
-        self.responses = []
+        self.responses = []  # список {"url", "data", "ts"}
 
     def attach(self, page):
         def on_response(resp):
             if "/share/list" in resp.url and "/static/" not in resp.url:
                 try:
                     data = resp.json()
-                    self.responses.append({"data": data, "ts": time.time()})
+                    self.responses.append({
+                        "url": resp.url,
+                        "data": data,
+                        "ts": time.time(),
+                    })
                 except Exception:
                     pass
         page.on("response", on_response)
@@ -61,41 +54,145 @@ class Catcher:
     def count(self):
         return len(self.responses)
 
-    def wait_new(self, page, prev_count, timeout_ms=15000):
-        elapsed = 0
-        while elapsed < timeout_ms:
-            if len(self.responses) > prev_count:
-                return self.responses[-1]
+    def collect_since(self, prev_count):
+        """Собирает все ответы, пришедшие после prev_count."""
+        return self.responses[prev_count:]
+
+
+# ============================================================
+# УТИЛИТЫ КЛИКОВ
+# ============================================================
+
+def _click_folder_by_name(page, name):
+    """
+    Клик по папке с точным совпадением имени.
+    Возвращает True/False.
+    """
+    # Ждём появления элементов
+    try:
+        page.wait_for_selector('.file-item-listmode', timeout=8000)
+    except Exception:
+        pass
+
+    elements = page.query_selector_all('.file-item-listmode')
+    print(f"    [click] Найдено элементов .file-item-listmode: {len(elements)}")
+
+    for el in elements:
+        try:
+            name_el = el.query_selector('.file-item-name')
+            txt = ""
+            if name_el:
+                txt = (name_el.inner_text() or "").strip()
+            else:
+                txt = (el.inner_text() or "").strip()
+
+            if txt == name:
+                el.scroll_into_view_if_needed(timeout=3000)
+                page.wait_for_timeout(200)
+                el.dblclick(timeout=5000)
+                return True
+        except Exception as e:
+            continue
+
+    # Fallback: has-text
+    try:
+        loc = page.locator(f'.file-item-listmode:has-text("{name}")').first
+        if loc.count() > 0:
+            loc.scroll_into_view_if_needed(timeout=3000)
             page.wait_for_timeout(200)
-            elapsed += 200
-        return None
+            loc.dblclick(timeout=5000)
+            return True
+    except Exception:
+        pass
+
+    return False
 
 
-def double_click_folder(page, name):
-    loc = page.locator(f'.file-item-listmode:has-text("{name}")').first
-    if loc.count() == 0:
-        return False
-    loc.scroll_into_view_if_needed(timeout=3000)
-    page.wait_for_timeout(200)
-    loc.dblclick(timeout=5000)
-    return True
+# ============================================================
+# СБОР ЭЛЕМЕНТОВ ПАПКИ С ПАГИНАЦИЕЙ
+# ============================================================
 
+def collect_folder_items(page, catcher, prev_count,
+                          wait_ms=15000, scroll=True):
+    """
+    Ждёт первый /share/list ответ, потом (опционально) скроллит
+    и собирает все элементы, объединяя по fs_id.
+    Возвращает список уникальных элементов.
+    """
+    # Ждём первый ответ
+    first = None
+    elapsed = 0
+    while elapsed < wait_ms:
+        new = catcher.collect_since(prev_count)
+        if new:
+            first = new[0]
+            break
+        page.wait_for_timeout(200)
+        elapsed += 200
+
+    if not first:
+        return []
+
+    page.wait_for_timeout(500)
+
+    # Собираем из всех полученных
+    all_items = {}
+
+    def add_items(resp):
+        items = resp["data"].get("list") or []
+        for it in items:
+            fid = it.get("fs_id")
+            if fid and fid not in all_items:
+                all_items[fid] = it
+
+    for resp in catcher.collect_since(prev_count):
+        add_items(resp)
+
+    print(f"    [collect] Первый ответ: {len(first['data'].get('list') or [])} элементов")
+
+    # Скролл для догрузки
+    if scroll:
+        seen_count = catcher.count()
+        for attempt in range(6):
+            try:
+                page.keyboard.press("End")
+            except Exception:
+                pass
+            page.wait_for_timeout(1500)
+
+            new_count = catcher.count()
+            if new_count > seen_count:
+                for resp in catcher.responses[seen_count:new_count]:
+                    add_items(resp)
+                print(f"    [collect] Догружено до {len(all_items)} элементов")
+                seen_count = new_count
+            else:
+                # Ничего не пришло — можно прекратить
+                pass
+
+    print(f"    [collect] Итого собрано: {len(all_items)} элементов")
+    return list(all_items.values())
+
+
+# ============================================================
+# СКАЧИВАНИЕ
+# ============================================================
 
 def download_file(context, dlink, save_path):
-    print(f"  GET {dlink[:110]}...")
+    print(f"    GET {dlink[:100]}...")
     resp = context.request.get(dlink, timeout=180000)
-    print(f"  HTTP {resp.status}")
+    print(f"    HTTP {resp.status}")
     if resp.status != 200:
         return None
     body = resp.body()
     with open(save_path, "wb") as f:
         f.write(body)
-    print(f"  ✓ Сохранено: {save_path} ({len(body)} байт)")
+    print(f"    ✓ Сохранено: {save_path} ({len(body)} байт)")
     return save_path
 
 
 # ============================================================
-# ДЕКОДИРОВАНИЕ (UTF-16 LE/BE, cp1251, utf-8, koi8-r)
+# ДЕКОДИРОВАНИЕ
 # ============================================================
 
 def decode_bytes(raw):
@@ -108,7 +205,6 @@ def decode_bytes(raw):
     if raw[:3] == b"\xef\xbb\xbf":
         return raw.decode("utf-8-sig", errors="replace")
 
-    # UTF-16 без BOM — характерный признак: нули в каждой второй позиции
     sample = raw[:400]
     if len(sample) >= 8:
         nulls_odd  = sum(1 for i in range(1, min(200, len(sample)), 2) if sample[i] == 0)
@@ -132,64 +228,41 @@ def decode_bytes(raw):
 def read_text_file(path):
     with open(path, "rb") as f:
         raw = f.read()
-    print(f"  Размер: {len(raw)} байт, hex head: {raw[:12].hex()}")
-    return decode_bytes(raw)
+    return decode_bytes(raw), raw
 
 
 # ============================================================
-# ОЧИСТКА ИМЕНИ ФАЙЛА ИЗ Patch / cmds
+# ПАРСИНГ
 # ============================================================
 
 def clean_patch_filename(name):
-    """
-    Приводит ссылку на файл из описания к «чистому» имени:
-      'Install\\MSO\\Libre.Office.exe'  → 'Libre.Office.exe'
-      '"%wpipath%\\MSO\\File.exe" /S'   → 'File.exe'
-      'Notepad3-{P}.exe'                → 'Notepad3.exe'
-    """
     if not name:
         return ""
-    # Убираем аргументы (всё после первого пробела вне кавычек)
     s = name.strip()
-    # Отрезаем всё, что идёт после закрывающей кавычки
     s = re.sub(r'"\s+.*$', '"', s)
-    # Разбиваем по разделителям пути
     parts = re.split(r"[\\/]", s)
     last = parts[-1] if parts else s
-    # Убираем аргументы
     last = re.split(r"\s+", last)[0]
-    # Снимаем кавычки
     last = last.strip("\"'")
-    # Плейсхолдеры {P}, -{P}
     last = re.sub(r"-?\{P\}", "", last, flags=re.IGNORECASE)
     return last.strip()
 
-
-# ============================================================
-# ПАРСИНГ СТАРОГО ФОРМАТА (1_Software.txt)
-# ============================================================
 
 def parse_old_format(content):
     programs = []
     current = None
     state = None
-
     for raw_line in content.split("\n"):
         line = raw_line.rstrip("\r")
-
         if re.match(r"^\[\d+\]\s*$", line.strip()):
             if current and current.get("name"):
                 programs.append(current)
-            current = {
-                "name": "", "description": "", "patch": "",
-                "patch_filename": "",
-            }
+            current = {"name": "", "description": "",
+                       "patch": "", "patch_filename": ""}
             state = None
             continue
-
         if current is None:
             continue
-
         if line.startswith("Name="):
             current["name"] = line[5:].strip(); state = None
         elif line.startswith("Hint="):
@@ -200,13 +273,10 @@ def parse_old_format(content):
             current["description"] += "\n" + line
         else:
             state = None
-
     if current and current.get("name"):
         programs.append(current)
-
     for p in programs:
         p["patch_filename"] = clean_patch_filename(p.get("patch", ""))
-
         hint = p.get("description", "")
         if hint:
             if hint.startswith("|"):
@@ -214,46 +284,33 @@ def parse_old_format(content):
             hint = hint.replace("|", "\n")
             hint = re.sub(r"\n+", "\n", hint).strip()
             p["description"] = hint
-
     return programs
 
-
-# ============================================================
-# ПАРСИНГ WPI-ФОРМАТА (описание*.txt)
-# ============================================================
 
 def parse_wpi_format(content):
     programs = []
     blocks = re.split(r"\bpn\s*\+\+\s*;", content)
-
     for block in blocks:
         if "prog[pn]" not in block:
             continue
-        entry = {
-            "name": "", "description": "", "patch": "",
-            "patch_filename": "",
-        }
-
+        entry = {"name": "", "description": "",
+                 "patch": "", "patch_filename": ""}
         m = re.search(r"prog\[pn\]\s*=\s*\[(.+?)\]\s*;", block, re.DOTALL)
         if m:
             parts = re.findall(r"['\"]([^'\"]*)['\"]", m.group(1))
             entry["name"] = "".join(parts).strip()
-
         m = re.search(r"desc\[pn\]\s*=\s*\[(.+?)\]\s*;", block, re.DOTALL)
         if m:
             parts = re.findall(r"['\"]([^'\"]*)['\"]", m.group(1))
             entry["description"] = "".join(parts).strip()
-
         m = re.search(r"cmds\[pn\]\s*=\s*\[(.+?)\]\s*;", block, re.DOTALL)
         if m:
             parts = re.findall(r"['\"]([^'\"]*)['\"]", m.group(1))
             cmds_str = "".join(parts)
             entry["patch"] = cmds_str
             entry["patch_filename"] = clean_patch_filename(cmds_str)
-
         if entry["name"]:
             programs.append(entry)
-
     return programs
 
 
@@ -262,59 +319,14 @@ def detect_format(content):
         return "wpi"
     if "Name=" in content and re.search(r"^\[\d+\]", content, re.MULTILINE):
         return "old"
+    # Дополнительно проверим на cmds[pn]/dflt[pn]
+    if "dflt[pn]" in content or "cat[pn]" in content or "uid[pn]" in content:
+        return "wpi"
     return "unknown"
 
 
 # ============================================================
-# ЗАГРУЗКА ВСЕХ ОПИСАНИЙ
-# ============================================================
-
-def load_all_programs(context, desc_items):
-    """desc_items: [{"name": ..., "dlink": ...}, ...]"""
-    all_programs = []
-    seen = set()
-
-    for item in desc_items:
-        name = item["name"]
-        dlink = item.get("dlink")
-        if not dlink:
-            print(f"  [!] Нет dlink для {name}")
-            continue
-
-        save = f"/tmp/{name}"
-        try:
-            download_file(context, dlink, save)
-        except Exception as e:
-            print(f"  [!] Ошибка скачивания {name}: {e}")
-            continue
-
-        content = read_text_file(save)
-        fmt = detect_format(content)
-
-        if fmt == "wpi":
-            programs = parse_wpi_format(content)
-        elif fmt == "old":
-            programs = parse_old_format(content)
-        else:
-            print(f"  [!] Неизвестный формат: {name}")
-            continue
-
-        print(f"  Формат: {fmt}, записей: {len(programs)}")
-
-        for p in programs:
-            key = (p.get("patch_filename") or "").lower()
-            if not key:
-                continue
-            if key in seen:
-                continue
-            seen.add(key)
-            all_programs.append(p)
-
-    return all_programs
-
-
-# ============================================================
-# СОПОСТАВЛЕНИЕ ФАЙЛА С ПРОГРАММОЙ
+# СОПОСТАВЛЕНИЕ
 # ============================================================
 
 def normalize_filename(name):
@@ -322,7 +334,7 @@ def normalize_filename(name):
         return ""
     name = name.lower()
     name = re.sub(
-        r"\.(exe|msi|zip|rar|7z|tar|gz|txt|dll|bat|cmd|ps1)$", "", name
+        r"\.(exe|msi|zip|rar|7z|tar|gz|txt|dll|bat|cmd|ps1|iso)$", "", name
     )
     return name.strip()
 
@@ -337,24 +349,19 @@ def match_file_to_program(filename, programs):
     if not fn_agg:
         return None
 
-    # 1. Точное совпадение по нормализованному имени
     for p in programs:
         if normalize_filename(p.get("patch_filename", "")) == fn_norm:
             return p
-
-    # 2. Совпадение без разделителей
     for p in programs:
         if normalize_aggressive(p.get("patch_filename", "")) == fn_agg:
             return p
-
-    # 3. Частичное (одно содержит другое), минимум 6 символов
     for p in programs:
         p_agg = normalize_aggressive(p.get("patch_filename", ""))
-        if len(fn_agg) >= 6 and len(p_agg) >= 6:
+        if len(fn_agg) >= 5 and len(p_agg) >= 5:
             if fn_agg in p_agg or p_agg in fn_agg:
                 return p
 
-    # 4. Fallback: по названию программы (совпадение >60% слов длиной ≥4)
+    # Fallback по названию
     fn_words = set(re.findall(r"[a-zа-яё0-9]{4,}", fn_norm.replace("ё", "е")))
     if not fn_words:
         return None
@@ -375,13 +382,21 @@ def match_file_to_program(filename, programs):
     return best
 
 
+def parse_filename_title(filename):
+    if not filename:
+        return ""
+    stem = os.path.splitext(filename)[0]
+    stem = re.sub(r"\s+", " ", stem).strip()
+    return stem
+
+
 # ============================================================
 # MAIN
 # ============================================================
 
 def main():
     print("=" * 72)
-    print("ТЕСТ TERABOX v2: мультиописания + распределение по папкам")
+    print("ТЕСТ TERABOX v3: скроллинг + мультиописания + подпапки")
     print("=" * 72)
 
     with sync_playwright() as p:
@@ -409,70 +424,106 @@ def main():
         # ─── Открываем корень ───
         print(f"\nОткрываем {START_URL}")
         page.goto(START_URL, wait_until="domcontentloaded", timeout=60000)
-        page.wait_for_timeout(7000)
+        page.wait_for_timeout(8000)
         print(f"Финальный URL: {page.url}")
 
-        initial = catcher.wait_new(page, 0, timeout_ms=10000)
-        if not initial:
-            print("✗ Нет ответа /share/list")
-            browser.close()
-            return
-        print(f"✓ Корень — errno: {initial['data'].get('errno')}")
+        root_items = collect_folder_items(page, catcher, 0, wait_ms=15000)
+        print(f"\n✓ Корень: {len(root_items)} элементов")
+        for it in root_items:
+            kind = "DIR " if str(it.get("isdir")) == "1" else "FILE"
+            print(f"    [{kind}] {it.get('server_filename')}")
 
         # ─── Вход в «Программы» ───
         print(f"\n{'─' * 72}\nШАГ 1: Вход в «Программы»\n{'─' * 72}")
         prev = catcher.count()
-        if not double_click_folder(page, "Программы"):
-            print("✗ Не удалось войти в «Программы»")
+        ok = _click_folder_by_name(page, "Программы")
+        if not ok:
+            print("✗ Не удалось кликнуть по «Программы»")
             browser.close()
             return
         page.wait_for_timeout(4000)
-        res_prog = catcher.wait_new(page, prev, timeout_ms=15000)
-        if not res_prog:
-            print("✗ Нет ответа")
-            browser.close()
-            return
+        prog_items = collect_folder_items(page, catcher, prev, wait_ms=20000)
+        print(f"\n  Содержимое «Программ»: {len(prog_items)} элементов")
 
-        data_prog = res_prog["data"]
-        items_prog = data_prog.get("list") or []
-        print(f"errno: {data_prog.get('errno')}, элементов: {len(items_prog)}")
+        desc_items = []   # файлы описаний
+        root_files = []   # прочие файлы в корне «Программ»
+        subdirs = []      # подпапки
 
-        # ─── Разделяем: файлы описаний / файлы / подпапки ───
-        desc_items = []
-        root_files = []
-        subdirs = []
-
-        for it in items_prog:
+        for it in prog_items:
             name = it.get("server_filename") or ""
             is_dir = str(it.get("isdir")) == "1"
             if is_dir:
                 subdirs.append(it)
-            elif any(p.match(name) for p in DESC_FILE_PATTERNS):
-                desc_items.append({"name": name, "dlink": it.get("dlink") or ""})
+            elif name.lower().endswith(DESC_EXTS):
+                desc_items.append(it)
             else:
                 root_files.append(it)
 
-        print(f"\nФайлов описаний: {len(desc_items)}")
+        print(f"\n  Файлов-описаний (.txt): {len(desc_items)}")
         for d in desc_items:
-            print(f"  • {d['name']}  (dlink: {'✓' if d['dlink'] else '✗'})")
-
-        print(f"Файлов в корне:  {len(root_files)}")
-        print(f"Подпапок:        {len(subdirs)}")
+            print(f"    • {d.get('server_filename')} "
+                  f"({d.get('size', 0)} b)")
+        print(f"  Прочих файлов:          {len(root_files)}")
+        for f in root_files:
+            print(f"    • {f.get('server_filename')} "
+                  f"({f.get('size', 0)} b)")
+        print(f"  Подпапок:               {len(subdirs)}")
         for s in subdirs:
-            print(f"  • {s.get('server_filename')}")
+            print(f"    • {s.get('server_filename')}")
 
         # ─── Парсинг описаний ───
         print(f"\n{'─' * 72}\nШАГ 2: Парсинг описаний\n{'─' * 72}")
-        all_programs = load_all_programs(context, desc_items)
-        print(f"\n✓ Всего программ: {len(all_programs)}")
+        all_programs = []
+        seen_keys = set()
 
-        # Небольшая диагностика
+        for d in desc_items:
+            fname = d.get("server_filename")
+            dlink = d.get("dlink")
+            if not dlink:
+                print(f"  [!] Нет dlink для {fname}")
+                continue
+
+            save = f"/tmp/{fname}"
+            try:
+                download_file(context, dlink, save)
+            except Exception as e:
+                print(f"  [!] Ошибка скачивания {fname}: {e}")
+                continue
+
+            content, raw = read_text_file(save)
+            fmt = detect_format(content)
+
+            # Диагностика
+            print(f"\n  ── {fname} ──")
+            print(f"  Размер: {len(raw)} байт, "
+                  f"первые байты: {raw[:8].hex()}")
+            preview = content[:300].replace("\r", "")
+            for i, line in enumerate(preview.split("\n")[:6]):
+                print(f"    | {line[:120]}")
+            print(f"  Формат: {fmt}")
+
+            if fmt == "wpi":
+                programs = parse_wpi_format(content)
+            elif fmt == "old":
+                programs = parse_old_format(content)
+            else:
+                print(f"  [!] Формат не распознан, пропуск")
+                continue
+
+            print(f"  Программ: {len(programs)}")
+
+            for prog in programs:
+                key = (prog.get("patch_filename") or "").lower()
+                if not key or key in seen_keys:
+                    continue
+                seen_keys.add(key)
+                all_programs.append(prog)
+
+        print(f"\n✓ Всего уникальных программ: {len(all_programs)}")
         if all_programs:
-            print("\n  Примеры распарсенных программ:")
-            for p in all_programs[:8]:
-                print(f"    • name            = {p['name'][:60]}")
-                print(f"      patch_filename  = {p['patch_filename']}")
-                print(f"      description[:60]= {p['description'][:60]}")
+            for prog in all_programs[:5]:
+                print(f"    • {prog['name'][:50]:<50} "
+                      f"→ {prog['patch_filename']}")
 
         # ─── Обход подпапок ───
         print(f"\n{'─' * 72}\nШАГ 3: Обход подпапок\n{'─' * 72}")
@@ -485,38 +536,37 @@ def main():
             print(f"ПАПКА [{i+1}/{len(subdirs)}]: {sub_name}")
             print(f"{'━' * 72}")
 
+            # Возврат в «Программы»
             if i > 0:
-                print(f"  → Возврат в «Программы»...")
-                page.goto(START_URL, wait_until="domcontentloaded", timeout=60000)
-                page.wait_for_timeout(5000)
+                page.goto(START_URL, wait_until="domcontentloaded",
+                          timeout=60000)
+                page.wait_for_timeout(6000)
                 prev = catcher.count()
-                if not double_click_folder(page, "Программы"):
-                    print(f"  ✗ Не удалось вернуться")
+                if not _click_folder_by_name(page, "Программы"):
+                    print(f"  ✗ Не удалось вернуться в «Программы»")
                     continue
-                page.wait_for_timeout(3000)
-                catcher.wait_new(page, prev, timeout_ms=10000)
+                page.wait_for_timeout(4000)
+                _ = collect_folder_items(page, catcher, prev,
+                                          wait_ms=15000, scroll=False)
 
             prev = catcher.count()
-            if not double_click_folder(page, sub_name):
+            if not _click_folder_by_name(page, sub_name):
                 print(f"  ✗ Не удалось открыть '{sub_name}'")
                 continue
             page.wait_for_timeout(4000)
+            sub_items = collect_folder_items(page, catcher, prev,
+                                              wait_ms=15000)
 
-            res_sub = catcher.wait_new(page, prev, timeout_ms=15000)
-            if not res_sub:
-                print(f"  ✗ Нет ответа")
-                continue
-
-            data_sub = res_sub["data"]
-            items_sub = data_sub.get("list") or []
-            files_only = [it for it in items_sub if str(it.get("isdir")) != "1"]
+            files_only = [it for it in sub_items
+                          if str(it.get("isdir")) != "1"]
             total_files += len(files_only)
-            print(f"  errno: {data_sub.get('errno')}, файлов: {len(files_only)}")
+            print(f"  Файлов: {len(files_only)}")
 
             matched_in_sub = 0
             for it in files_only:
                 fname = it.get("server_filename") or ""
-                found = match_file_to_program(fname, all_programs)
+                found = (match_file_to_program(fname, all_programs)
+                         if all_programs else None)
                 if found:
                     matched_in_sub += 1
                     print(f"    ✓ {fname}")
@@ -540,8 +590,10 @@ def main():
               f"сопоставлено {len(all_matched)}")
         print(f"{'═' * 72}")
 
-        for m in all_matched:
+        for m in all_matched[:30]:
             print(f"  [{m['folder']}] {m['title']}  →  {m['filename']}")
+        if len(all_matched) > 30:
+            print(f"  ... и ещё {len(all_matched) - 30}")
 
         with open("/tmp/matched_programs.json", "w", encoding="utf-8") as f:
             json.dump(all_matched, f, ensure_ascii=False, indent=2)
