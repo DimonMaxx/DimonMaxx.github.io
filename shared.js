@@ -143,16 +143,24 @@
         }
     }
 
+    /**
+     * Скачивает файл по url.
+     * Если передан filename — устанавливает его в атрибут download
+     * (это важно при скачивании через прокси, чтобы браузер использовал
+     * правильное имя и не открывал вложение вместо сохранения).
+     */
     function triggerDownload(url, filename) {
-    const a = document.createElement('a');
-    a.href = url;
-    if (filename) a.download = filename;
-    a.rel = 'noopener';
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-}
+        const a = document.createElement('a');
+        a.href = url;
+        if (filename) {
+            a.download = String(filename);
+        }
+        a.rel = 'noopener';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
 
     function formatDateRu(date) {
         if (!date) return '—';
