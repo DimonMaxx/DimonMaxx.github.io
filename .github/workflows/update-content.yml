@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       sections:
-        description: 'Разделы через запятую (пусто = все). Например: programs,music'
+        description: 'Разделы через запятую (пусто = все). Например: programs'
         required: false
         default: ''
         type: string
@@ -24,13 +24,11 @@ on:
         default: false
         type: boolean
   schedule:
-    # Каждую ночь в 03:00 UTC
     - cron: '0 3 * * *'
 
 permissions:
   contents: write
 
-# Защита от параллельных запусков (два workflow не будут бить друг друга)
 concurrency:
   group: sync-content
   cancel-in-progress: false
@@ -38,6 +36,7 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
 
     steps:
       - name: Checkout repository
@@ -98,7 +97,7 @@ jobs:
           SKIP_ENRICHMENT:           ${{ github.event.inputs.skip_enrichment == 'true' && '1' || '0' }}
         run: python yandex_disk_sync.py
 
-      # ─── TeraBox (Playwright + обход папок) ───
+      # ─── TeraBox ───
       - name: Run terabox_sync.py
         if: github.event.inputs.run_terabox != 'false'
         env:
@@ -113,7 +112,7 @@ jobs:
           TERABOX_COOKIE:            ${{ secrets.TERABOX_COOKIE }}
         run: python terabox_sync.py
 
-      # ─── Генерация JSON (всегда, чтобы подхватить изменения) ───
+      # ─── Генерация JSON ───
       - name: Run generate_from_sheets.py
         env:
           GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
