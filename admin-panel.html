@@ -1926,120 +1926,186 @@
         if (delBtn) delBtn.addEventListener('click', deleteAllOrphans);
     }
 
-    // ---------- Diff-view ----------
+    // Текущий контекст модалки Diff-view
+let currentOrphansCtx = { section_key: null, section_label: null };
 
-    window.showOrphansByIndex = function (idx) {
-        const item = orphansData[idx];
-        if (!item) return;
+window.showOrphansByIndex = function (idx) {
+    const item = orphansData[idx];
+    if (!item) return;
 
-        const orphans = item.orphans || [];
-        const headers = Array.isArray(item.headers) ? item.headers : [];
+    const orphans = item.orphans || [];
+    const headers = Array.isArray(item.headers) ? item.headers : [];
 
-        const modal = document.getElementById('userEditModal');
-        const box = modal.querySelector('.modal-box');
+    // Запоминаем контекст для выборочного удаления
+    currentOrphansCtx.section_key   = item.section_key;
+    currentOrphansCtx.section_label = item.section_label;
 
-        let orphanBlocks = '';
-        orphans.forEach((o, i) => {
-            const values = Array.isArray(o.values) ? o.values : [];
-            const title = o.title || '';
-            const link = o.link || '';
-            const linkShort = link.length > 60
-                ? link.slice(0, 60) + '…'
-                : link;
+    const modal = document.getElementById('userEditModal');
+    const box = modal.querySelector('.modal-box');
 
-            let rowsHtml = '';
-            if (headers.length > 0) {
-                headers.forEach((h, j) => {
-                    const v = values[j] !== undefined ? String(values[j]) : '';
-                    const isTitle = (h === 'Название' || h.toLowerCase() === 'title');
-                    const isLink = (h === 'Ссылка для скачивания' || h === 'Ссылка'
-                                    || h.toLowerCase() === 'download_link');
-                    let cellCls = '';
-                    if (isLink) cellCls = 'orphan-highlight';
+    let orphanBlocks = '';
+    orphans.forEach((o, i) => {
+        const values = Array.isArray(o.values) ? o.values : [];
+        const title = o.title || '';
+        const link = o.link || '';
+        const linkShort = link.length > 60 ? link.slice(0, 60) + '…' : link;
 
-                    const cellContent = v
-                        ? (isLink && v.length > 120
-                            ? `<span title="${MF.escapeAttr(v)}">${MF.escapeHtml(v.slice(0, 120))}…</span>`
-                            : MF.escapeHtml(v))
-                        : '<i>пусто</i>';
+        // ─── Определяем источник по ссылке ───
+        let sourceName = 'облаке';
+        let sourceWhere = 'облачный диск';
+        if (/terabox|1024tera|4funbox|d.terabox/i.test(link)) {
+            sourceName  = 'TeraBox';
+            sourceWhere = 'TeraBox';
+        } else if (/disk\.yandex|yadi\.sk/i.test(link)) {
+            sourceName  = 'Яндекс.Диске';
+            sourceWhere = 'Яндекс.Диск';
+        }
 
-                    rowsHtml += `<tr>
-                        <td>${MF.escapeHtml(h)}</td>
-                        <td class="${cellCls} ${!v ? 'orphan-empty' : ''}">${cellContent}</td>
-                    </tr>`;
-                });
-            } else {
-                rowsHtml = `
-                    <tr><td>Название</td><td>${MF.escapeHtml(title || '—')}</td></tr>
-                    <tr><td>Ссылка</td><td class="orphan-highlight">
-                        <span title="${MF.escapeAttr(link)}">${MF.escapeHtml(linkShort)}</span>
-                    </td></tr>
-                    <tr><td>Строка</td><td>${o.row || '—'}</td></tr>
-                `;
-            }
+        let rowsHtml = '';
+        if (headers.length > 0) {
+            headers.forEach((h, j) => {
+                const v = values[j] !== undefined ? String(values[j]) : '';
+                const isLink = (h === 'Ссылка для скачивания' || h === 'Ссылка'
+                                || h.toLowerCase() === 'download_link');
+                const cellCls = isLink ? 'orphan-highlight' : '';
 
-            orphanBlocks += `
-                <div class="orphan-item" data-orphan-idx="${i}">
-                    <div class="orphan-header" data-toggle-idx="${i}">
-                        <i class="fas fa-caret-right caret"></i>
-                        <span class="row-num">#${o.row || i + 1}</span>
-                        <span class="orphan-title" title="${MF.escapeAttr(title)}">
-                            ${MF.escapeHtml(title || '(без названия)')}
-                        </span>
-                    </div>
-                    <div class="orphan-body" data-body-idx="${i}">
-                        <table>${rowsHtml}</table>
-                        <div class="diff-note">
-                            <i class="fas fa-info-circle"></i>
-                            <strong>Что не так:</strong>
-                            файл с этой ссылкой не найден на Яндекс.Диске.
-                            Возможные причины: файл переименован, перемещён в другую
-                            папку или удалён. Если это ошибочно — проверьте Диск;
-                            иначе строку можно удалить в Google Sheets или
-                            кнопкой «Удалить все осиротевшие».
-                        </div>
+                const cellContent = v
+                    ? (isLink && v.length > 120
+                        ? `<span title="${MF.escapeAttr(v)}">${MF.escapeHtml(v.slice(0, 120))}…</span>`
+                        : MF.escapeHtml(v))
+                    : '<i>пусто</i>';
+
+                rowsHtml += `<tr>
+                    <td>${MF.escapeHtml(h)}</td>
+                    <td class="${cellCls} ${!v ? 'orphan-empty' : ''}">${cellContent}</td>
+                </tr>`;
+            });
+        } else {
+            rowsHtml = `
+                <tr><td>Название</td><td>${MF.escapeHtml(title || '—')}</td></tr>
+                <tr><td>Ссылка</td><td class="orphan-highlight">
+                    <span title="${MF.escapeAttr(link)}">${MF.escapeHtml(linkShort)}</span>
+                </td></tr>
+                <tr><td>Строка</td><td>${o.row || '—'}</td></tr>
+            `;
+        }
+
+        orphanBlocks += `
+            <div class="orphan-item" data-orphan-idx="${i}">
+                <div class="orphan-header" data-toggle-idx="${i}">
+                    <input type="checkbox" class="orphan-checkbox"
+                           data-orphan-idx="${i}"
+                           onclick="event.stopPropagation();"
+                           style="width:18px; height:18px; cursor:pointer; accent-color:#dc2626;">
+                    <i class="fas fa-caret-right caret"></i>
+                    <span class="row-num">#${o.row || i + 1}</span>
+                    <span class="orphan-title" title="${MF.escapeAttr(title)}">
+                        ${MF.escapeHtml(title || '(без названия)')}
+                    </span>
+                </div>
+                <div class="orphan-body" data-body-idx="${i}">
+                    <table>${rowsHtml}</table>
+                    <div class="diff-note">
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Что не так:</strong>
+                        файл с этой ссылкой не найден на ${sourceWhere}.
+                        Возможные причины: файл переименован, перемещён
+                        в другую папку или удалён. Если это ошибочно —
+                        проверьте ${sourceName}; иначе строку можно удалить
+                        кнопкой «Удалить выбранные».
                     </div>
                 </div>
-            `;
-        });
-
-        box.innerHTML = `
-            <h3>
-                <i class="fas fa-code-compare"></i>
-                Осиротевшие строки — ${MF.escapeHtml(item.section_label || item.section_key)}
-                (${orphans.length})
-            </h3>
-            <p style="color:#64748b; font-size:13px; margin-bottom:15px;">
-                Лист <strong>${MF.escapeHtml(item.sheet_name || '')}</strong>.
-                Кликните на запись, чтобы развернуть diff-view с полным содержимым строки.
-            </p>
-            <div style="max-height:60vh; overflow-y:auto; padding-right:4px;">
-                ${orphanBlocks}
-            </div>
-            <div class="modal-actions">
-                <button class="btn-secondary" onclick="closeUserEditModal()">Закрыть</button>
             </div>
         `;
-        modal.classList.add('active');
+    });
 
-        box.querySelectorAll('.orphan-header').forEach(h => {
-            h.addEventListener('click', function () {
-                const idx2 = this.dataset.toggleIdx;
-                const body = box.querySelector(`.orphan-body[data-body-idx="${idx2}"]`);
-                const isOpen = this.classList.toggle('expanded');
-                body.classList.toggle('expanded', isOpen);
-            });
+    box.innerHTML = `
+        <h3>
+            <i class="fas fa-code-compare"></i>
+            Осиротевшие строки — ${MF.escapeHtml(item.section_label || item.section_key)}
+            (${orphans.length})
+        </h3>
+        <p style="color:#64748b; font-size:13px; margin-bottom:10px;">
+            Лист <strong>${MF.escapeHtml(item.sheet_name || '')}</strong>.
+            Кликните на запись, чтобы развернуть diff-view.
+            Отметьте нужные галочками, чтобы удалить только их.
+        </p>
+        <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+            <button class="btn-secondary" id="orphansSelectAllBtn" style="font-size:12px; padding:6px 14px;">
+                <i class="fas fa-check-square"></i> Выбрать все
+            </button>
+            <button class="btn-secondary" id="orphansSelectNoneBtn" style="font-size:12px; padding:6px 14px;">
+                <i class="fas fa-square"></i> Снять все
+            </button>
+            <span style="color:#94a3b8; font-size:12px;">|</span>
+            <span id="orphansSelInfo" style="color:#dc2626; font-weight:600; font-size:13px;">
+                Выбрано: 0
+            </span>
+            <span style="flex:1;"></span>
+            <button class="btn-danger" id="orphansDeleteSelectedBtn" disabled
+                    style="font-size:12px; padding:6px 14px;">
+                <i class="fas fa-trash"></i> Удалить выбранные
+            </button>
+        </div>
+        <div style="max-height:55vh; overflow-y:auto; padding-right:4px;">
+            ${orphanBlocks}
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" onclick="closeUserEditModal()">Закрыть</button>
+        </div>
+    `;
+    modal.classList.add('active');
+
+    // ─── Обработчики ───
+    box.querySelectorAll('.orphan-header').forEach(h => {
+        h.addEventListener('click', function (e) {
+            // Клик по чекбоксу — не открывать/закрывать
+            if (e.target.tagName === 'INPUT') return;
+            const idx2 = this.dataset.toggleIdx;
+            const body = box.querySelector(`.orphan-body[data-body-idx="${idx2}"]`);
+            const isOpen = this.classList.toggle('expanded');
+            body.classList.toggle('expanded', isOpen);
         });
+    });
+
+    const updateSel = () => {
+        const checked = box.querySelectorAll('.orphan-checkbox:checked').length;
+        document.getElementById('orphansSelInfo').textContent =
+            `Выбрано: ${checked}`;
+        document.getElementById('orphansDeleteSelectedBtn').disabled =
+            checked === 0;
     };
+
+    box.querySelectorAll('.orphan-checkbox').forEach(cb => {
+        cb.addEventListener('change', updateSel);
+    });
+
+    document.getElementById('orphansSelectAllBtn').addEventListener('click', () => {
+        box.querySelectorAll('.orphan-checkbox').forEach(cb => cb.checked = true);
+        updateSel();
+    });
+    document.getElementById('orphansSelectNoneBtn').addEventListener('click', () => {
+        box.querySelectorAll('.orphan-checkbox').forEach(cb => cb.checked = false);
+        updateSel();
+    });
+    document.getElementById('orphansDeleteSelectedBtn').addEventListener('click', () => {
+        const indices = [];
+        box.querySelectorAll('.orphan-checkbox:checked').forEach(cb => {
+            indices.push(parseInt(cb.dataset.orphanIdx, 10));
+        });
+        if (indices.length === 0) return;
+        deleteSelectedOrphans(indices);
+    });
+
+    updateSel();
+};
 
     // ---------- Массовое удаление осиротевших ----------
 
-    async function deleteAllOrphans() {
+   async function deleteAllOrphans() {
     const allItems = [];
     orphansData.forEach(sectionItem => {
         (sectionItem.orphans || []).forEach(o => {
-            // Отправляем ТОЛЬКО (section, title) — этого достаточно,
-            // а размер inputs не превысит лимит GitHub.
             const title = (o.title || '').trim();
             if (!title) return;
             allItems.push({
@@ -2054,22 +2120,8 @@
         return;
     }
 
-    const totalCount = allItems.length;
-    const approxSize = JSON.stringify(allItems).length;
-    console.log('delete_all size (bytes):', approxSize);
-
-    if (approxSize > 60000) {
-        alert(
-            `Список слишком большой для одного запуска (${approxSize} байт, ` +
-            `лимит GitHub — 65 535).\n\n` +
-            `Разбейте удаление: сначала вручную удалите часть строк из ` +
-            `Google Sheets, потом повторите.`
-        );
-        return;
-    }
-
     if (!confirm(
-        `Удалить ${totalCount} осиротевших строк из Google Sheets?\n\n` +
+        `Удалить ${allItems.length} осиротевших строк из Google Sheets?\n\n` +
         `Удаление выполняется через GitHub Actions (delete-content.yml).\n` +
         `Это действие необратимо. Продолжить?`
     )) return;
@@ -2080,13 +2132,52 @@
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
     }
 
-    try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session) {
-            alert('Сессия истекла. Войдите заново.');
-            return;
-        }
+    const ok = await _dispatchDeleteOrphans(allItems);
 
+    if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fas fa-broom"></i> Удалить все осиротевшие (${allItems.length})`;
+    }
+
+    if (ok) {
+        alert(
+            `Запрос отправлен (${allItems.length} строк).\n\n` +
+            `Через 1–2 минуты Google Sheets обновится.\n` +
+            `После следующей синхронизации с TeraBox ` +
+            `список осиротевших обновится автоматически.`
+        );
+    }
+}
+
+
+// Общая отправка списка на удаление в GitHub Actions.
+// items = [{section, title}, ...]
+async function _dispatchDeleteOrphans(items) {
+    if (!items || items.length === 0) {
+        alert('Нет записей для удаления.');
+        return false;
+    }
+
+    const approxSize = JSON.stringify(items).length;
+    console.log('delete size (bytes):', approxSize);
+
+    if (approxSize > 60000) {
+        alert(
+            `Список слишком большой для одного запуска ` +
+            `(${approxSize} байт, лимит GitHub — 65 535).\n\n` +
+            `Разбейте удаление: сначала удалите часть вручную из ` +
+            `Google Sheets, потом повторите.`
+        );
+        return false;
+    }
+
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    if (!session) {
+        alert('Сессия истекла. Войдите заново.');
+        return false;
+    }
+
+    try {
         const resp = await fetch(`${SUPABASE_URL}/functions/v1/github-dispatch`, {
             method: 'POST',
             headers: {
@@ -2095,30 +2186,73 @@
             },
             body: JSON.stringify({
                 workflow: DELETE_WORKFLOW,
-                inputs: { delete_list: JSON.stringify(allItems) }
+                inputs: { delete_list: JSON.stringify(items) }
             })
         });
         const result = await resp.json();
         if (resp.ok && result.ok) {
-            alert(
-                `Запрос отправлен (${totalCount} строк).\n\n` +
-                `Через 1–2 минуты Google Sheets обновится.\n` +
-                `После следующей синхронизации с TeraBox ` +
-                `список осиротевших обновится автоматически.`
-            );
-        } else {
-            alert('Ошибка: ' + (result.error || `HTTP ${resp.status}`));
+            return true;
         }
+        alert('Ошибка: ' + (result.error || `HTTP ${resp.status}`));
+        return false;
     } catch (e) {
         alert('Ошибка сети: ' + e.message);
-    } finally {
-        if (btn) {
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fas fa-broom"></i> Удалить все осиротевшие (${totalCount})`;
-        }
+        return false;
     }
-}
+}    
 
+async function deleteSelectedOrphans(indices) {
+    const sectionKey = currentOrphansCtx.section_key;
+    const sectionLabel = currentOrphansCtx.section_label;
+    if (!sectionKey) {
+        alert('Не удалось определить раздел.');
+        return;
+    }
+
+    // Находим источник данных этого раздела в orphansData
+    const src = orphansData.find(o => o.section_key === sectionKey);
+    if (!src) {
+        alert('Данные раздела не найдены.');
+        return;
+    }
+
+    const items = [];
+    indices.forEach(i => {
+        const o = (src.orphans || [])[i];
+        if (o && o.title) {
+            items.push({ section: sectionKey, title: o.title });
+        }
+    });
+
+    if (items.length === 0) {
+        alert('Нет названий для удаления.');
+        return;
+    }
+
+    if (!confirm(
+        `Удалить ${items.length} строк из раздела «${sectionLabel}»?\n\n` +
+        `Удаление через GitHub Actions (delete-content.yml).\n` +
+        `Это действие необратимо.`
+    )) return;
+
+    const btn = document.getElementById('orphansDeleteSelectedBtn');
+    if (btn) { btn.disabled = true; btn.innerHTML =
+        '<i class="fas fa-spinner fa-spin"></i> Отправка...'; }
+
+    const ok = await _dispatchDeleteOrphans(items);
+
+    if (btn) { btn.disabled = false; btn.innerHTML =
+        '<i class="fas fa-trash"></i> Удалить выбранные'; }
+
+    if (ok) {
+        alert(
+            `Запрос отправлен (${items.length} строк).\n\n` +
+            `Через 1–2 минуты Google Sheets обновится.\n` +
+            `После следующей синхронизации список осиротевших ` +
+            `обновится автоматически.`
+        );
+    }
+}    
     // ============================================================
     // СТАТИСТИКА
     // ============================================================
