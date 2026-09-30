@@ -143,11 +143,16 @@
         }
     }
 
-    function triggerDownload(url) {
-        const a = document.createElement('a');
-        a.href = url; a.rel = 'noopener'; a.style.display = 'none';
-        document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    }
+    function triggerDownload(url, filename) {
+    const a = document.createElement('a');
+    a.href = url;
+    if (filename) a.download = filename;
+    a.rel = 'noopener';
+    a.style.display = 'none';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
 
     function formatDateRu(date) {
         if (!date) return '—';
