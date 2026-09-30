@@ -1,0 +1,96 @@
+name: Sync TeraBox
+
+on:
+  workflow_dispatch:
+    inputs:
+      sections:
+        description: 'Разделы через запятую (пусто = все TeraBox-разделы)'
+        required: false
+        default: ''
+        type: string
+  schedule:
+    # Каждые 4 часа — чтобы dlink TeraBox не протухали
+    # (TeraBox-ссылки живут ~6-8 часов, при суточной синхронизации
+    #  они успевают устареть до момента клика на сайте)
+    - cron: '15 */4 * * *'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-content
+  cancel-in-progress: false
+
+jobs:
+  sync-terabox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright Chromium
+        run: |
+          python -m playwright install chromium
+          python -m playwright install-deps chromium
+
+      - name: Create credentials.json
+        run: echo '${{ secrets.GOOGLE_CREDENTIALS_JSON }}' > credentials.json
+
+      - name: Run terabox_sync.py
+        env:
+          GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SPREADSHEET_NAME:          "НаполнениеСайта"
+          SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
+          PRESERVE_USER_EDITS:       "1"
+          BACKUP_BEFORE_SYNC:        "1"
+          BACKUP_KEEP_COUNT:         "2"
+          SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
+          TERABOX_COOKIE:            ${{ secrets.TERABOX_COOKIE }}
+        run: python terabox_sync.py
+
+      - name: Run generate_from_sheets.py
+        env:
+          GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
+        run: python generate_from_sheets.py
+
+      - name: Commit and push changes
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add _content/ || true
+
+          if git diff --staged --quiet; then
+            echo "Нет изменений для коммита."
+            exit 0
+          fi
+
+          git commit -m "Auto-sync TeraBox content $(date -u +'%Y-%m-%d %H:%M UTC')"
+
+          git pull --rebase origin main || {
+            echo "Rebase conflict — оставляем свежую генерацию"
+            git checkout --theirs _content/ 2>/dev/null || true
+            git add _content/ || true
+            GIT_EDITOR=true git rebase --continue || git rebase --skip || true
+          }
+
+          git push
