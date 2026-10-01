@@ -2,6 +2,12 @@
 (function () {
     'use strict';
 
+    // ============================================================
+    // ДЕФОЛТНЫЕ РАЗДЕЛЫ
+    // Используются как fallback, если Supabase недоступен.
+    // В рабочем режиме разделы подгружаются из таблицы site_sections
+    // через MF.loadSections() в shared.js.
+    // ============================================================
     const DEFAULT_SECTIONS = {
         programs: {
             label: 'Программы', icon: 'fa-code',
@@ -42,56 +48,84 @@
     };
 
     const APP_CONFIG = {
+        // ─── Supabase ───
         SUPABASE_URL: 'https://rmoonebbvpmvthvpcmpt.supabase.co',
         SUPABASE_ANON_KEY: 'sb_publishable_tr2OeCNsnhEeOTw7-Y3yLw_OGCYtWHW',
 
-        YANDEX_FOLDER_URL: 'https://disk.yandex.ru/d/zMxF4nXHPkIVCQ',
-
+        // ─── GitHub (для ссылок и запуска workflow) ───
         GITHUB_OWNER: 'DimonMaxx',
         GITHUB_REPO: 'my-site',
         GITHUB_BRANCH: 'main',
-        WORKFLOW_UPDATE: 'update-content.yml',
+
+        // Актуальные workflow-файлы (используются Edge Function github-dispatch):
+        //   • sync-yandex.yml    — синхронизация Яндекс.Диска (по cron 03:00 UTC)
+        //   • sync-terabox.yml   — синхронизация TeraBox (по cron каждые 4 часа)
+        //   • delete-content.yml — удаление записей из Google Sheets
+        //   • cleanup-backups.yml — удаление старых бэкапов
+        // Переменная WORKFLOW_DELETE используется в admin-panel.html для
+        // отправки списка удаляемых записей через github-dispatch.
         WORKFLOW_DELETE: 'delete-content.yml',
 
+        // ─── Пагинация ───
         PAGE_SIZES: [5, 10, 15, 25, 50, 100],
         DEFAULT_PAGE_SIZE: 10,
 
-        MAX_AVATAR_SIZE: 2 * 1024 * 1024,
-        MAX_ATTACH_SIZE: 10 * 1024 * 1024,
-        ALLOWED_IMAGE_TYPES: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+        // ─── Ограничения загрузки ───
+        MAX_AVATAR_SIZE: 2 * 1024 * 1024,      // 2 МБ
+        MAX_ATTACH_SIZE: 10 * 1024 * 1024,     // 10 МБ
+        ALLOWED_IMAGE_TYPES: [
+            'image/jpeg', 'image/png', 'image/webp', 'image/gif'
+        ],
         ALLOWED_ATTACH_TYPES: [
             'image/jpeg', 'image/png', 'image/webp', 'image/gif',
             'application/pdf',
             'application/zip'
         ],
 
+        // ─── Разделы ───
         DEFAULT_SECTIONS,
 
-        // SECTIONS — «живой» объект. Он заполняется сразу DEFAULT'ами,
+        // SECTIONS — «живой» объект. Заполняется сразу дефолтами,
         // а MF.loadSections() позже подменяет содержимое из Supabase.
+        // ВАЖНО: не замораживать APP_CONFIG — иначе SECTIONS нельзя обновить.
         SECTIONS: Object.assign({}, DEFAULT_SECTIONS),
 
+        // ─── Заголовки колонок (RU) ───
         COLUMN_LABELS: {
-            title: 'Название', description: 'Описание', version: 'Версия',
-            size: 'Размер (МБ)', download_link: 'Ссылка',
-            author: 'Автор', format: 'Формат', date: 'Дата',
-            body: 'Текст', year: 'Год', artist: 'Исполнитель',
-            platform: 'Платформа', folder: 'Папка',
-            file_name: 'Файл', username: 'Пользователь',
+            title: 'Название',
+            description: 'Описание',
+            version: 'Версия',
+            size: 'Размер (МБ)',
+            download_link: 'Ссылка',
+            author: 'Автор',
+            format: 'Формат',
+            date: 'Дата',
+            body: 'Текст',
+            year: 'Год',
+            artist: 'Исполнитель',
+            platform: 'Платформа',
+            folder: 'Папка',
+            file_name: 'Файл',
+            username: 'Пользователь',
             downloaded_at: 'Дата и время'
         },
 
+        // ─── Соответствие разделов и имён листов Google Sheets ───
+        // Используется скриптами Python (common.py), а не фронтендом.
+        // Оставлено в config.js для справки и возможных проверок.
         SECTION_TO_SHEET: {
-            programs: 'Программы', books: 'Книги', movies: 'Фильмы',
-            music: 'Музыка', games: 'Игры', misc: 'Разное'
+            programs: 'Программы',
+            books: 'Книги',
+            movies: 'Фильмы',
+            music: 'Музыка',
+            games: 'Игры',
+            misc: 'Разное'
         }
     };
 
-    // НЕ морозим APP_CONFIG — иначе SECTIONS будет невозможно обновить из Supabase.
-
     window.APP_CONFIG = APP_CONFIG;
 
-    // Диагностика (можно убрать позже)
+    // Диагностика (можно закомментировать при релизе)
     console.log('[config.js] DEFAULT_SECTIONS keys:',
         Object.keys(DEFAULT_SECTIONS));
     console.log('[config.js] SECTIONS keys:',
