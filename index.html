@@ -399,7 +399,7 @@
             <a href="admin-panel.html" class="btn-admin-panel" id="adminPanelLink" style="display:none;">
                 <i class="fas fa-shield-alt"></i> Админ-панель
             </a>
-            <a href="#" target="_blank" class="btn-update" id="adminUpdateBtn" style="display:none;">
+            <a href="#" class="btn-update" id="adminUpdateBtn" style="display:none;">
                <i class="fas fa-sync-alt"></i> Обновить
             </a>
             <div id="authWidget" style="display:flex; align-items:center; gap:6px;"></div>
@@ -505,9 +505,7 @@
     const loadedSections = new Set();
     const tableStates = {};
     let sectionRenderers = {};
-    let extraFolders = {}; // { sectionKey: [ {name, sort_order} ] }
-
-    try { localStorage.removeItem('github_token'); } catch (e) {}
+    let extraFolders = {};
 
     // ─── ГЛОБАЛЬНАЯ ЗАЩИТА ОТ КОНТЕКСТНОГО МЕНЮ НА АУДИО ───
     document.addEventListener('contextmenu', function (e) {
@@ -535,7 +533,6 @@
             const parsed = new URL(downloadUrl);
             const host = parsed.hostname.toLowerCase();
 
-            // ─── TeraBox-ссылки ───
             if (host.includes('terabox')
                 || host.includes('1024tera')
                 || host.includes('4funbox')
@@ -555,7 +552,6 @@
                      + `&name=${encodeURIComponent(fname)}`;
             }
 
-            // ─── Яндекс.Диск ───
             const folder = `${parsed.origin}${parsed.pathname}`;
             const path = parsed.searchParams.get('path');
             if (!folder || !path) return downloadUrl;
@@ -564,6 +560,7 @@
                  + `&path=${encodeURIComponent(path)}`;
         } catch (e) { return downloadUrl; }
     }
+
     function getAudioMimeType(url) {
         if (!url) return '';
         const m = url.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
@@ -575,24 +572,6 @@
         return map[ext] || '';
     }
 
-    function buildColumnsFromKeys(keys) {
-        const labels = CFG.COLUMN_LABELS || {};
-        const out = [];
-        keys.forEach(key => {
-            if (key === 'cover') {
-                out.push({ key: 'cover', label: '', type: 'cover' });
-            } else if (key === 'description' || key === 'body') {
-                out.push({ key, label: labels[key] || key, type: 'description' });
-            } else if (key === 'download_link') {
-                out.push({ key, label: 'Скачать', type: '__download__' });
-                out.push({ key, label: 'Скачиваний', type: 'count' });
-            } else {
-                out.push({ key, label: labels[key] || key, type: 'text' });
-            }
-        });
-        return out;
-    }
-
     function buildRenderers() {
         sectionRenderers = {};
         Object.entries(CFG.SECTIONS).forEach(([key, meta]) => {
@@ -602,9 +581,7 @@
                 if (col === 'description' || col === 'body')
                     return { key: col, label: CFG.COLUMN_LABELS[col] || col, type: 'description' };
                 if (col === 'download_link') {
-                    if (isMusic) {
-                        return { key: col, label: 'Слушать', type: 'audio' };
-                    }
+                    if (isMusic) return { key: col, label: 'Слушать', type: 'audio' };
                     return { key: col, label: 'Скачать', type: 'download' };
                 }
                 return { key: col, label: CFG.COLUMN_LABELS[col] || col, type: 'text' };
@@ -653,7 +630,11 @@
 
     async function checkAuth() {
         const { data, error } = await supabaseClient.auth.getUser();
-        if (error || !data?.user) { currentUser = null; currentProfile = null; renderAuthWidget(false); return; }
+        if (error || !data?.user) {
+            currentUser = null; currentProfile = null;
+            renderAuthWidget(false);
+            return;
+        }
         currentUser = data.user;
         const { data: profile } = await supabaseClient
             .from('profiles').select('*').eq('id', currentUser.id).single();
@@ -681,7 +662,7 @@
             });
         }
 
-        // ─── Скрыть/показать кнопки на welcome-hero в зависимости от логина ───
+        // Скрыть/показать кнопки на welcome-hero
         const heroLogin    = document.getElementById('heroLoginBtn');
         const heroRegister = document.getElementById('heroRegisterBtn');
         if (heroLogin)    heroLogin.style.display    = isLoggedIn ? 'none' : 'inline-flex';
@@ -691,7 +672,13 @@
         const pl = document.getElementById('adminPanelLink');
         const ub = document.getElementById('adminUpdateBtn');
         if (pl) pl.style.display = isAdmin ? 'inline-flex' : 'none';
-        if (ub) ub.style.display = isAdmin ? 'inline-flex' : 'none';
+        if (ub) {
+            ub.style.display = isAdmin ? 'inline-flex' : 'none';
+            if (isAdmin) {
+                // Ведём на страницу GitHub Actions репозитория
+                ub.href = `https://github.com/${CFG.GITHUB_OWNER}/${CFG.GITHUB_REPO}/actions`;
+            }
+        }
     }
 
     async function loadStats() {
@@ -708,6 +695,7 @@
             document.getElementById('stat-today').textContent = r5.data || 0;
         } catch (e) {}
     }
+
     let downloadCounts = {};
     async function loadDownloadCounts() {
         try {
@@ -748,14 +736,13 @@
                 data: [], columns: cols,
                 sortKey: null, sortDir: 'asc', searches: {},
                 pageSize: CFG.DEFAULT_PAGE_SIZE, currentPage: 1,
-                totalItems: 0, viewMode: 'table', folderFilter: null, sectionMeta: null, sectionKey: null
+                totalItems: 0, viewMode: 'table', folderFilter: null,
+                sectionMeta: null, sectionKey: null
             };
         }
         return tableStates[id];
     }
-    function getSectionKeyByContainer(containerId) {
-        return Object.keys(CFG.SECTIONS).find(k => CFG.SECTIONS[k].container === containerId);
-    }
+
     async function loadCollection(containerId, jsonPath, renderFn, sectionKey) {
         const container = document.getElementById(containerId);
         if (!container) return;
@@ -781,6 +768,7 @@
             container.innerHTML = `<p class="empty-block" style="color:#ef4444;">Не удалось загрузить раздел.</p>`;
         }
     }
+
     async function loadSectionIfNeeded(tabId) {
         if (loadedSections.has(tabId)) return;
         const meta = CFG.SECTIONS[tabId];
@@ -790,6 +778,7 @@
         if (!renderFn) return;
         await loadCollection(meta.container, meta.json, renderFn, tabId);
     }
+
     function renderSection(containerId, container, renderFn) {
         const state = tableStates[containerId];
         if (!state) return;
@@ -799,6 +788,7 @@
             renderTableWithState(containerId, container, renderFn);
         }
     }
+
     function renderFolderGrid(containerId, container, renderFn) {
         const state = tableStates[containerId];
         const data = state.data;
@@ -847,8 +837,16 @@
                 if (folder === '__ALL__') state.folderFilter = null;
                 else if (folder === '__NOFOLDER__') state.folderFilter = '__NOFOLDER__';
                 else state.folderFilter = folder;
+
+                // ─── Сбрасываем поиск и сортировку при входе в папку ───
+                state.searches = {};
+                state.sortKey = null;
+                state.sortDir = 'asc';
                 state.currentPage = 1;
+
                 renderSection(containerId, container, renderFn);
+                // ─── Плавный скролл к началу таблицы ───
+                MF.scrollToContainer(container, 120);
             });
         });
     }
@@ -963,7 +961,6 @@
         thead += '</tr>';
 
         let audioIdx = 0;
-
         let tbody = '';
         if (pageItems.length === 0) {
             tbody = `<tr><td colspan="${cols.length}" class="empty-block">Ничего не найдено</td></tr>`;
@@ -1051,7 +1048,6 @@
             });
         }
 
-        // ─── Две панели пагинации ───
         const paginationTop = (totalPages > 1)
             ? MF.renderPagination(containerId, totalItems, totalPages, state, 'top')
             : '';
@@ -1099,7 +1095,10 @@
             state.currentPage = 1;
             state.searches = {};
             state.sortKey = null;
+            state.sortDir = 'asc';
             renderSection(containerId, container, renderFn);
+            // ─── Плавный скролл к началу сетки папок ───
+            MF.scrollToContainer(container, 120);
         });
 
         container.querySelectorAll('.th-label').forEach(el => el.addEventListener('click', function () {
@@ -1172,8 +1171,6 @@
             });
         });
 
-        // Обработчики навешиваются на ВСЕ панели (верх + низ).
-        // Автоскролл к началу таблицы после переключения страницы.
         MF.attachPaginationHandlers(
             container,
             containerId,
@@ -1196,6 +1193,7 @@
         localStorage.setItem('activeTab', tabId);
         loadSectionIfNeeded(tabId);
     }
+
     function bindNav() {
         document.querySelectorAll('.sidebar .nav-link').forEach(link => {
             link.addEventListener('click', function () { switchTab(this.dataset.tab); });
