@@ -62,6 +62,12 @@
         .btn-danger:disabled { background: #94a3b8; cursor: not-allowed; transform: none; }
         .btn-warning { background: #f59e0b; color: white; }
         .btn-warning:hover { background: #d97706; transform: translateY(-2px); }
+        .btn-hide { background: #8b5cf6; color: white; }
+        .btn-hide:hover { background: #7c3aed; transform: translateY(-2px); }
+        .btn-hide:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+        .btn-unhide { background: #16a34a; color: white; }
+        .btn-unhide:hover { background: #15803d; transform: translateY(-2px); }
+        .btn-unhide:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
 
         .main-layout { display: flex; flex: 1; }
         .sidebar {
@@ -193,6 +199,32 @@
         .btn-del-user { background: #dc2626; color: white; }
         .btn-del-user:hover { background: #b91c1c; }
         .btn-del-user:disabled { background: #94a3b8; cursor: not-allowed; }
+
+        /* Строки, скрытые на сайте */
+        .content-table tr.row-hidden {
+            background: #fafafa;
+            opacity: 0.65;
+        }
+        .content-table tr.row-hidden:hover {
+            background: #f3f4f6;
+        }
+        .content-table tr.row-hidden td.title-cell {
+            color: #64748b;
+        }
+        .hidden-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
 
         .empty-block {
             text-align: center; color: #94a3b8;
@@ -429,6 +461,16 @@
             color: #78350f;
         }
 
+        /* ─── Скрытые ─── */
+        .hidden-banner {
+            margin-bottom: 18px; padding: 16px 20px;
+            background: #ede9fe; border: 1px solid #c4b5fd;
+            border-radius: 14px; font-size: 14px; color: #4c1d95;
+            display: flex; gap: 12px; align-items: flex-start;
+        }
+        .hidden-banner i { font-size: 20px; color: #7c3aed; flex-shrink: 0; margin-top: 2px; }
+        .hidden-banner strong { color: #5b21b6; }
+
         @media (max-width: 900px) {
             body { padding: 8px; }
             .container { border-radius: 20px; }
@@ -437,9 +479,7 @@
             .logo i { font-size: 24px; }
             .logo .badge { font-size: 11px; }
             .header-actions { width: 100%; justify-content: center; gap: 5px; }
-            .header-actions a, .header-actions button {
-                padding: 7px 12px; font-size: 12px;
-            }
+            .header-actions a, .header-actions button { padding: 7px 12px; font-size: 12px; }
 
             .main-layout { flex-direction: column; }
             .sidebar {
@@ -515,6 +555,10 @@
             <button class="nav-link" data-tab="folders"><i class="fas fa-folder"></i> Папки</button>
             <button class="nav-link" data-tab="users"><i class="fas fa-users"></i> Пользователи</button>
             <button class="nav-link" data-tab="visitors"><i class="fas fa-user-check"></i> Посетители</button>
+            <button class="nav-link" data-tab="hidden">
+                <i class="fas fa-eye-slash"></i> Скрытые
+                <span class="badge-count" id="hiddenBadge" style="display:none;">0</span>
+            </button>
             <button class="nav-link" data-tab="orphans">
                 <i class="fas fa-link-slash"></i> Осиротевшие
                 <span class="badge-count" id="orphansBadge" style="display:none;">0</span>
@@ -528,7 +572,15 @@
                 <button class="btn-secondary" id="refreshBtn"><i class="fas fa-sync-alt"></i> Обновить</button>
                 <span class="spacer"></span>
                 <span class="selected-info" id="selectedInfo" style="display:none;"></span>
-                <button class="btn-danger" id="deleteSelectedBtn" disabled><i class="fas fa-trash"></i> Удалить выбранные</button>
+                <button class="btn-hide" id="hideSelectedBtn" disabled>
+                    <i class="fas fa-eye-slash"></i> Скрыть выбранные
+                </button>
+                <button class="btn-unhide" id="unhideSelectedBtn" disabled>
+                    <i class="fas fa-eye"></i> Показать выбранные
+                </button>
+                <button class="btn-danger" id="deleteSelectedBtn" disabled>
+                    <i class="fas fa-trash"></i> Удалить выбранные
+                </button>
             </div>
 
             <div id="tabContent">
@@ -540,11 +592,8 @@
     </div>
 </div>
 
-<!-- Универсальная модалка (используется для пользователей, разделов, папок, orphans) -->
 <div class="modal-overlay" id="userEditModal">
-    <div class="modal-box">
-        <!-- содержимое задаётся динамически -->
-    </div>
+    <div class="modal-box"></div>
 </div>
 
 <script src="config.js"></script>
@@ -556,6 +605,7 @@
 
     const SUPABASE_URL = CFG.SUPABASE_URL;
     const DELETE_WORKFLOW = CFG.WORKFLOW_DELETE;
+    const GENERATE_WORKFLOW = 'sync-terabox.yml';
 
     let currentUser = null;
     let currentProfile = null;
@@ -576,11 +626,28 @@
     let currentFolderSection = null;
     let foldersList = [];
 
-    // Orphans
     let orphansData = [];
     let orphansTotalCount = 0;
 
+    // ─── Скрытые ───
+    // Map: "<sectionKey>|<folder.lower()>|<title.lower()>" → { id, hidden_at, note }
+    let hiddenItems = new Map();
+    let hiddenTotalCount = 0;
+
     try { localStorage.removeItem('github_token'); } catch (e) {}
+
+    // ============================================================
+    // ВСПОМОГАТЕЛЬНОЕ: КЛЮЧ СКРЫТОЙ ЗАПИСИ
+    // ============================================================
+    function makeHiddenKey(sectionKey, folder, title) {
+        const f = (folder || '').trim().toLowerCase();
+        const t = (title  || '').trim().toLowerCase();
+        return `${sectionKey}|${f}|${t}`;
+    }
+
+    function isHidden(sectionKey, folder, title) {
+        return hiddenItems.has(makeHiddenKey(sectionKey, folder, title));
+    }
 
     // ============================================================
     // АВТОРИЗАЦИЯ
@@ -602,6 +669,7 @@
             profile.username || currentUser.email;
 
         await loadDownloadCounts();
+        await loadHiddenItems();
         await refreshOrphansBadge();
         await loadSection('programs');
     }
@@ -612,7 +680,54 @@
     });
 
     // ============================================================
-    // БОКОВОЕ МЕНЮ КОНТЕНТА (динамически из CFG.SECTIONS)
+    // ЗАГРУЗКА СКРЫТЫХ
+    // ============================================================
+    async function loadHiddenItems() {
+        try {
+            const { data, error } = await supabaseClient
+                .from('hidden_items')
+                .select('id, section_key, folder, title, hidden_at, note');
+            if (error) {
+                console.warn('hidden_items:', error);
+                hiddenItems = new Map();
+                hiddenTotalCount = 0;
+            } else {
+                hiddenItems = new Map();
+                (data || []).forEach(row => {
+                    const key = makeHiddenKey(row.section_key, row.folder, row.title);
+                    hiddenItems.set(key, {
+                        id: row.id,
+                        section_key: row.section_key,
+                        folder: row.folder,
+                        title: row.title,
+                        hidden_at: row.hidden_at,
+                        note: row.note,
+                    });
+                });
+                hiddenTotalCount = hiddenItems.size;
+            }
+            updateHiddenBadge();
+        } catch (e) {
+            console.warn('loadHiddenItems exception:', e);
+            hiddenItems = new Map();
+            hiddenTotalCount = 0;
+            updateHiddenBadge();
+        }
+    }
+
+    function updateHiddenBadge() {
+        const badge = document.getElementById('hiddenBadge');
+        if (!badge) return;
+        if (hiddenTotalCount > 0) {
+            badge.textContent = hiddenTotalCount;
+            badge.style.display = 'inline-block';
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+
+    // ============================================================
+    // БОКОВОЕ МЕНЮ КОНТЕНТА
     // ============================================================
     function buildAdminNav() {
         const nav = document.getElementById('adminContentNav');
@@ -650,6 +765,8 @@
             `<i class="fas fa-layer-group"></i> Разделы сайта`;
         document.getElementById('toolbar').style.display = 'flex';
         document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('hideSelectedBtn').style.display = 'none';
+        document.getElementById('unhideSelectedBtn').style.display = 'none';
         document.getElementById('contentPagination').innerHTML = '';
 
         await loadSectionsFromDB();
@@ -934,6 +1051,8 @@
             `<i class="fas fa-folder"></i> Папки разделов`;
         document.getElementById('toolbar').style.display = 'none';
         document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('hideSelectedBtn').style.display = 'none';
+        document.getElementById('unhideSelectedBtn').style.display = 'none';
         document.getElementById('contentPagination').innerHTML = '';
 
         await loadSectionsFromDB();
@@ -1123,6 +1242,7 @@
         if (section === 'users') { await loadUsers(); return; }
         if (section === 'visitors') { await loadVisitors(); return; }
         if (section === 'orphans') { await loadOrphans(); return; }
+        if (section === 'hidden') { await loadHidden(); return; }
 
         const info = CFG.SECTIONS[section];
         if (!info) return;
@@ -1131,6 +1251,8 @@
             `<i class="fas ${info.icon}"></i> ${MF.escapeHtml(info.label)}`;
         document.getElementById('toolbar').style.display = 'flex';
         document.getElementById('deleteSelectedBtn').style.display = 'inline-flex';
+        document.getElementById('hideSelectedBtn').style.display = 'inline-flex';
+        document.getElementById('unhideSelectedBtn').style.display = 'inline-flex';
 
         try {
             const resp = await fetch(info.json + '?t=' + Date.now());
@@ -1216,7 +1338,12 @@
         } else {
             pageItems.forEach(item => {
                 const rowIdx = data.indexOf(item);
-                tbodyHtml += `<tr data-row-index="${rowIdx}">`;
+                const folderVal = item.folder || '';
+                const titleVal  = item.title  || '';
+                const rowHidden = isHidden(section, folderVal, titleVal);
+
+                const rowClass = rowHidden ? 'row-hidden' : '';
+                tbodyHtml += `<tr class="${rowClass}" data-row-index="${rowIdx}">`;
                 tbodyHtml += `<td class="center checkbox-cell">
                     <input type="checkbox" class="row-checkbox" data-row-index="${rowIdx}">
                 </td>`;
@@ -1235,7 +1362,10 @@
                             ? `<td><a href="${MF.escapeAttr(val)}" target="_blank" style="color:#2563eb;">Скачать</a></td>`
                             : `<td>—</td>`;
                     } else if (col.key === 'title') {
-                        tbodyHtml += `<td class="title-cell">${MF.escapeHtml(val || '')}</td>`;
+                        const badge = rowHidden
+                            ? '<span class="hidden-badge"><i class="fas fa-eye-slash"></i> Скрыто</span>'
+                            : '';
+                        tbodyHtml += `<td class="title-cell">${MF.escapeHtml(val || '')}${badge}</td>`;
                     } else {
                         const s = val ? String(val) : '';
                         const shortVal = s.length > 120 ? s.slice(0, 120) + '...' : s;
@@ -1276,11 +1406,11 @@
         const selectAll = document.getElementById('selectAllCheckbox');
         if (selectAll) selectAll.addEventListener('change', function () {
             wrapper.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = this.checked);
-            updateDeleteButton();
+            updateSelectionButtons();
         });
         wrapper.querySelectorAll('.row-checkbox').forEach(cb =>
-            cb.addEventListener('change', updateDeleteButton));
-        updateDeleteButton();
+            cb.addEventListener('change', updateSelectionButtons));
+        updateSelectionButtons();
     }
 
     function getSelectedRows() {
@@ -1290,19 +1420,308 @@
         return rows;
     }
 
-    function updateDeleteButton() {
+    /**
+     * Обновляет доступность кнопок на основе выбранных строк:
+     *   • «Скрыть выбранные» — активна, если есть хотя бы одна не скрытая
+     *   • «Показать выбранные» — активна, если есть хотя бы одна скрытая
+     *   • «Удалить выбранные» — активна, если есть хотя бы одна (как раньше)
+     */
+    function updateSelectionButtons() {
         const selected = getSelectedRows();
-        const btn = document.getElementById('deleteSelectedBtn');
         const info = document.getElementById('selectedInfo');
+        const deleteBtn = document.getElementById('deleteSelectedBtn');
+        const hideBtn   = document.getElementById('hideSelectedBtn');
+        const unhideBtn = document.getElementById('unhideSelectedBtn');
+
         const isContent = !!CFG.SECTIONS[currentTab];
-        if (selected.length > 0 && isContent) {
-            btn.disabled = false;
-            info.textContent = `Выбрано: ${selected.length}`;
-            info.style.display = 'inline';
-        } else {
-            btn.disabled = true;
+
+        if (selected.length === 0 || !isContent) {
             info.style.display = 'none';
+            deleteBtn.disabled = true;
+            hideBtn.disabled = true;
+            unhideBtn.disabled = true;
+            return;
         }
+
+        const data = sectionData[currentTab] || [];
+        let hasVisible = false;
+        let hasHidden  = false;
+
+        selected.forEach(idx => {
+            const item = data[idx];
+            if (!item) return;
+            const rowHidden = isHidden(currentTab, item.folder || '', item.title || '');
+            if (rowHidden) hasHidden = true;
+            else hasVisible = true;
+        });
+
+        info.textContent = `Выбрано: ${selected.length}`;
+        info.style.display = 'inline';
+
+        deleteBtn.disabled = false;
+        hideBtn.disabled   = !hasVisible;
+        unhideBtn.disabled = !hasHidden;
+    }
+
+    // ============================================================
+    // СКРЫТИЕ / ВОССТАНОВЛЕНИЕ
+    // ============================================================
+    async function hideSelected() {
+        const selected = getSelectedRows();
+        if (selected.length === 0) return;
+
+        const section = currentTab;
+        const data = sectionData[section] || [];
+
+        // Отбираем только те, что ещё не скрыты
+        const toHide = [];
+        selected.forEach(idx => {
+            const item = data[idx];
+            if (!item) return;
+            const folder = (item.folder || '').trim();
+            const title  = (item.title  || '').trim();
+            if (!title) return;
+            if (isHidden(section, folder, title)) return;
+            toHide.push({ folder, title });
+        });
+
+        if (toHide.length === 0) {
+            alert('Все выбранные записи уже скрыты.');
+            return;
+        }
+
+        if (!confirm(
+            `Скрыть ${toHide.length} записей на сайте?\n\n` +
+            `Записи останутся в Google Sheets, но не будут показываться ` +
+            `посетителям. Их можно вернуть в любой момент.`
+        )) return;
+
+        const hideBtn = document.getElementById('hideSelectedBtn');
+        if (hideBtn) { hideBtn.disabled = true; hideBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Скрываю...'; }
+
+        const payload = toHide.map(it => ({
+            section_key: section,
+            folder:      it.folder || null,
+            title:       it.title,
+            hidden_by:   currentUser.id,
+        }));
+
+        const { error } = await supabaseClient
+            .from('hidden_items')
+            .insert(payload);
+
+        if (hideBtn) { hideBtn.disabled = false; hideBtn.innerHTML =
+            '<i class="fas fa-eye-slash"></i> Скрыть выбранные'; }
+
+        if (error) {
+            alert('Ошибка: ' + error.message);
+            return;
+        }
+
+        await loadHiddenItems();
+        renderContentTable(section);
+        alert(
+            `Скрыто: ${toHide.length}.\n\n` +
+            `Запустите Sync TeraBox / Sync Yandex.Disk (или дождитесь ` +
+            `следующей синхронизации) — изменения появятся на сайте ` +
+            `в течение 1–2 минут.`
+        );
+    }
+
+    async function unhideSelected() {
+        const selected = getSelectedRows();
+        if (selected.length === 0) return;
+
+        const section = currentTab;
+        const data = sectionData[section] || [];
+
+        const keysToUnhide = [];
+        selected.forEach(idx => {
+            const item = data[idx];
+            if (!item) return;
+            const folder = (item.folder || '').trim();
+            const title  = (item.title  || '').trim();
+            if (!title) return;
+            if (!isHidden(section, folder, title)) return;
+            keysToUnhide.push(makeHiddenKey(section, folder, title));
+        });
+
+        if (keysToUnhide.length === 0) {
+            alert('Среди выбранных нет скрытых записей.');
+            return;
+        }
+
+        if (!confirm(`Показать на сайте ${keysToUnhide.length} записей?`)) return;
+
+        const unhideBtn = document.getElementById('unhideSelectedBtn');
+        if (unhideBtn) { unhideBtn.disabled = true; unhideBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Возвращаю...'; }
+
+        // Удаляем все записи с указанными ключами
+        // (используем `.in` по id, потому что составной ключ мы уже собрали)
+        const idsToDelete = [];
+        keysToUnhide.forEach(k => {
+            const item = hiddenItems.get(k);
+            if (item && item.id) idsToDelete.push(item.id);
+        });
+
+        const { error } = await supabaseClient
+            .from('hidden_items')
+            .delete()
+            .in('id', idsToDelete);
+
+        if (unhideBtn) { unhideBtn.disabled = false; unhideBtn.innerHTML =
+            '<i class="fas fa-eye"></i> Показать выбранные'; }
+
+        if (error) {
+            alert('Ошибка: ' + error.message);
+            return;
+        }
+
+        await loadHiddenItems();
+        renderContentTable(section);
+        alert(`Возвращено на сайт: ${idsToDelete.length}.`);
+    }
+
+    // ============================================================
+    // ВКЛАДКА «СКРЫТЫЕ»
+    // ============================================================
+    async function loadHidden() {
+        document.getElementById('sectionTitle').innerHTML =
+            `<i class="fas fa-eye-slash"></i> Скрытые на сайте`;
+        document.getElementById('toolbar').style.display = 'none';
+        document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('hideSelectedBtn').style.display = 'none';
+        document.getElementById('unhideSelectedBtn').style.display = 'none';
+        document.getElementById('contentPagination').innerHTML = '';
+
+        // Обновляем данные
+        await loadHiddenItems();
+
+        const wrapper = document.getElementById('tableWrapper');
+
+        if (hiddenItems.size === 0) {
+            wrapper.innerHTML = `<p class="empty-block">
+                Скрытых записей нет.<br>
+                <small>Скрывайте файлы из таблиц разделов — они появятся здесь.</small>
+            </p>`;
+            return;
+        }
+
+        // Сортируем по времени (сначала новые)
+        const list = Array.from(hiddenItems.values())
+            .sort((a, b) => {
+                const ta = a.hidden_at ? new Date(a.hidden_at).getTime() : 0;
+                const tb = b.hidden_at ? new Date(b.hidden_at).getTime() : 0;
+                return tb - ta;
+            });
+
+        // Сводка по разделам
+        const bySection = {};
+        list.forEach(it => {
+            bySection[it.section_key] = (bySection[it.section_key] || 0) + 1;
+        });
+        const summaryText = Object.entries(bySection)
+            .map(([k, v]) => {
+                const label = (CFG.SECTIONS[k]?.label) || k;
+                return `${label}: ${v}`;
+            })
+            .join(' • ');
+
+        let html = `
+            <div class="hidden-banner">
+                <i class="fas fa-eye-slash"></i>
+                <div>
+                    Всего скрыто: <strong>${list.length}</strong>.
+                    <br>
+                    <small>${MF.escapeHtml(summaryText)}</small>
+                    <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                        <button class="btn-unhide" id="unhideAllBtn">
+                            <i class="fas fa-eye"></i> Показать все (${list.length})
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        html += `<div class="content-table-wrapper"><table class="content-table"><thead><tr>
+            <th class="center"><input type="checkbox" id="hiddenSelectAll"></th>
+            <th>Раздел</th>
+            <th>Папка</th>
+            <th>Название</th>
+            <th>Скрыто</th>
+            <th>Действия</th>
+        </tr></thead><tbody>`;
+
+        list.forEach(it => {
+            const sectionLabel = (CFG.SECTIONS[it.section_key]?.label) || it.section_key;
+            const hiddenAt = it.hidden_at
+                ? new Date(it.hidden_at).toLocaleString('ru-RU')
+                : '—';
+            html += `<tr>
+                <td class="center checkbox-cell">
+                    <input type="checkbox" class="hidden-row-checkbox" data-id="${it.id}">
+                </td>
+                <td><span class="role-badge role-user">${MF.escapeHtml(sectionLabel)}</span></td>
+                <td>${MF.escapeHtml(it.folder || '—')}</td>
+                <td class="title-cell">${MF.escapeHtml(it.title || '')}</td>
+                <td>${MF.escapeHtml(hiddenAt)}</td>
+                <td class="actions-cell">
+                    <button class="btn-unhide" onclick="unhideOne(${it.id})">
+                        <i class="fas fa-eye"></i> Показать
+                    </button>
+                </td>
+            </tr>`;
+        });
+        html += '</tbody></table></div>';
+
+        wrapper.innerHTML = html;
+
+        const selectAll = document.getElementById('hiddenSelectAll');
+        if (selectAll) selectAll.addEventListener('change', function () {
+            wrapper.querySelectorAll('.hidden-row-checkbox').forEach(cb => cb.checked = this.checked);
+        });
+
+        const unhideAllBtn = document.getElementById('unhideAllBtn');
+        if (unhideAllBtn) unhideAllBtn.addEventListener('click', unhideAll);
+    }
+
+    async function unhideOne(id) {
+        if (!confirm('Показать этот файл на сайте?')) return;
+        const { error } = await supabaseClient
+            .from('hidden_items').delete().eq('id', id);
+        if (error) { alert('Ошибка: ' + error.message); return; }
+        await loadHiddenItems();
+        await loadHidden();
+    }
+
+    async function unhideAll() {
+        const total = hiddenItems.size;
+        if (total === 0) return;
+        if (!confirm(
+            `Показать все ${total} скрытых записей на сайте?\n\n` +
+            `Они вернутся в каталог после следующей синхронизации ` +
+            `(или при ручном запуске generate_from_sheets.py).`
+        )) return;
+
+        const btn = document.getElementById('unhideAllBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Возвращаю...'; }
+
+        const ids = Array.from(hiddenItems.values()).map(it => it.id);
+
+        const { error } = await supabaseClient
+            .from('hidden_items').delete().in('id', ids);
+
+        if (btn) { btn.disabled = false; btn.innerHTML =
+            `<i class="fas fa-eye"></i> Показать все (${total})`; }
+
+        if (error) { alert('Ошибка: ' + error.message); return; }
+
+        await loadHiddenItems();
+        await loadHidden();
+        alert(`Возвращено на сайт: ${ids.length}.`);
     }
 
     // ============================================================
@@ -1321,6 +1740,8 @@
             `<i class="fas fa-download"></i> История скачиваний`;
         document.getElementById('toolbar').style.display = 'none';
         document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('hideSelectedBtn').style.display = 'none';
+        document.getElementById('unhideSelectedBtn').style.display = 'none';
         document.getElementById('contentPagination').innerHTML = '';
 
         const wrapper = document.getElementById('tableWrapper');
@@ -1363,6 +1784,8 @@
             `<i class="fas fa-users"></i> Пользователи`;
         document.getElementById('toolbar').style.display = 'none';
         document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('hideSelectedBtn').style.display = 'none';
+        document.getElementById('unhideSelectedBtn').style.display = 'none';
         document.getElementById('contentPagination').innerHTML = '';
 
         const wrapper = document.getElementById('tableWrapper');
@@ -1656,6 +2079,8 @@
             `<i class="fas fa-user-check"></i> Посетители сайта`;
         document.getElementById('toolbar').style.display = 'none';
         document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('hideSelectedBtn').style.display = 'none';
+        document.getElementById('unhideSelectedBtn').style.display = 'none';
         document.getElementById('contentPagination').innerHTML = '';
 
         const wrapper = document.getElementById('tableWrapper');
@@ -1792,9 +2217,8 @@
     }
 
     // ============================================================
-    // ОСИРОТЕВШИЕ СТРОКИ
+    // ОСИРОТЕВШИЕ СТРОКИ (без изменений)
     // ============================================================
-
     async function refreshOrphansBadge() {
         try {
             const { data, error } = await supabaseClient
@@ -1822,6 +2246,8 @@
             `<i class="fas fa-link-slash"></i> Осиротевшие строки`;
         document.getElementById('toolbar').style.display = 'none';
         document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('hideSelectedBtn').style.display = 'none';
+        document.getElementById('unhideSelectedBtn').style.display = 'none';
         document.getElementById('contentPagination').innerHTML = '';
 
         const wrapper = document.getElementById('tableWrapper');
@@ -1878,7 +2304,7 @@
                     <br>
                     <small>
                         Осиротевшие строки — это записи в Google Sheets, файлы которых
-                        больше не найдены на Яндекс.Диске (переименованы, перемещены
+                        больше не найдены на источнике (переименованы, перемещены
                         или удалены).
                     </small>
                     <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
@@ -1926,333 +2352,312 @@
         if (delBtn) delBtn.addEventListener('click', deleteAllOrphans);
     }
 
-    // Текущий контекст модалки Diff-view
-let currentOrphansCtx = { section_key: null, section_label: null };
+    let currentOrphansCtx = { section_key: null, section_label: null };
 
-window.showOrphansByIndex = function (idx) {
-    const item = orphansData[idx];
-    if (!item) return;
+    window.showOrphansByIndex = function (idx) {
+        const item = orphansData[idx];
+        if (!item) return;
 
-    const orphans = item.orphans || [];
-    const headers = Array.isArray(item.headers) ? item.headers : [];
+        const orphans = item.orphans || [];
+        const headers = Array.isArray(item.headers) ? item.headers : [];
 
-    // Запоминаем контекст для выборочного удаления
-    currentOrphansCtx.section_key   = item.section_key;
-    currentOrphansCtx.section_label = item.section_label;
+        currentOrphansCtx.section_key   = item.section_key;
+        currentOrphansCtx.section_label = item.section_label;
 
-    const modal = document.getElementById('userEditModal');
-    const box = modal.querySelector('.modal-box');
+        const modal = document.getElementById('userEditModal');
+        const box = modal.querySelector('.modal-box');
 
-    let orphanBlocks = '';
-    orphans.forEach((o, i) => {
-        const values = Array.isArray(o.values) ? o.values : [];
-        const title = o.title || '';
-        const link = o.link || '';
-        const linkShort = link.length > 60 ? link.slice(0, 60) + '…' : link;
+        let orphanBlocks = '';
+        orphans.forEach((o, i) => {
+            const values = Array.isArray(o.values) ? o.values : [];
+            const title = o.title || '';
+            const link = o.link || '';
+            const linkShort = link.length > 60 ? link.slice(0, 60) + '…' : link;
 
-        // ─── Определяем источник по ссылке ───
-        let sourceName = 'облаке';
-        let sourceWhere = 'облачный диск';
-        if (/terabox|1024tera|4funbox|d.terabox/i.test(link)) {
-            sourceName  = 'TeraBox';
-            sourceWhere = 'TeraBox';
-        } else if (/disk\.yandex|yadi\.sk/i.test(link)) {
-            sourceName  = 'Яндекс.Диске';
-            sourceWhere = 'Яндекс.Диск';
-        }
+            let sourceName = 'облаке';
+            let sourceWhere = 'облачный диск';
+            if (/terabox|1024tera|4funbox|d\.terabox/i.test(link)) {
+                sourceName  = 'TeraBox';
+                sourceWhere = 'TeraBox';
+            } else if (/disk\.yandex|yadi\.sk/i.test(link)) {
+                sourceName  = 'Яндекс.Диске';
+                sourceWhere = 'Яндекс.Диск';
+            }
 
-        let rowsHtml = '';
-        if (headers.length > 0) {
-            headers.forEach((h, j) => {
-                const v = values[j] !== undefined ? String(values[j]) : '';
-                const isLink = (h === 'Ссылка для скачивания' || h === 'Ссылка'
-                                || h.toLowerCase() === 'download_link');
-                const cellCls = isLink ? 'orphan-highlight' : '';
+            let rowsHtml = '';
+            if (headers.length > 0) {
+                headers.forEach((h, j) => {
+                    const v = values[j] !== undefined ? String(values[j]) : '';
+                    const isLink = (h === 'Ссылка для скачивания' || h === 'Ссылка'
+                                    || h.toLowerCase() === 'download_link');
+                    const cellCls = isLink ? 'orphan-highlight' : '';
 
-                const cellContent = v
-                    ? (isLink && v.length > 120
-                        ? `<span title="${MF.escapeAttr(v)}">${MF.escapeHtml(v.slice(0, 120))}…</span>`
-                        : MF.escapeHtml(v))
-                    : '<i>пусто</i>';
+                    const cellContent = v
+                        ? (isLink && v.length > 120
+                            ? `<span title="${MF.escapeAttr(v)}">${MF.escapeHtml(v.slice(0, 120))}…</span>`
+                            : MF.escapeHtml(v))
+                        : '<i>пусто</i>';
 
-                rowsHtml += `<tr>
-                    <td>${MF.escapeHtml(h)}</td>
-                    <td class="${cellCls} ${!v ? 'orphan-empty' : ''}">${cellContent}</td>
-                </tr>`;
-            });
-        } else {
-            rowsHtml = `
-                <tr><td>Название</td><td>${MF.escapeHtml(title || '—')}</td></tr>
-                <tr><td>Ссылка</td><td class="orphan-highlight">
-                    <span title="${MF.escapeAttr(link)}">${MF.escapeHtml(linkShort)}</span>
-                </td></tr>
-                <tr><td>Строка</td><td>${o.row || '—'}</td></tr>
-            `;
-        }
+                    rowsHtml += `<tr>
+                        <td>${MF.escapeHtml(h)}</td>
+                        <td class="${cellCls} ${!v ? 'orphan-empty' : ''}">${cellContent}</td>
+                    </tr>`;
+                });
+            } else {
+                rowsHtml = `
+                    <tr><td>Название</td><td>${MF.escapeHtml(title || '—')}</td></tr>
+                    <tr><td>Ссылка</td><td class="orphan-highlight">
+                        <span title="${MF.escapeAttr(link)}">${MF.escapeHtml(linkShort)}</span>
+                    </td></tr>
+                    <tr><td>Строка</td><td>${o.row || '—'}</td></tr>
+                `;
+            }
 
-        orphanBlocks += `
-            <div class="orphan-item" data-orphan-idx="${i}">
-                <div class="orphan-header" data-toggle-idx="${i}">
-                    <input type="checkbox" class="orphan-checkbox"
-                           data-orphan-idx="${i}"
-                           onclick="event.stopPropagation();"
-                           style="width:18px; height:18px; cursor:pointer; accent-color:#dc2626;">
-                    <i class="fas fa-caret-right caret"></i>
-                    <span class="row-num">#${o.row || i + 1}</span>
-                    <span class="orphan-title" title="${MF.escapeAttr(title)}">
-                        ${MF.escapeHtml(title || '(без названия)')}
-                    </span>
-                </div>
-                <div class="orphan-body" data-body-idx="${i}">
-                    <table>${rowsHtml}</table>
-                    <div class="diff-note">
-                        <i class="fas fa-info-circle"></i>
-                        <strong>Что не так:</strong>
-                        файл с этой ссылкой не найден на ${sourceWhere}.
-                        Возможные причины: файл переименован, перемещён
-                        в другую папку или удалён. Если это ошибочно —
-                        проверьте ${sourceName}; иначе строку можно удалить
-                        кнопкой «Удалить выбранные».
+            orphanBlocks += `
+                <div class="orphan-item" data-orphan-idx="${i}">
+                    <div class="orphan-header" data-toggle-idx="${i}">
+                        <input type="checkbox" class="orphan-checkbox"
+                               data-orphan-idx="${i}"
+                               onclick="event.stopPropagation();"
+                               style="width:18px; height:18px; cursor:pointer; accent-color:#dc2626;">
+                        <i class="fas fa-caret-right caret"></i>
+                        <span class="row-num">#${o.row || i + 1}</span>
+                        <span class="orphan-title" title="${MF.escapeAttr(title)}">
+                            ${MF.escapeHtml(title || '(без названия)')}
+                        </span>
+                    </div>
+                    <div class="orphan-body" data-body-idx="${i}">
+                        <table>${rowsHtml}</table>
+                        <div class="diff-note">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Что не так:</strong>
+                            файл с этой ссылкой не найден на ${sourceWhere}.
+                            Возможные причины: файл переименован, перемещён
+                            в другую папку или удалён. Если это ошибочно —
+                            проверьте ${sourceName}; иначе строку можно удалить
+                            кнопкой «Удалить выбранные».
+                        </div>
                     </div>
                 </div>
+            `;
+        });
+
+        box.innerHTML = `
+            <h3>
+                <i class="fas fa-code-compare"></i>
+                Осиротевшие строки — ${MF.escapeHtml(item.section_label || item.section_key)}
+                (${orphans.length})
+            </h3>
+            <p style="color:#64748b; font-size:13px; margin-bottom:10px;">
+                Лист <strong>${MF.escapeHtml(item.sheet_name || '')}</strong>.
+                Кликните на запись, чтобы развернуть diff-view.
+                Отметьте нужные галочками, чтобы удалить только их.
+            </p>
+            <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+                <button class="btn-secondary" id="orphansSelectAllBtn" style="font-size:12px; padding:6px 14px;">
+                    <i class="fas fa-check-square"></i> Выбрать все
+                </button>
+                <button class="btn-secondary" id="orphansSelectNoneBtn" style="font-size:12px; padding:6px 14px;">
+                    <i class="fas fa-square"></i> Снять все
+                </button>
+                <span style="color:#94a3b8; font-size:12px;">|</span>
+                <span id="orphansSelInfo" style="color:#dc2626; font-weight:600; font-size:13px;">
+                    Выбрано: 0
+                </span>
+                <span style="flex:1;"></span>
+                <button class="btn-danger" id="orphansDeleteSelectedBtn" disabled
+                        style="font-size:12px; padding:6px 14px;">
+                    <i class="fas fa-trash"></i> Удалить выбранные
+                </button>
+            </div>
+            <div style="max-height:55vh; overflow-y:auto; padding-right:4px;">
+                ${orphanBlocks}
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeUserEditModal()">Закрыть</button>
             </div>
         `;
-    });
+        modal.classList.add('active');
 
-    box.innerHTML = `
-        <h3>
-            <i class="fas fa-code-compare"></i>
-            Осиротевшие строки — ${MF.escapeHtml(item.section_label || item.section_key)}
-            (${orphans.length})
-        </h3>
-        <p style="color:#64748b; font-size:13px; margin-bottom:10px;">
-            Лист <strong>${MF.escapeHtml(item.sheet_name || '')}</strong>.
-            Кликните на запись, чтобы развернуть diff-view.
-            Отметьте нужные галочками, чтобы удалить только их.
-        </p>
-        <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
-            <button class="btn-secondary" id="orphansSelectAllBtn" style="font-size:12px; padding:6px 14px;">
-                <i class="fas fa-check-square"></i> Выбрать все
-            </button>
-            <button class="btn-secondary" id="orphansSelectNoneBtn" style="font-size:12px; padding:6px 14px;">
-                <i class="fas fa-square"></i> Снять все
-            </button>
-            <span style="color:#94a3b8; font-size:12px;">|</span>
-            <span id="orphansSelInfo" style="color:#dc2626; font-weight:600; font-size:13px;">
-                Выбрано: 0
-            </span>
-            <span style="flex:1;"></span>
-            <button class="btn-danger" id="orphansDeleteSelectedBtn" disabled
-                    style="font-size:12px; padding:6px 14px;">
-                <i class="fas fa-trash"></i> Удалить выбранные
-            </button>
-        </div>
-        <div style="max-height:55vh; overflow-y:auto; padding-right:4px;">
-            ${orphanBlocks}
-        </div>
-        <div class="modal-actions">
-            <button class="btn-secondary" onclick="closeUserEditModal()">Закрыть</button>
-        </div>
-    `;
-    modal.classList.add('active');
-
-    // ─── Обработчики ───
-    box.querySelectorAll('.orphan-header').forEach(h => {
-        h.addEventListener('click', function (e) {
-            // Клик по чекбоксу — не открывать/закрывать
-            if (e.target.tagName === 'INPUT') return;
-            const idx2 = this.dataset.toggleIdx;
-            const body = box.querySelector(`.orphan-body[data-body-idx="${idx2}"]`);
-            const isOpen = this.classList.toggle('expanded');
-            body.classList.toggle('expanded', isOpen);
-        });
-    });
-
-    const updateSel = () => {
-        const checked = box.querySelectorAll('.orphan-checkbox:checked').length;
-        document.getElementById('orphansSelInfo').textContent =
-            `Выбрано: ${checked}`;
-        document.getElementById('orphansDeleteSelectedBtn').disabled =
-            checked === 0;
-    };
-
-    box.querySelectorAll('.orphan-checkbox').forEach(cb => {
-        cb.addEventListener('change', updateSel);
-    });
-
-    document.getElementById('orphansSelectAllBtn').addEventListener('click', () => {
-        box.querySelectorAll('.orphan-checkbox').forEach(cb => cb.checked = true);
-        updateSel();
-    });
-    document.getElementById('orphansSelectNoneBtn').addEventListener('click', () => {
-        box.querySelectorAll('.orphan-checkbox').forEach(cb => cb.checked = false);
-        updateSel();
-    });
-    document.getElementById('orphansDeleteSelectedBtn').addEventListener('click', () => {
-        const indices = [];
-        box.querySelectorAll('.orphan-checkbox:checked').forEach(cb => {
-            indices.push(parseInt(cb.dataset.orphanIdx, 10));
-        });
-        if (indices.length === 0) return;
-        deleteSelectedOrphans(indices);
-    });
-
-    updateSel();
-};
-
-    // ---------- Массовое удаление осиротевших ----------
-
-   async function deleteAllOrphans() {
-    const allItems = [];
-    orphansData.forEach(sectionItem => {
-        (sectionItem.orphans || []).forEach(o => {
-            const title = (o.title || '').trim();
-            if (!title) return;
-            allItems.push({
-                section: sectionItem.section_key,
-                title:   title,
+        box.querySelectorAll('.orphan-header').forEach(h => {
+            h.addEventListener('click', function (e) {
+                if (e.target.tagName === 'INPUT') return;
+                const idx2 = this.dataset.toggleIdx;
+                const body = box.querySelector(`.orphan-body[data-body-idx="${idx2}"]`);
+                const isOpen = this.classList.toggle('expanded');
+                body.classList.toggle('expanded', isOpen);
             });
         });
-    });
 
-    if (allItems.length === 0) {
-        alert('Нет осиротевших строк для удаления.');
-        return;
-    }
+        const updateSel = () => {
+            const checked = box.querySelectorAll('.orphan-checkbox:checked').length;
+            document.getElementById('orphansSelInfo').textContent =
+                `Выбрано: ${checked}`;
+            document.getElementById('orphansDeleteSelectedBtn').disabled =
+                checked === 0;
+        };
 
-    if (!confirm(
-        `Удалить ${allItems.length} осиротевших строк из Google Sheets?\n\n` +
-        `Удаление выполняется через GitHub Actions (delete-content.yml).\n` +
-        `Это действие необратимо. Продолжить?`
-    )) return;
-
-    const btn = document.getElementById('deleteAllOrphansBtn');
-    if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
-    }
-
-    const ok = await _dispatchDeleteOrphans(allItems);
-
-    if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = `<i class="fas fa-broom"></i> Удалить все осиротевшие (${allItems.length})`;
-    }
-
-    if (ok) {
-        alert(
-            `Запрос отправлен (${allItems.length} строк).\n\n` +
-            `Через 1–2 минуты Google Sheets обновится.\n` +
-            `После следующей синхронизации с TeraBox ` +
-            `список осиротевших обновится автоматически.`
-        );
-    }
-}
-
-
-// Общая отправка списка на удаление в GitHub Actions.
-// items = [{section, title}, ...]
-async function _dispatchDeleteOrphans(items) {
-    if (!items || items.length === 0) {
-        alert('Нет записей для удаления.');
-        return false;
-    }
-
-    const approxSize = JSON.stringify(items).length;
-    console.log('delete size (bytes):', approxSize);
-
-    if (approxSize > 60000) {
-        alert(
-            `Список слишком большой для одного запуска ` +
-            `(${approxSize} байт, лимит GitHub — 65 535).\n\n` +
-            `Разбейте удаление: сначала удалите часть вручную из ` +
-            `Google Sheets, потом повторите.`
-        );
-        return false;
-    }
-
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    if (!session) {
-        alert('Сессия истекла. Войдите заново.');
-        return false;
-    }
-
-    try {
-        const resp = await fetch(`${SUPABASE_URL}/functions/v1/github-dispatch`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`
-            },
-            body: JSON.stringify({
-                workflow: DELETE_WORKFLOW,
-                inputs: { delete_list: JSON.stringify(items) }
-            })
+        box.querySelectorAll('.orphan-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateSel);
         });
-        const result = await resp.json();
-        if (resp.ok && result.ok) {
-            return true;
+
+        document.getElementById('orphansSelectAllBtn').addEventListener('click', () => {
+            box.querySelectorAll('.orphan-checkbox').forEach(cb => cb.checked = true);
+            updateSel();
+        });
+        document.getElementById('orphansSelectNoneBtn').addEventListener('click', () => {
+            box.querySelectorAll('.orphan-checkbox').forEach(cb => cb.checked = false);
+            updateSel();
+        });
+        document.getElementById('orphansDeleteSelectedBtn').addEventListener('click', () => {
+            const indices = [];
+            box.querySelectorAll('.orphan-checkbox:checked').forEach(cb => {
+                indices.push(parseInt(cb.dataset.orphanIdx, 10));
+            });
+            if (indices.length === 0) return;
+            deleteSelectedOrphans(indices);
+        });
+
+        updateSel();
+    };
+
+    async function _dispatchDeleteOrphans(items) {
+        if (!items || items.length === 0) {
+            alert('Нет записей для удаления.');
+            return false;
         }
-        alert('Ошибка: ' + (result.error || `HTTP ${resp.status}`));
-        return false;
-    } catch (e) {
-        alert('Ошибка сети: ' + e.message);
-        return false;
-    }
-}    
-
-async function deleteSelectedOrphans(indices) {
-    const sectionKey = currentOrphansCtx.section_key;
-    const sectionLabel = currentOrphansCtx.section_label;
-    if (!sectionKey) {
-        alert('Не удалось определить раздел.');
-        return;
-    }
-
-    // Находим источник данных этого раздела в orphansData
-    const src = orphansData.find(o => o.section_key === sectionKey);
-    if (!src) {
-        alert('Данные раздела не найдены.');
-        return;
-    }
-
-    const items = [];
-    indices.forEach(i => {
-        const o = (src.orphans || [])[i];
-        if (o && o.title) {
-            items.push({ section: sectionKey, title: o.title });
+        const approxSize = JSON.stringify(items).length;
+        if (approxSize > 60000) {
+            alert(
+                `Список слишком большой для одного запуска ` +
+                `(${approxSize} байт, лимит GitHub — 65 535).\n\n` +
+                `Разбейте удаление на части.`
+            );
+            return false;
         }
-    });
 
-    if (items.length === 0) {
-        alert('Нет названий для удаления.');
-        return;
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            alert('Сессия истекла. Войдите заново.');
+            return false;
+        }
+
+        const url = `${SUPABASE_URL}/functions/v1/github-dispatch`;
+        const body = JSON.stringify({
+            workflow: DELETE_WORKFLOW,
+            inputs: { delete_list: JSON.stringify(items) }
+        });
+        const headers = {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+        };
+
+        const MAX_ATTEMPTS = 2;
+        const TIMEOUT_MS   = 90000;
+
+        for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+            let resp;
+            try {
+                resp = await fetch(url, { method: 'POST', headers, body, signal: controller.signal });
+            } catch (e) {
+                clearTimeout(timer);
+                const isAbort = (e.name === 'AbortError');
+                const isNet   = (e.name === 'TypeError');
+                if (attempt < MAX_ATTEMPTS && (isAbort || isNet)) {
+                    await new Promise(r => setTimeout(r, 3000));
+                    continue;
+                }
+                alert(isAbort ? `Превышено время ожидания.` :
+                    `Не удалось связаться с сервером: ${e.message}`);
+                return false;
+            }
+            clearTimeout(timer);
+
+            let result = {};
+            try { result = await resp.json(); } catch (_) {}
+            if (resp.ok && result.ok) return true;
+
+            const msg = result.error || result.message || `HTTP ${resp.status}`;
+            if (resp.status >= 500 && attempt < MAX_ATTEMPTS) {
+                await new Promise(r => setTimeout(r, 3000));
+                continue;
+            }
+            alert('Ошибка сервера: ' + msg);
+            return false;
+        }
+        return false;
     }
 
-    if (!confirm(
-        `Удалить ${items.length} строк из раздела «${sectionLabel}»?\n\n` +
-        `Удаление через GitHub Actions (delete-content.yml).\n` +
-        `Это действие необратимо.`
-    )) return;
+    async function deleteSelectedOrphans(indices) {
+        const sectionKey = currentOrphansCtx.section_key;
+        const sectionLabel = currentOrphansCtx.section_label;
+        if (!sectionKey) { alert('Не удалось определить раздел.'); return; }
 
-    const btn = document.getElementById('orphansDeleteSelectedBtn');
-    if (btn) { btn.disabled = true; btn.innerHTML =
-        '<i class="fas fa-spinner fa-spin"></i> Отправка...'; }
+        const src = orphansData.find(o => o.section_key === sectionKey);
+        if (!src) { alert('Данные раздела не найдены.'); return; }
 
-    const ok = await _dispatchDeleteOrphans(items);
+        const items = [];
+        indices.forEach(i => {
+            const o = (src.orphans || [])[i];
+            if (o && o.title) items.push({ section: sectionKey, title: o.title });
+        });
 
-    if (btn) { btn.disabled = false; btn.innerHTML =
-        '<i class="fas fa-trash"></i> Удалить выбранные'; }
+        if (items.length === 0) { alert('Нет названий для удаления.'); return; }
 
-    if (ok) {
-        alert(
-            `Запрос отправлен (${items.length} строк).\n\n` +
-            `Через 1–2 минуты Google Sheets обновится.\n` +
-            `После следующей синхронизации список осиротевших ` +
-            `обновится автоматически.`
-        );
+        if (!confirm(
+            `Удалить ${items.length} строк из раздела «${sectionLabel}»?\n\n` +
+            `Удаление через GitHub Actions. Это действие необратимо.`
+        )) return;
+
+        const btn = document.getElementById('orphansDeleteSelectedBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Отправка...'; }
+
+        const ok = await _dispatchDeleteOrphans(items);
+
+        if (btn) { btn.disabled = false; btn.innerHTML =
+            '<i class="fas fa-trash"></i> Удалить выбранные'; }
+
+        if (ok) {
+            alert(`Запрос отправлен (${items.length} строк). Страница обновится через 5 сек.`);
+            setTimeout(() => { window.location.reload(); }, 5000);
+        }
     }
-}    
+
+    async function deleteAllOrphans() {
+        const allItems = [];
+        orphansData.forEach(sectionItem => {
+            (sectionItem.orphans || []).forEach(o => {
+                const title = (o.title || '').trim();
+                if (!title) return;
+                allItems.push({ section: sectionItem.section_key, title });
+            });
+        });
+
+        if (allItems.length === 0) { alert('Нет осиротевших строк для удаления.'); return; }
+
+        if (!confirm(
+            `Удалить ${allItems.length} осиротевших строк?\n\n` +
+            `Это действие необратимо. Продолжить?`
+        )) return;
+
+        const btn = document.getElementById('deleteAllOrphansBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Отправка...'; }
+
+        const ok = await _dispatchDeleteOrphans(allItems);
+
+        if (btn) { btn.disabled = false; btn.innerHTML =
+            `<i class="fas fa-broom"></i> Удалить все осиротевшие (${allItems.length})`; }
+
+        if (ok) {
+            alert(`Запрос отправлен (${allItems.length} строк). Страница обновится через 5 сек.`);
+            setTimeout(() => { window.location.reload(); }, 5000);
+        }
+    }
+
     // ============================================================
     // СТАТИСТИКА
     // ============================================================
@@ -2261,6 +2666,8 @@ async function deleteSelectedOrphans(indices) {
             `<i class="fas fa-chart-simple"></i> Статистика`;
         document.getElementById('toolbar').style.display = 'none';
         document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('hideSelectedBtn').style.display = 'none';
+        document.getElementById('unhideSelectedBtn').style.display = 'none';
         document.getElementById('contentPagination').innerHTML = '';
 
         const wrapper = document.getElementById('tableWrapper');
@@ -2288,44 +2695,6 @@ async function deleteSelectedOrphans(indices) {
     }
 
     // ============================================================
-    // УДАЛЕНИЕ ВЫБРАННЫХ ЗАПИСЕЙ
-    // ============================================================
-    async function deleteSelected() {
-        const rows = getSelectedRows();
-        if (rows.length === 0) return;
-        const section = currentTab;
-        const data = sectionData[section] || [];
-        const items = rows.map(idx => ({ section, title: data[idx]?.title || '' }));
-
-        if (!confirm(`Удалить ${rows.length} записей?\n\nПосле подтверждения потребуется 1-2 минуты.`)) return;
-
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        if (!session) { alert('Сессия истекла.'); return; }
-
-        try {
-            const resp = await fetch(`${SUPABASE_URL}/functions/v1/github-dispatch`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${session.access_token}`
-                },
-                body: JSON.stringify({
-                    workflow: DELETE_WORKFLOW,
-                    inputs: { delete_list: JSON.stringify(items) }
-                })
-            });
-            const result = await resp.json();
-            if (resp.ok && result.ok) {
-                alert('Запрос отправлен. Через 1–2 минуты данные обновятся.');
-            } else {
-                alert('Ошибка: ' + (result.error || `HTTP ${resp.status}`));
-            }
-        } catch (e) {
-            alert('Ошибка сети: ' + e.message);
-        }
-    }
-
-    // ============================================================
     // ОБРАБОТЧИКИ
     // ============================================================
     document.querySelectorAll('.sidebar .nav-link[data-tab]').forEach(btn => {
@@ -2344,11 +2713,15 @@ async function deleteSelectedOrphans(indices) {
             else if (currentTab === 'users') loadUsers();
             else if (currentTab === 'visitors') loadVisitors();
             else if (currentTab === 'orphans') loadOrphans();
+            else if (currentTab === 'hidden') loadHidden();
             else loadSection(currentTab);
         });
     });
 
-    document.getElementById('refreshBtn').addEventListener('click', () => {
+    document.getElementById('refreshBtn').addEventListener('click', async () => {
+        // Обновим список скрытых, чтобы изменения подхватились
+        await loadHiddenItems();
+
         if (currentTab === 'sections') renderSectionsAdmin();
         else if (currentTab === 'folders') renderFoldersAdmin();
         else if (currentTab === 'downloads') loadDownloads();
@@ -2356,10 +2729,28 @@ async function deleteSelectedOrphans(indices) {
         else if (currentTab === 'users') loadUsers();
         else if (currentTab === 'visitors') loadVisitors();
         else if (currentTab === 'orphans') loadOrphans();
+        else if (currentTab === 'hidden') loadHidden();
         else loadSection(currentTab);
     });
 
+    document.getElementById('hideSelectedBtn').addEventListener('click', hideSelected);
+    document.getElementById('unhideSelectedBtn').addEventListener('click', unhideSelected);
     document.getElementById('deleteSelectedBtn').addEventListener('click', deleteSelected);
+
+    async function deleteSelected() {
+        const rows = getSelectedRows();
+        if (rows.length === 0) return;
+        const section = currentTab;
+        const data = sectionData[section] || [];
+        const items = rows.map(idx => ({ section, title: data[idx]?.title || '' }));
+
+        if (!confirm(`Удалить ${rows.length} записей?\n\nПосле подтверждения потребуется 1-2 минуты.`)) return;
+
+        const ok = await _dispatchDeleteOrphans(items);
+        if (ok) {
+            alert('Запрос отправлен. Через 1–2 минуты данные обновятся.');
+        }
+    }
 
     let resizeTimer;
     window.addEventListener('resize', () => {
