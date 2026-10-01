@@ -52,7 +52,17 @@
         return pages;
     }
 
-    function renderPagination(containerId, totalItems, totalPages, state) {
+    /**
+     * Возвращает HTML панели пагинации.
+     *
+     * @param {string} containerId — идентификатор контейнера (для data-pagination-for)
+     * @param {number} totalItems  — всего записей
+     * @param {number} totalPages  — всего страниц
+     * @param {object} state       — { pageSize, currentPage }
+     * @param {string} [position]  — 'top' | 'bottom' (по умолчанию 'bottom')
+     */
+    function renderPagination(containerId, totalItems, totalPages, state, position) {
+        position = position === 'top' ? 'top' : 'bottom';
         const PAGE_SIZES = window.APP_CONFIG.PAGE_SIZES;
         const sizes = PAGE_SIZES.map(sz =>
             `<option value="${sz}"${state.pageSize === sz ? ' selected' : ''}>${sz}</option>`
@@ -62,7 +72,9 @@
             `<button class="page-num${p === state.currentPage ? ' active' : ''}" data-page="${p}">${p}</button>`
         ).join('');
         return `
-            <div class="pagination-bar" data-pagination-for="${escapeAttr(containerId)}">
+            <div class="pagination-bar pagination-${position}"
+                 data-pagination-for="${escapeAttr(containerId)}"
+                 data-position="${position}">
                 <div class="pagination-total">Всего: <strong>${totalItems}</strong> • Стр. <strong>${state.currentPage}</strong> из <strong>${totalPages}</strong></div>
                 <div class="pagination-controls">
                     <label>Показывать по:
@@ -81,46 +93,121 @@
         `;
     }
 
-    function attachPaginationHandlers(container, containerId, state, onRender) {
+    /**
+     * Плавный скролл к элементу.
+     */
+    function scrollToContainer(el, offset) {
+        if (!el) return;
+        const off = typeof offset === 'number' ? offset : 100;
+        const top = el.getBoundingClientRect().top + window.scrollY - off;
+        window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+    }
+
+    /**
+     * Навешивает обработчики на ВСЕ панели пагинации внутри container,
+     * относящиеся к containerId.
+     *
+     * @param {HTMLElement} container — контейнер, внутри которого ищем панели
+     * @param {string} containerId    — идентификатор (совпадает с data-pagination-for)
+     * @param {object} state          — состояние (pageSize, currentPage, totalItems)
+     * @param {function} onRender     — вызывается после изменения состояния
+     * @param {object} [opts]         — { scrollTarget, scrollOffset }
+     *   scrollTarget: селектор (строка) или HTMLElement, к которому скроллить после onRender.
+     *                 По умолчанию — '.content-table-wrapper' внутри container, иначе сам container.
+     *   scrollOffset: отступ сверху (px), по умолчанию 100.
+     */
+    function attachPaginationHandlers(container, containerId, state, onRender, opts) {
         if (!state || !container) return;
-        const sizeSelect = container.querySelector(`.page-size-select[data-container="${containerId}"]`);
-        if (sizeSelect) sizeSelect.addEventListener('change', function () {
-            state.pageSize = parseInt(this.value, 10);
-            state.currentPage = 1; onRender();
-        });
-        const prevBtn = container.querySelector(`.prev-btn[data-container="${containerId}"]`);
-        if (prevBtn) prevBtn.addEventListener('click', function () {
-            if (state.currentPage > 1) { state.currentPage--; onRender(); }
-        });
-        const nextBtn = container.querySelector(`.next-btn[data-container="${containerId}"]`);
-        if (nextBtn) nextBtn.addEventListener('click', function () {
-            const totalPages = Math.max(1, Math.ceil(state.totalItems / state.pageSize));
-            if (state.currentPage < totalPages) { state.currentPage++; onRender(); }
-        });
-        container.querySelectorAll(`.page-num[data-page]`).forEach(btn => {
-            btn.addEventListener('click', function () {
-                const p = parseInt(this.dataset.page, 10);
-                if (!isNaN(p) && p !== state.currentPage) {
-                    state.currentPage = p; onRender();
+        opts = opts || {};
+        const scrollOffset = typeof opts.scrollOffset === 'number' ? opts.scrollOffset : 100;
+
+        const bars = container.querySelectorAll(
+            `.pagination-bar[data-pagination-for="${containerId}"]`
+        );
+        if (!bars.length) return;
+
+        const doScroll = () => {
+            let target = null;
+            if (opts.scrollTarget) {
+                if (typeof opts.scrollTarget === 'string') {
+                    target = container.querySelector(opts.scrollTarget);
+                } else if (opts.scrollTarget instanceof HTMLElement) {
+                    target = opts.scrollTarget;
                 }
+            }
+            if (!target) {
+                target = container.querySelector('.content-table-wrapper') || container;
+            }
+            scrollToContainer(target, scrollOffset);
+        };
+
+        const afterRender = () => {
+            onRender();
+            // Даём браузеру время отрисовать новое содержимое
+            setTimeout(doScroll, 60);
+        };
+
+        bars.forEach(bar => {
+            const sizeSelect = bar.querySelector('.page-size-select');
+            if (sizeSelect) {
+                sizeSelect.addEventListener('change', function () {
+                    state.pageSize = parseInt(this.value, 10) || 10;
+                    state.currentPage = 1;
+                    afterRender();
+                });
+            }
+
+            const prevBtn = bar.querySelector('.prev-btn');
+            if (prevBtn) {
+                prevBtn.addEventListener('click', function () {
+                    if (state.currentPage > 1) {
+                        state.currentPage--;
+                        afterRender();
+                    }
+                });
+            }
+
+            const nextBtn = bar.querySelector('.next-btn');
+            if (nextBtn) {
+                nextBtn.addEventListener('click', function () {
+                    const totalPages = Math.max(1,
+                        Math.ceil(state.totalItems / state.pageSize));
+                    if (state.currentPage < totalPages) {
+                        state.currentPage++;
+                        afterRender();
+                    }
+                });
+            }
+
+            bar.querySelectorAll('.page-num[data-page]').forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const p = parseInt(this.dataset.page, 10);
+                    if (!isNaN(p) && p !== state.currentPage) {
+                        state.currentPage = p;
+                        afterRender();
+                    }
+                });
             });
+
+            const jumpBtn = bar.querySelector('.page-jump-btn');
+            const jumpInput = bar.querySelector('.page-jump-input');
+            if (jumpBtn && jumpInput) {
+                const doJump = () => {
+                    const totalPages = Math.max(1,
+                        Math.ceil(state.totalItems / state.pageSize));
+                    let p = parseInt(jumpInput.value, 10);
+                    if (isNaN(p)) p = 1;
+                    if (p < 1) p = 1;
+                    if (p > totalPages) p = totalPages;
+                    state.currentPage = p;
+                    afterRender();
+                };
+                jumpBtn.addEventListener('click', doJump);
+                jumpInput.addEventListener('keydown', function (e) {
+                    if (e.key === 'Enter') { e.preventDefault(); doJump(); }
+                });
+            }
         });
-        const jumpBtn = container.querySelector(`.page-jump-btn[data-container="${containerId}"]`);
-        const jumpInput = container.querySelector(`.page-jump-input[data-container="${containerId}"]`);
-        if (jumpBtn && jumpInput) {
-            const doJump = () => {
-                const totalPages = Math.max(1, Math.ceil(state.totalItems / state.pageSize));
-                let p = parseInt(jumpInput.value, 10);
-                if (isNaN(p)) p = 1;
-                if (p < 1) p = 1;
-                if (p > totalPages) p = totalPages;
-                state.currentPage = p; onRender();
-            };
-            jumpBtn.addEventListener('click', doJump);
-            jumpInput.addEventListener('keydown', function (e) {
-                if (e.key === 'Enter') { e.preventDefault(); doJump(); }
-            });
-        }
     }
 
     // ============================================================
@@ -146,7 +233,7 @@
     /**
      * Скачивает файл по url.
      * Если передан filename — устанавливает его в атрибут download
-     * (это важно при скачивании через прокси, чтобы браузер использовал
+     * (важно при скачивании через прокси, чтобы браузер использовал
      * правильное имя и не открывал вложение вместо сохранения).
      */
     function triggerDownload(url, filename) {
@@ -206,9 +293,7 @@
         if (!cfg.SECTIONS || typeof cfg.SECTIONS !== 'object') {
             cfg.SECTIONS = {};
         }
-        // Очищаем старые ключи
         Object.keys(cfg.SECTIONS).forEach(k => { delete cfg.SECTIONS[k]; });
-        // Копируем новые
         Object.keys(newSections).forEach(k => { cfg.SECTIONS[k] = newSections[k]; });
     }
 
@@ -267,7 +352,6 @@
                             sort_order: row.sort_order || 100,
                         };
                     });
-                    // Сортируем по sort_order
                     const sorted = {};
                     Object.entries(sections)
                         .sort((a, b) => (a[1].sort_order || 100) - (b[1].sort_order || 100))
@@ -297,6 +381,7 @@
         escapeHtml, escapeAttr, slugify,
         getMaxPageButtons, getVisiblePages,
         renderPagination, attachPaginationHandlers,
+        scrollToContainer,
         toggleDesc, triggerDownload, formatDateRu,
         getSupabaseClient, loadSections
     });
