@@ -68,6 +68,8 @@
         .btn-unhide { background: #16a34a; color: white; }
         .btn-unhide:hover { background: #15803d; transform: translateY(-2px); }
         .btn-unhide:disabled { background: #cbd5e1; cursor: not-allowed; transform: none; }
+        .btn-github { background: #0f172a; color: white; }
+        .btn-github:hover { background: #1e293b; transform: translateY(-2px); }
 
         .main-layout { display: flex; flex: 1; }
         .sidebar {
@@ -200,7 +202,6 @@
         .btn-del-user:hover { background: #b91c1c; }
         .btn-del-user:disabled { background: #94a3b8; cursor: not-allowed; }
 
-        /* Скрытые строки */
         .content-table tr.row-hidden {
             background: #fafafa;
             opacity: 0.65;
@@ -287,7 +288,6 @@
             border-radius: 20px;
         }
 
-        /* Хлебные крошки / кнопка возврата */
         .admin-back-bar {
             display: flex;
             align-items: center;
@@ -481,7 +481,6 @@
         }
         .filters select:focus, .filters input:focus { outline: none; border-color: #8b5cf6; }
 
-        /* ─── Orphans ─── */
         .orphans-banner {
             margin-bottom: 18px; padding: 16px 20px;
             background: #fef3c7; border: 1px solid #fcd34d;
@@ -561,7 +560,6 @@
             color: #78350f;
         }
 
-        /* ─── Скрытые ─── */
         .hidden-banner {
             margin-bottom: 18px; padding: 16px 20px;
             background: #ede9fe; border: 1px solid #c4b5fd;
@@ -570,6 +568,24 @@
         }
         .hidden-banner i { font-size: 20px; color: #7c3aed; flex-shrink: 0; margin-top: 2px; }
         .hidden-banner strong { color: #5b21b6; }
+
+        .section-hidden-notice {
+            margin-bottom: 15px;
+            padding: 10px 16px;
+            background: #ede9fe;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #4c1d95;
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .section-hidden-notice button {
+            padding: 5px 14px;
+            font-size: 12px;
+            border-radius: 20px;
+        }
 
         @media (max-width: 900px) {
             body { padding: 8px; }
@@ -642,6 +658,9 @@
         </div>
         <div class="header-actions">
             <a href="index.html" class="btn-primary"><i class="fas fa-home"></i> На сайт</a>
+            <a href="#" id="actionsBtn" target="_blank" rel="noopener" class="btn-github">
+                <i class="fab fa-github"></i> Actions
+            </a>
             <button class="btn-danger" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Выйти</button>
         </div>
     </header>
@@ -687,7 +706,6 @@
             <div id="tabContent">
                 <h2 class="section-title" id="sectionTitle"><i class="fas fa-spinner fa-spin"></i> Загрузка...</h2>
                 <div id="tableWrapper"></div>
-                <div id="contentPagination"></div>
             </div>
         </div>
     </div>
@@ -734,11 +752,12 @@
     let hiddenTotalCount = 0;
 
     // ─── Режим отображения контента раздела: 'folders' | 'table' ───
-    // Хранится отдельно для каждого раздела
-    const contentViews = {};       // { sectionKey: 'folders' | 'table' }
+    const contentViews = {};         // { sectionKey: 'folders' | 'table' }
     const contentFolderFilters = {}; // { sectionKey: 'FolderName' | '__NOFOLDER__' | null }
 
-    try { localStorage.removeItem('github_token'); } catch (e) {}
+    // ─── Защита от двойных вызовов (кнопки hide/unhide) ───
+    let hideInProgress = false;
+    let unhideInProgress = false;
 
     // ============================================================
     // ВСПОМОГАТЕЛЬНОЕ: КЛЮЧ СКРЫТОЙ ЗАПИСИ
@@ -770,6 +789,12 @@
         currentProfile = profile;
         document.getElementById('adminName').textContent =
             profile.username || currentUser.email;
+
+        // Кнопка Actions — ведёт в репозиторий на страницу workflow
+        const actionsBtn = document.getElementById('actionsBtn');
+        if (actionsBtn) {
+            actionsBtn.href = `https://github.com/${CFG.GITHUB_OWNER}/${CFG.GITHUB_REPO}/actions`;
+        }
 
         await loadDownloadCounts();
         await loadHiddenItems();
@@ -846,12 +871,31 @@
             btn.addEventListener('click', function () {
                 document.querySelectorAll('.sidebar .nav-link').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
-                currentTab = this.dataset.tab;
-                document.getElementById('tableWrapper').style.display = 'block';
-                document.getElementById('contentPagination').innerHTML = '';
-                loadSection(currentTab);
+                switchToTab(this.dataset.tab);
             });
         });
+    }
+
+    // ─── Единая точка переключения вкладки ───
+    function switchToTab(tab) {
+        currentTab = tab;
+        document.getElementById('tableWrapper').style.display = 'block';
+
+        // ─── Сброс фильтра и режима при переключении на раздел контента ───
+        if (CFG.SECTIONS[tab]) {
+            contentFolderFilters[tab] = null;
+            contentViews[tab] = null;   // заново переопределится в loadSection
+        }
+
+        if (tab === 'sections') renderSectionsAdmin();
+        else if (tab === 'folders') renderFoldersAdmin();
+        else if (tab === 'downloads') loadDownloads();
+        else if (tab === 'stats') loadStats();
+        else if (tab === 'users') loadUsers();
+        else if (tab === 'visitors') loadVisitors();
+        else if (tab === 'orphans') loadOrphans();
+        else if (tab === 'hidden') loadHidden();
+        else loadSection(tab);
     }
 
     // ============================================================
@@ -870,7 +914,6 @@
         document.getElementById('deleteSelectedBtn').style.display = 'none';
         document.getElementById('hideSelectedBtn').style.display = 'none';
         document.getElementById('unhideSelectedBtn').style.display = 'none';
-        document.getElementById('contentPagination').innerHTML = '';
 
         await loadSectionsFromDB();
 
@@ -1156,7 +1199,6 @@
         document.getElementById('deleteSelectedBtn').style.display = 'none';
         document.getElementById('hideSelectedBtn').style.display = 'none';
         document.getElementById('unhideSelectedBtn').style.display = 'none';
-        document.getElementById('contentPagination').innerHTML = '';
 
         await loadSectionsFromDB();
         const sectionKeys = sectionsList.filter(s => s.folderable).map(s => s.key);
@@ -1338,15 +1380,6 @@
     // ЗАГРУЗКА РАЗДЕЛА КОНТЕНТА
     // ============================================================
     async function loadSection(section) {
-        if (section === 'sections') { await renderSectionsAdmin(); return; }
-        if (section === 'folders') { await renderFoldersAdmin(); return; }
-        if (section === 'downloads') { await loadDownloads(); return; }
-        if (section === 'stats') { await loadStats(); return; }
-        if (section === 'users') { await loadUsers(); return; }
-        if (section === 'visitors') { await loadVisitors(); return; }
-        if (section === 'orphans') { await loadOrphans(); return; }
-        if (section === 'hidden') { await loadHidden(); return; }
-
         const info = CFG.SECTIONS[section];
         if (!info) return;
 
@@ -1371,14 +1404,12 @@
             };
         }
 
-        // ─── Определяем режим: сетка папок или таблица ───
         const data = sectionData[section] || [];
         const hasFolders = data.some(it => (it.folder || '').trim());
-        const sectionMeta = info;
 
+        // Определяем режим при первом показе
         if (!contentViews[section]) {
-            // Первый показ: если раздел folderable и есть папки — сначала сетка
-            if (sectionMeta.folderable && hasFolders) {
+            if (info.folderable && hasFolders) {
                 contentViews[section] = 'folders';
                 contentFolderFilters[section] = null;
             } else {
@@ -1406,9 +1437,8 @@
         const info = CFG.SECTIONS[section];
         const data = sectionData[section] || [];
 
-        // Считаем файлы по папкам
-        const counts = {};               // folder → всего
-        const hiddenCounts = {};         // folder → скрыто
+        const counts = {};
+        const hiddenCounts = {};
         let withFolder = 0;
 
         data.forEach(it => {
@@ -1423,7 +1453,6 @@
         const withoutFolder = data.length - withFolder;
         const folders = Object.keys(counts).sort((a, b) => a.localeCompare(b, 'ru'));
 
-        // Верхняя панель скрытых/кнопок
         let hiddenInSection = 0;
         hiddenItems.forEach((item) => {
             if (item.section_key === section) hiddenInSection++;
@@ -1431,10 +1460,11 @@
 
         let html = '';
         if (hiddenInSection > 0) {
-            html += `<div style="margin-bottom:15px; padding:10px 16px; background:#ede9fe; border-radius:10px; font-size:13px; color:#4c1d95;">
+            html += `<div class="section-hidden-notice">
                         <i class="fas fa-eye-slash"></i>
                         Скрыто в разделе: <strong>${hiddenInSection}</strong>
-                        <button class="btn-unhide" style="margin-left:12px; padding:5px 14px; font-size:12px;" onclick="unhideAllInSection('${section}')">
+                        <span style="flex:1;"></span>
+                        <button class="btn-unhide" onclick="unhideAllInSection('${section}')">
                             <i class="fas fa-eye"></i> Показать все
                         </button>
                      </div>`;
@@ -1443,15 +1473,13 @@
         html += '<div class="admin-folder-grid">';
 
         // Карточка «Все материалы»
-        const hiddenTotalInSection = hiddenInSection;
         html += `<div class="admin-folder-card all-card" data-folder="__ALL__">
                     <div class="folder-icon"><i class="fas fa-layer-group"></i></div>
                     <div class="folder-name">Все материалы</div>
                     <div class="folder-count">${data.length}</div>
-                    ${hiddenTotalInSection > 0 ? `<div class="folder-hidden-badge">${hiddenTotalInSection} скрыто</div>` : ''}
+                    ${hiddenInSection > 0 ? `<div class="folder-hidden-badge">${hiddenInSection} скрыто</div>` : ''}
                  </div>`;
 
-        // Карточки папок
         folders.forEach(f => {
             const total = counts[f];
             const hidden = hiddenCounts[f] || 0;
@@ -1468,7 +1496,6 @@
                      </div>`;
         });
 
-        // Карточка «Без папки»
         if (withoutFolder > 0) {
             html += `<div class="admin-folder-card nofolder-card" data-folder="__NOFOLDER__">
                         <div class="folder-icon"><i class="fas fa-question-circle"></i></div>
@@ -1480,14 +1507,12 @@
         html += '</div>';
 
         document.getElementById('tableWrapper').innerHTML = html;
-        document.getElementById('contentPagination').innerHTML = '';
 
-        // Скрываем кнопки скрытия/удаления — они не применимы к сетке
+        // Кнопки скрытия/удаления не применимы к сетке
         document.getElementById('hideSelectedBtn').style.display = 'none';
         document.getElementById('unhideSelectedBtn').style.display = 'none';
         document.getElementById('deleteSelectedBtn').style.display = 'none';
 
-        // Клики по карточкам
         document.querySelectorAll('.admin-folder-card').forEach(card => {
             card.addEventListener('click', () => {
                 const folder = card.dataset.folder;
@@ -1495,6 +1520,7 @@
                 else if (folder === '__NOFOLDER__') contentFolderFilters[section] = '__NOFOLDER__';
                 else contentFolderFilters[section] = folder;
                 contentViews[section] = 'table';
+
                 if (!tableStates[section]) {
                     tableStates[section] = {
                         sortKey: null, sortDir: 'asc', searches: {},
@@ -1504,14 +1530,14 @@
                 tableStates[section].currentPage = 1;
                 tableStates[section].searches = {};
                 tableStates[section].sortKey = null;
+                tableStates[section].sortDir = 'asc';
+
                 renderContent(section);
 
-                // Показать кнопки выбора снова
                 document.getElementById('hideSelectedBtn').style.display = 'inline-flex';
                 document.getElementById('unhideSelectedBtn').style.display = 'inline-flex';
                 document.getElementById('deleteSelectedBtn').style.display = 'inline-flex';
 
-                // Скролл к началу
                 MF.scrollToContainer(document.getElementById('tableWrapper'), 120);
             });
         });
@@ -1540,7 +1566,6 @@
     function getFilteredSorted(state, data, section) {
         let filtered = data.slice();
 
-        // Фильтр по папке (если задан)
         const folderFilter = contentFolderFilters[section];
         if (folderFilter) {
             if (folderFilter === '__NOFOLDER__') {
@@ -1550,7 +1575,6 @@
             }
         }
 
-        // Поиски по колонкам
         Object.keys(state.searches).forEach(key => {
             const q = (state.searches[key] || '').trim().toLowerCase();
             if (!q) return;
@@ -1560,7 +1584,6 @@
             });
         });
 
-        // Сортировка
         if (state.sortKey) {
             const key = state.sortKey;
             const dir = state.sortDir === 'asc' ? 1 : -1;
@@ -1582,7 +1605,6 @@
         const data = sectionData[section] || [];
         const cols = buildAdminColumns(info);
 
-        // Фильтрация по папке + поиски
         const filtered = getFilteredSorted(state, data, section);
         const totalItems = filtered.length;
         state.totalItems = totalItems;
@@ -1592,7 +1614,6 @@
         const startIdx = (state.currentPage - 1) * state.pageSize;
         const pageItems = filtered.slice(startIdx, startIdx + state.pageSize);
 
-        // ─── Кнопка «К папкам» если раздел folderable ───
         let backBar = '';
         if (info.folderable) {
             const folderFilter = contentFolderFilters[section];
@@ -1611,7 +1632,6 @@
                 </div>`;
         }
 
-        // ─── Заголовок таблицы ───
         let headHtml = '<tr>';
         headHtml += `<th class="center"><input type="checkbox" id="selectAllCheckbox"></th>`;
         cols.forEach(col => {
@@ -1634,7 +1654,6 @@
         });
         headHtml += '</tr>';
 
-        // ─── Тело таблицы ───
         let tbodyHtml = '';
         if (pageItems.length === 0) {
             tbodyHtml = `<tr><td colspan="${cols.length + 1}" class="empty-block">Ничего не найдено</td></tr>`;
@@ -1679,7 +1698,6 @@
             });
         }
 
-        // ─── Две панели пагинации ───
         const paginationTop = (totalPages > 1)
             ? MF.renderPagination(section, totalItems, totalPages, state, 'top')
             : '';
@@ -1701,7 +1719,6 @@
                 ${paginationBottom}
             </div>`;
 
-        // ─── Кнопка «К папкам» ───
         const backBtn = document.getElementById('backToFoldersBtn');
         if (backBtn) backBtn.addEventListener('click', () => {
             contentViews[section] = 'folders';
@@ -1710,12 +1727,12 @@
                 tableStates[section].currentPage = 1;
                 tableStates[section].searches = {};
                 tableStates[section].sortKey = null;
+                tableStates[section].sortDir = 'asc';
             }
             renderContent(section);
             MF.scrollToContainer(document.getElementById('tableWrapper'), 120);
         });
 
-        // ─── Обработчики сортировки ───
         wrapper.querySelectorAll('.th-label').forEach(el => el.addEventListener('click', function () {
             const key = this.dataset.sortKey;
             if (state.sortKey === key) state.sortDir = state.sortDir === 'asc' ? 'desc' : 'asc';
@@ -1724,7 +1741,6 @@
             renderContentTable(section);
         }));
 
-        // ─── Обработчики поиска ───
         wrapper.querySelectorAll('.col-search').forEach(input => input.addEventListener('input', function () {
             const key = this.dataset.searchKey;
             state.searches[key] = this.value;
@@ -1737,7 +1753,6 @@
             }, 250);
         }));
 
-        // ─── Чекбоксы ───
         const selectAll = document.getElementById('selectAllCheckbox');
         if (selectAll) selectAll.addEventListener('change', function () {
             wrapper.querySelectorAll('.row-checkbox').forEach(cb => cb.checked = this.checked);
@@ -1747,7 +1762,6 @@
             cb.addEventListener('change', updateSelectionButtons));
         updateSelectionButtons();
 
-        // ─── Автоскролл к началу таблицы + обработка всех панелей ───
         MF.attachPaginationHandlers(
             wrapper,
             section,
@@ -1805,6 +1819,7 @@
     // СКРЫТИЕ / ВОССТАНОВЛЕНИЕ
     // ============================================================
     async function hideSelected() {
+        if (hideInProgress) return;
         const selected = getSelectedRows();
         if (selected.length === 0) return;
 
@@ -1833,6 +1848,7 @@
             `посетителям. Их можно вернуть в любой момент.`
         )) return;
 
+        hideInProgress = true;
         const hideBtn = document.getElementById('hideSelectedBtn');
         if (hideBtn) { hideBtn.disabled = true; hideBtn.innerHTML =
             '<i class="fas fa-spinner fa-spin"></i> Скрываю...'; }
@@ -1848,6 +1864,7 @@
             .from('hidden_items')
             .insert(payload);
 
+        hideInProgress = false;
         if (hideBtn) { hideBtn.disabled = false; hideBtn.innerHTML =
             '<i class="fas fa-eye-slash"></i> Скрыть выбранные'; }
 
@@ -1866,6 +1883,7 @@
     }
 
     async function unhideSelected() {
+        if (unhideInProgress) return;
         const selected = getSelectedRows();
         if (selected.length === 0) return;
 
@@ -1891,6 +1909,7 @@
 
         if (!confirm(`Показать на сайте ${idsToDelete.length} записей?`)) return;
 
+        unhideInProgress = true;
         const unhideBtn = document.getElementById('unhideSelectedBtn');
         if (unhideBtn) { unhideBtn.disabled = true; unhideBtn.innerHTML =
             '<i class="fas fa-spinner fa-spin"></i> Возвращаю...'; }
@@ -1900,6 +1919,7 @@
             .delete()
             .in('id', idsToDelete);
 
+        unhideInProgress = false;
         if (unhideBtn) { unhideBtn.disabled = false; unhideBtn.innerHTML =
             '<i class="fas fa-eye"></i> Показать выбранные'; }
 
@@ -1923,7 +1943,6 @@
         document.getElementById('deleteSelectedBtn').style.display = 'none';
         document.getElementById('hideSelectedBtn').style.display = 'none';
         document.getElementById('unhideSelectedBtn').style.display = 'none';
-        document.getElementById('contentPagination').innerHTML = '';
 
         await loadHiddenItems();
 
@@ -2069,7 +2088,6 @@
         document.getElementById('deleteSelectedBtn').style.display = 'none';
         document.getElementById('hideSelectedBtn').style.display = 'none';
         document.getElementById('unhideSelectedBtn').style.display = 'none';
-        document.getElementById('contentPagination').innerHTML = '';
 
         const wrapper = document.getElementById('tableWrapper');
         wrapper.innerHTML = `<p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>`;
@@ -2113,7 +2131,6 @@
         document.getElementById('deleteSelectedBtn').style.display = 'none';
         document.getElementById('hideSelectedBtn').style.display = 'none';
         document.getElementById('unhideSelectedBtn').style.display = 'none';
-        document.getElementById('contentPagination').innerHTML = '';
 
         const wrapper = document.getElementById('tableWrapper');
         wrapper.innerHTML = `<p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>`;
@@ -2221,7 +2238,6 @@
             });
         });
 
-        // Обработчики на обе панели
         const usersContainer = document.getElementById('users-container');
         MF.attachPaginationHandlers(
             usersContainer,
@@ -2361,7 +2377,6 @@
         document.getElementById('deleteSelectedBtn').style.display = 'none';
         document.getElementById('hideSelectedBtn').style.display = 'none';
         document.getElementById('unhideSelectedBtn').style.display = 'none';
-        document.getElementById('contentPagination').innerHTML = '';
 
         const wrapper = document.getElementById('tableWrapper');
         wrapper.innerHTML = `<p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</p>`;
@@ -2478,7 +2493,6 @@
         document.getElementById('deleteSelectedBtn').style.display = 'none';
         document.getElementById('hideSelectedBtn').style.display = 'none';
         document.getElementById('unhideSelectedBtn').style.display = 'none';
-        document.getElementById('contentPagination').innerHTML = '';
 
         const wrapper = document.getElementById('tableWrapper');
         wrapper.innerHTML =
@@ -2886,7 +2900,6 @@
         document.getElementById('deleteSelectedBtn').style.display = 'none';
         document.getElementById('hideSelectedBtn').style.display = 'none';
         document.getElementById('unhideSelectedBtn').style.display = 'none';
-        document.getElementById('contentPagination').innerHTML = '';
 
         const wrapper = document.getElementById('tableWrapper');
         wrapper.innerHTML = '<div class="stats-grid" id="statsGrid"><div class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка...</div></div>';
@@ -2919,20 +2932,7 @@
         btn.addEventListener('click', function () {
             document.querySelectorAll('.sidebar .nav-link').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
-            currentTab = this.dataset.tab;
-
-            document.getElementById('tableWrapper').style.display = 'block';
-            document.getElementById('contentPagination').innerHTML = '';
-
-            if (currentTab === 'sections') renderSectionsAdmin();
-            else if (currentTab === 'folders') renderFoldersAdmin();
-            else if (currentTab === 'downloads') loadDownloads();
-            else if (currentTab === 'stats') loadStats();
-            else if (currentTab === 'users') loadUsers();
-            else if (currentTab === 'visitors') loadVisitors();
-            else if (currentTab === 'orphans') loadOrphans();
-            else if (currentTab === 'hidden') loadHidden();
-            else loadSection(currentTab);
+            switchToTab(this.dataset.tab);
         });
     });
 
