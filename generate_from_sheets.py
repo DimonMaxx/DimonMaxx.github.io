@@ -7,6 +7,9 @@
 # Поддерживает SYNC_SECTIONS=programs,music — генерирует JSON только для
 # перечисленных разделов (для селективной синхронизации).
 #
+# Поддерживает скрытие записей через Supabase-таблицу hidden_items:
+# строки, у которых (folder, title) в hidden_items, НЕ попадают в JSON.
+#
 # Устойчив к «дубликатам заголовков» и «хвостам» старых колонок:
 # не использует get_all_records(), а читает значения напрямую.
 
@@ -40,8 +43,6 @@ SUPABASE_URL = os.environ.get(
 )
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
-# SYNC_SECTIONS — список ключей разделов через запятую.
-# Пусто → генерировать JSON для всех активных разделов.
 _raw_sync_sections = os.environ.get("SYNC_SECTIONS", "").strip()
 SYNC_SECTIONS_FILTER = [
     s.strip() for s in _raw_sync_sections.split(",") if s.strip()
@@ -80,15 +81,24 @@ EN_TO_RU.setdefault("body", []).extend(EN_TO_RU.get("text", []))
 # SUPABASE
 # ============================================================
 
-def load_active_sections():
-    if supa_create_client is None:
-        print("[!] supabase-py не установлен.")
-        return []
+def _get_supabase_client():
+    if not supa_create_client:
+        return None
     if not SUPABASE_SERVICE_KEY:
-        print("[!] SUPABASE_SERVICE_ROLE_KEY не задан.")
+        return None
+    try:
+        return supa_create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+    except Exception as e:
+        print(f"[!] Ошибка создания Supabase-клиента: {e}")
+        return None
+
+
+def load_active_sections():
+    client = _get_supabase_client()
+    if client is None:
+        print("[!] Supabase-клиент недоступен.")
         return []
     try:
-        client = supa_create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
         resp = (
             client.table("site_sections")
             .select("key,label,icon,handler_type,yandex_url,yandex_path,"
@@ -103,6 +113,36 @@ def load_active_sections():
         print(f"[!] Ошибка загрузки разделов из Supabase: {e}")
         traceback.print_exc()
         return []
+
+
+def load_hidden_items(section_key):
+    """
+    Возвращает set кортежей (folder.lower().strip(), title.lower().strip())
+    для скрытых записей указанного раздела.
+    Если supabase недоступен или таблицы нет — возвращает пустой set
+    (генерация пойдёт без фильтрации — безопасный fallback).
+    """
+    client = _get_supabase_client()
+    if client is None:
+        return set()
+    try:
+        resp = (
+            client.table("hidden_items")
+            .select("folder,title")
+            .eq("section_key", section_key)
+            .execute()
+        )
+        hidden = set()
+        for row in resp.data or []:
+            folder = (row.get("folder") or "").strip().lower()
+            title  = (row.get("title")  or "").strip().lower()
+            if title:
+                hidden.add((folder, title))
+        return hidden
+    except Exception as e:
+        # Например, таблицы нет — не падаем, просто логируем
+        print(f"  [!] hidden_items недоступна для '{section_key}': {e}")
+        return set()
 
 
 # ============================================================
@@ -126,38 +166,26 @@ def _read_records_safe(worksheet, headers):
     """
     Читает лист построчно БЕЗ get_all_records().
     Возвращает список dict {RU-заголовок: значение}.
-
-    Устойчив к:
-      • дубликатам заголовков;
-      • «хвостам» старых колонок;
-      • пустым заголовкам.
-
-    :param worksheet: gspread.Worksheet
-    :param headers:   список ожидаемых RU-заголовков (в нужном порядке)
     """
     try:
         all_values = worksheet.get_all_values()
     except Exception as e:
         print(f"  ОШИБКА чтения листа: {e}")
-        return None  # сигнал об ошибке
+        return None
 
     if not all_values:
         return []
 
     raw_header = all_values[0]
 
-    # Сопоставляем ожидаемые заголовки с позициями в листе.
-    # При дубликатах берём ПЕРВОЕ совпадение.
     positions = {}
     for want_idx, want in enumerate(headers):
         want_clean = want.strip()
         pos = None
-        # 1. Точное совпадение (регистронезависимо, без пробелов)
         for i, h in enumerate(raw_header):
             if (h or "").strip().lower() == want_clean.lower():
                 pos = i
                 break
-        # 2. Частичное совпадение (например, «Размер» vs «Размер (МБ)»)
         if pos is None:
             for i, h in enumerate(raw_header):
                 if want_clean.lower() in (h or "").strip().lower():
@@ -204,21 +232,27 @@ def row_to_item(row, columns=None):
 # ГЕНЕРАЦИЯ JSON
 # ============================================================
 
-def generate_json_for_section(worksheet, json_path, columns=None, headers=None):
+def generate_json_for_section(worksheet, json_path, columns=None,
+                              headers=None, hidden_set=None):
     """
-    :param worksheet: gspread.Worksheet
-    :param json_path: путь к JSON
-    :param columns:   список EN-ключей из site_sections.columns
-    :param headers:   список RU-заголовков (в порядке columns) —
-                      если не задан, вычисляется автоматически
+    :param worksheet:  gspread.Worksheet
+    :param json_path:  путь к JSON
+    :param columns:    список EN-ключей из site_sections.columns
+    :param headers:    список RU-заголовков (в порядке columns)
+    :param hidden_set: set кортежей (folder.lower(), title.lower())
+                       — эти записи не попадут в JSON
     """
+    if hidden_set is None:
+        hidden_set = set()
+
     print(f"  Лист:    {worksheet.title}")
     print(f"  JSON:    {json_path}")
+    if hidden_set:
+        print(f"  Скрытых: {len(hidden_set)} (будут пропущены)")
 
     dir_part = os.path.dirname(json_path) or "."
     os.makedirs(dir_part, exist_ok=True)
 
-    # Определяем ожидаемые RU-заголовки
     if headers is None:
         headers = []
         for key in columns or []:
@@ -244,12 +278,23 @@ def generate_json_for_section(worksheet, json_path, columns=None, headers=None):
         return 0
 
     json_data = []
-    skipped = 0
+    skipped_no_title = 0
+    skipped_hidden   = 0
+
     for row in records:
         item = row_to_item(row, columns)
         if not item.get("title"):
-            skipped += 1
+            skipped_no_title += 1
             continue
+
+        # ─── Фильтрация скрытых ───
+        if hidden_set:
+            folder_val = (item.get("folder") or "").strip().lower()
+            title_val  = (item.get("title")  or "").strip().lower()
+            if (folder_val, title_val) in hidden_set:
+                skipped_hidden += 1
+                continue
+
         json_data.append(item)
 
     try:
@@ -260,8 +305,13 @@ def generate_json_for_section(worksheet, json_path, columns=None, headers=None):
         return -1
 
     msg = f"  ✓ Записано: {len(json_data)} записей"
-    if skipped:
-        msg += f" (пропущено без title: {skipped})"
+    extras = []
+    if skipped_no_title:
+        extras.append(f"без title: {skipped_no_title}")
+    if skipped_hidden:
+        extras.append(f"скрытых: {skipped_hidden}")
+    if extras:
+        msg += " (пропущено — " + ", ".join(extras) + ")"
     print(msg)
 
     if json_data:
@@ -298,7 +348,6 @@ def main():
         print("[!] Нет активных разделов — завершаю.")
         sys.exit(0)
 
-    # ─── Фильтр по SYNC_SECTIONS ───
     if SYNC_SECTIONS_FILTER:
         before = len(sections)
         sections = [s for s in sections
@@ -354,6 +403,9 @@ def main():
             failed.append((key, "нет json_path"))
             continue
 
+        # ─── Скрытые записи ───
+        hidden_set = load_hidden_items(key)
+
         try:
             worksheet = sh.worksheet(sheet_name)
         except gspread.exceptions.WorksheetNotFound:
@@ -365,7 +417,8 @@ def main():
             failed.append((key, str(e)))
             continue
 
-        count = generate_json_for_section(worksheet, json_path, columns)
+        count = generate_json_for_section(worksheet, json_path, columns,
+                                          hidden_set=hidden_set)
         if count >= 0:
             total_ok += 1
             total_records += count
