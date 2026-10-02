@@ -26,10 +26,11 @@ yandex_disk_sync.py
   • Детект «осиротевших» строк (файлы исчезли с Диска, строки остались
     в Sheets) с сохранением в Supabase-таблицу sync_orphans,
     включая полные значения строк и заголовки (для diff-view).
-    Терабокс-строки в листе игнорируются (обрабатываются terabox_sync.py).
+    TeraBox-строки в листе игнорируются (обрабатываются terabox_sync.py).
   • ensure_headers полностью перезаписывает первую строку до максимальной
     ширины листа — устраняет «хвосты» старых колонок и дубликаты
     заголовков.
+  • По завершении отправляет итоговый отчёт в Telegram (через notify.py).
 """
 
 import os
@@ -61,6 +62,15 @@ try:
     from supabase import create_client as supa_create_client
 except ImportError:
     supa_create_client = None
+
+# ─── Уведомления в Telegram (опционально) ───
+try:
+    from notify import notify_telegram, notify_result
+except ImportError:
+    def notify_telegram(text, **kw):
+        return False
+    def notify_result(**kw):
+        return False
 
 
 # ============================================================
@@ -1665,7 +1675,6 @@ def find_orphan_rows(existing_index, rows, headers, link_idx):
         if link in new_links:
             continue
 
-        # ─── КЛЮЧЕВОЕ: только Яндекс-ссылки ───
         if not is_yandex_link(link):
             continue
 
@@ -1688,6 +1697,11 @@ def find_orphan_rows(existing_index, rows, headers, link_idx):
 # ============================================================
 
 def sync_section(section, gs_client, cache):
+    """
+    Синхронизирует один раздел.
+    Возвращает dict со статистикой {added, updated, orphans} или None,
+    если раздел был пропущен (не относится к Яндексу, нет токена и т.п.).
+    """
     label = section.get("label") or section.get("key")
     section_key = section.get("key")
     yandex_url  = section.get("yandex_url") or ""
@@ -1716,21 +1730,21 @@ def sync_section(section, gs_client, cache):
     if yandex_url and ("terabox.com" in yandex_url.lower()
                        or "1024terabox.com" in yandex_url.lower()):
         print("  [i] Раздел относится к TeraBox — обрабатывается terabox_sync.py.")
-        return
+        return None
 
     if not yandex_url:
         print("  [!] yandex_url не задан — раздел пропускается.")
-        return
+        return None
 
     if yadisk is None:
         print("  [!] yadisk не установлен.")
-        return
+        return None
 
     public_key = get_public_key(yandex_url)
     token = os.environ.get("YADISK_TOKEN")
     if not token:
         print("  [!] YADISK_TOKEN не задан.")
-        return
+        return None
 
     sp = (start_path or "").strip("/")
 
@@ -1757,10 +1771,10 @@ def sync_section(section, gs_client, cache):
         try:
             if not client.check_token():
                 print("  [!] Неверный YADISK_TOKEN")
-                return
+                return None
         except Exception as e:
             print(f"  [!] Ошибка проверки токена: {e}")
-            return
+            return None
 
         print_folder_diagnostics(client, public_key, start_path)
         files = list_public_files_recursive(client, public_key, path=start_path)
@@ -1790,7 +1804,7 @@ def sync_section(section, gs_client, cache):
         sh = open_spreadsheet(gs_client)
     except Exception as e:
         print(f"  [!] Не удалось открыть таблицу: {e}")
-        return
+        return None
 
     sheet = get_or_create_sheet(sh, sheet_name)
     ensure_headers(sheet, headers)
@@ -1803,7 +1817,6 @@ def sync_section(section, gs_client, cache):
     n_cols = len(headers)
     end_col_letter = _col_letter(n_cols - 1)
 
-    # ─── Детект сирот (только Яндекс-строки, чужие игнорируются) ───
     orphans = find_orphan_rows(existing, rows, headers, link_idx)
     diag.orphans_found = len(orphans)
     if orphans:
@@ -1886,6 +1899,12 @@ def sync_section(section, gs_client, cache):
 
     diag.report()
 
+    return {
+        "added":   diag.added,
+        "updated": diag.updated,
+        "orphans": diag.orphans_found,
+    }
+
 
 # ============================================================
 # MAIN
@@ -1907,12 +1926,22 @@ def main():
 
     if yadisk is None:
         print("[!] yadisk не установлен: pip install -r requirements.txt")
+        notify_result(
+            title="Sync Yandex.Disk",
+            status="failure",
+            details="yadisk не установлен",
+        )
         return
 
     print("\nЗагрузка разделов из Supabase...")
     sections = load_sections_from_supabase()
     if not sections:
         print("[!] Не удалось получить ни одного раздела — завершаю.")
+        notify_result(
+            title="Sync Yandex.Disk",
+            status="failure",
+            details="Не удалось загрузить разделы из Supabase",
+        )
         return
 
     if SYNC_SECTIONS_FILTER:
@@ -1941,22 +1970,69 @@ def main():
         gs_client = get_gspread_client()
     except Exception as e:
         print(f"[!] Google Sheets: {e}")
+        notify_result(
+            title="Sync Yandex.Disk",
+            status="failure",
+            details=f"Ошибка Google Sheets: {e}",
+        )
         return
     print("Клиент создан.")
 
     if not SPREADSHEET_ID:
         print("[!] SPREADSHEET_ID не задан.")
 
+    # ─── Аккумулируем статистику ───
+    total_stats = {
+        "added":    0,
+        "updated":  0,
+        "orphans":  0,
+        "errors":   0,
+        "sections": [],
+    }
+
     cache = {}
     for section in sections:
         try:
-            sync_section(section, gs_client, cache)
+            stats = sync_section(section, gs_client, cache)
+            if stats:
+                total_stats["added"]   += stats.get("added", 0)
+                total_stats["updated"] += stats.get("updated", 0)
+                total_stats["orphans"] += stats.get("orphans", 0)
+                total_stats["sections"].append(
+                    f"{section.get('label')}: +{stats.get('added', 0)} / "
+                    f"~{stats.get('updated', 0)}"
+                )
         except Exception as e:
+            total_stats["errors"] += 1
             print(f"\n[!!!] Ошибка в разделе {section.get('key')}: {e}")
             traceback.print_exc()
 
     print("\n" + "=" * 60)
     print("Готово!")
+
+    # ─── Telegram-уведомление с итогами ───
+    run_url = None
+    if os.environ.get("GITHUB_RUN_ID"):
+        repo = os.environ.get("GITHUB_REPOSITORY", "")
+        run_url = (f"https://github.com/{repo}/actions/runs/"
+                   f"{os.environ['GITHUB_RUN_ID']}")
+
+    status = "failure" if total_stats["errors"] > 0 else "success"
+
+    details = (f"Обновлено: {total_stats['updated']}, "
+               f"добавлено: {total_stats['added']}, "
+               f"осиротевших: {total_stats['orphans']}")
+
+    if total_stats["errors"]:
+        details += f" • Ошибок: {total_stats['errors']}"
+
+    notify_result(
+        title="Sync Yandex.Disk",
+        status=status,
+        details=details,
+        extra_lines=total_stats["sections"] or None,
+        run_url=run_url,
+    )
 
 
 if __name__ == "__main__":
