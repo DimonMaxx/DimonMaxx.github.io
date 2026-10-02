@@ -35,6 +35,12 @@
     if (state.errorsPageSize === undefined)    state.errorsPageSize = CFG.DEFAULT_PAGE_SIZE;
     if (state.errorsFilter === undefined)      state.errorsFilter = { period: 'week', page: '', search: '' };
 
+    // ─── Скачивания (новая вкладка) ───
+    if (state.downloadLogsData === undefined)     state.downloadLogsData = [];
+    if (state.downloadLogsFiltered === undefined) state.downloadLogsFiltered = [];
+    if (state.downloadLogsSelected === undefined) state.downloadLogsSelected = new Set();
+    if (state.downloadLogsFilter === undefined)   state.downloadLogsFilter = { search: '', period: 'all' };
+
     // ============================================================
     // РАЗДЕЛЫ САЙТА (CRUD)
     // ============================================================
@@ -401,7 +407,6 @@
         let fileCounts = {};
         if (meta) {
             try {
-                // ← ИЗМЕНЕНО: '../' + meta.json
                 const resp = await fetch('../' + meta.json + '?t=' + Date.now());
                 if (resp.ok) {
                     const items = await resp.json();
@@ -453,7 +458,6 @@
         let itemsToDelete = [];
         if (meta) {
             try {
-                // ← ИЗМЕНЕНО: '../' + meta.json
                 const resp = await fetch('../' + meta.json + '?t=' + Date.now());
                 if (resp.ok) {
                     const items = await resp.json();
@@ -1353,7 +1357,7 @@
     }
 
     // ============================================================
-    // СКАЧИВАНИЯ
+    // СКАЧИВАНИЯ — обновлённая вкладка с фильтрами и удалением
     // ============================================================
     async function loadDownloads() {
         document.getElementById('sectionTitle').innerHTML =
@@ -1369,32 +1373,331 @@
         const { data, error } = await supabaseClient
             .from('download_logs').select('*')
             .order('downloaded_at', { ascending: false })
-            .limit(500);
+            .limit(1000);
 
         if (error) {
             wrapper.innerHTML = `<p class="empty-block">Ошибка: ${MF.escapeHtml(error.message)}</p>`;
             return;
         }
-        if (!data || data.length === 0) {
-            wrapper.innerHTML = `<p class="empty-block">Нет записей</p>`;
+
+        state.downloadLogsData = data || [];
+        state.downloadLogsSelected = new Set();
+
+        renderDownloadsFiltered();
+    }
+
+    function renderDownloadsFiltered() {
+        const filter = state.downloadLogsFilter;
+        const search = (filter.search || '').trim().toLowerCase();
+        const period = filter.period || 'all';
+        const now = Date.now();
+
+        let filtered = state.downloadLogsData.slice();
+
+        // Поиск
+        if (search) {
+            filtered = filtered.filter(log => {
+                const fileName = (log.file_name || '').toLowerCase();
+                const fileId = (log.file_id || '').toLowerCase();
+                const username = (log.username || '').toLowerCase();
+                return fileName.includes(search)
+                    || fileId.includes(search)
+                    || username.includes(search);
+            });
+        }
+
+        // Период
+        if (period !== 'all') {
+            const limits = {
+                today: 1,
+                week: 7,
+                month: 30,
+            };
+            const days = limits[period] || 1;
+            const cutoff = now - days * 24 * 60 * 60 * 1000;
+            filtered = filtered.filter(log => {
+                const t = new Date(log.downloaded_at).getTime();
+                return isFinite(t) && t >= cutoff;
+            });
+        }
+
+        state.downloadLogsFiltered = filtered;
+        renderDownloadsTable();
+    }
+
+    function renderDownloadsTable() {
+        const wrapper = document.getElementById('tableWrapper');
+        const data = state.downloadLogsFiltered;
+
+        const filter = state.downloadLogsFilter;
+        const periodOptions = [
+            { value: 'all',   label: 'Все время' },
+            { value: 'today', label: 'За 24 часа' },
+            { value: 'week',  label: 'За неделю' },
+            { value: 'month', label: 'За месяц' },
+        ].map(o => {
+            const sel = filter.period === o.value ? ' selected' : '';
+            return `<option value="${o.value}"${sel}>${o.label}</option>`;
+        }).join('');
+
+        const filterBarHtml = `
+            <div class="filters">
+                <label>Поиск:
+                    <input type="text" id="dlSearchInput"
+                           placeholder="Название или пользователь..."
+                           value="${MF.escapeAttr(filter.search || '')}">
+                </label>
+                <label>Период:
+                    <select id="dlPeriodSelect">${periodOptions}</select>
+                </label>
+                <span class="spacer" style="flex:1;"></span>
+                <span class="selected-info" id="dlSelectedInfo" style="display:none;"></span>
+                <button class="btn-danger" id="dlDeleteSelectedBtn" disabled>
+                    <i class="fas fa-trash"></i> Удалить выбранные
+                </button>
+                <button class="btn-danger" id="dlDeleteAllBtn" ${state.downloadLogsData.length === 0 ? 'disabled' : ''}>
+                    <i class="fas fa-trash-alt"></i> Удалить все
+                </button>
+            </div>
+        `;
+
+        if (data.length === 0) {
+            wrapper.innerHTML = `
+                ${filterBarHtml}
+                <p class="empty-block">Нет записей${filter.search || filter.period !== 'all' ? ' по текущим фильтрам' : ''}</p>`;
+            attachDownloadsFilterHandlers();
+            updateDownloadsSelectionUI();
             return;
         }
 
-        let html = `<div class="content-table-wrapper"><table class="content-table"><thead><tr>
-            <th>Файл</th><th>Пользователь</th><th>Дата и время</th>
-        </tr></thead><tbody>`;
+        let headHtml = `<tr>
+            <th class="center"><input type="checkbox" id="dlSelectAllCheckbox"></th>
+            <th>Файл</th>
+            <th>Пользователь</th>
+            <th>Дата и время</th>
+        </tr>`;
+
+        let bodyHtml = '';
         data.forEach(log => {
             const d = new Date(log.downloaded_at);
-            const dateStr = d.toLocaleDateString('ru-RU') + ' ' +
-                            d.toLocaleTimeString('ru-RU');
-            html += `<tr>
-                <td>${MF.escapeHtml(log.file_name || log.file_id || '')}</td>
-                <td>${MF.escapeHtml(log.username || '')}</td>
-                <td>${dateStr}</td>
+            const dateStr = isFinite(d.getTime())
+                ? d.toLocaleDateString('ru-RU') + ' ' + d.toLocaleTimeString('ru-RU')
+                : '—';
+            const displayName = log.file_name || log.file_id || 'Без названия';
+            const checked = state.downloadLogsSelected.has(log.id) ? 'checked' : '';
+            bodyHtml += `<tr>
+                <td class="center checkbox-cell">
+                    <input type="checkbox" class="dl-row-checkbox"
+                           data-id="${log.id}" ${checked}>
+                </td>
+                <td title="${MF.escapeAttr(displayName)}">
+                    ${MF.escapeHtml(displayName)}
+                </td>
+                <td>${MF.escapeHtml(log.username || 'Неизвестный')}</td>
+                <td>${MF.escapeHtml(dateStr)}</td>
             </tr>`;
         });
-        html += '</tbody></table></div>';
-        wrapper.innerHTML = html;
+
+        const info = `Показано: <strong>${data.length}</strong> из <strong>${state.downloadLogsData.length}</strong>`;
+
+        wrapper.innerHTML = `
+            ${filterBarHtml}
+            <div class="pagination-bar pagination-top" style="justify-content:flex-start;">
+                <div class="pagination-total">${info}</div>
+            </div>
+            <div class="content-table-wrapper">
+                <table class="content-table">
+                    <thead>${headHtml}</thead>
+                    <tbody>${bodyHtml}</tbody>
+                </table>
+            </div>`;
+
+        attachDownloadsFilterHandlers();
+        attachDownloadsRowHandlers();
+        updateDownloadsSelectionUI();
+    }
+
+    function attachDownloadsFilterHandlers() {
+        const searchInput = document.getElementById('dlSearchInput');
+        if (searchInput) {
+            let t = null;
+            searchInput.addEventListener('input', function () {
+                clearTimeout(t);
+                const val = this.value;
+                t = setTimeout(() => {
+                    state.downloadLogsFilter.search = val;
+                    renderDownloadsFiltered();
+                    const ni = document.getElementById('dlSearchInput');
+                    if (ni) {
+                        ni.focus();
+                        ni.setSelectionRange(ni.value.length, ni.value.length);
+                    }
+                }, 300);
+            });
+        }
+
+        const periodSelect = document.getElementById('dlPeriodSelect');
+        if (periodSelect) {
+            periodSelect.addEventListener('change', function () {
+                state.downloadLogsFilter.period = this.value;
+                renderDownloadsFiltered();
+            });
+        }
+
+        const deleteSelectedBtn = document.getElementById('dlDeleteSelectedBtn');
+        if (deleteSelectedBtn) {
+            deleteSelectedBtn.addEventListener('click', deleteSelectedDownloadLogs);
+        }
+
+        const deleteAllBtn = document.getElementById('dlDeleteAllBtn');
+        if (deleteAllBtn) {
+            deleteAllBtn.addEventListener('click', deleteAllDownloadLogs);
+        }
+    }
+
+    function attachDownloadsRowHandlers() {
+        const wrapper = document.getElementById('tableWrapper');
+        if (!wrapper) return;
+
+        const selectAll = document.getElementById('dlSelectAllCheckbox');
+        if (selectAll) {
+            selectAll.addEventListener('change', function () {
+                const checked = this.checked;
+                wrapper.querySelectorAll('.dl-row-checkbox').forEach(cb => {
+                    const id = parseInt(cb.dataset.id, 10);
+                    cb.checked = checked;
+                    if (checked) state.downloadLogsSelected.add(id);
+                    else state.downloadLogsSelected.delete(id);
+                });
+                updateDownloadsSelectionUI();
+            });
+        }
+
+        wrapper.querySelectorAll('.dl-row-checkbox').forEach(cb => {
+            cb.addEventListener('change', function () {
+                const id = parseInt(this.dataset.id, 10);
+                if (this.checked) state.downloadLogsSelected.add(id);
+                else state.downloadLogsSelected.delete(id);
+                updateDownloadsSelectionUI();
+            });
+        });
+    }
+
+    function updateDownloadsSelectionUI() {
+        const selected = state.downloadLogsSelected.size;
+        const info = document.getElementById('dlSelectedInfo');
+        const deleteBtn = document.getElementById('dlDeleteSelectedBtn');
+
+        if (info) {
+            if (selected > 0) {
+                info.textContent = `Выбрано: ${selected}`;
+                info.style.display = 'inline';
+            } else {
+                info.style.display = 'none';
+            }
+        }
+
+        if (deleteBtn) {
+            deleteBtn.disabled = selected === 0;
+        }
+
+        // Обновим состояние "выбрать все"
+        const selectAll = document.getElementById('dlSelectAllCheckbox');
+        const rowCheckboxes = document.querySelectorAll('.dl-row-checkbox');
+        if (selectAll && rowCheckboxes.length > 0) {
+            selectAll.checked = selected === rowCheckboxes.length;
+        }
+    }
+
+    async function _deleteDownloadLogsByIds(ids) {
+        if (!ids || ids.length === 0) return { ok: true, count: 0 };
+
+        // Удаляем порциями по 100 (лимит .in())
+        const chunks = [];
+        for (let i = 0; i < ids.length; i += 100) {
+            chunks.push(ids.slice(i, i + 100));
+        }
+
+        let deleted = 0;
+        for (const chunk of chunks) {
+            const { error } = await supabaseClient
+                .from('download_logs')
+                .delete()
+                .in('id', chunk);
+            if (error) {
+                return { ok: false, count: deleted, error: error.message };
+            }
+            deleted += chunk.length;
+        }
+        return { ok: true, count: deleted };
+    }
+
+    async function deleteSelectedDownloadLogs() {
+        const ids = Array.from(state.downloadLogsSelected);
+        if (ids.length === 0) return;
+
+        if (!confirm(`Удалить ${ids.length} записей из истории скачиваний?\n\nЭто действие необратимо.`)) {
+            return;
+        }
+
+        const btn = document.getElementById('dlDeleteSelectedBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Удаляю...';
+        }
+
+        const result = await _deleteDownloadLogsByIds(ids);
+
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash"></i> Удалить выбранные';
+        }
+
+        if (result.ok) {
+            Admin.showToast(`Удалено ${result.count} записей.`, 'success');
+            state.downloadLogsSelected = new Set();
+            await loadDownloads();
+        } else {
+            alert('Ошибка удаления: ' + (result.error || 'неизвестная'));
+            await loadDownloads();
+        }
+    }
+
+    async function deleteAllDownloadLogs() {
+        const total = state.downloadLogsData.length;
+        if (total === 0) {
+            alert('Нечего удалять.');
+            return;
+        }
+
+        if (!confirm(
+            `Удалить ВСЕ записи истории скачиваний (${total})?\n\n` +
+            `Это действие необратимо.`
+        )) return;
+
+        const btn = document.getElementById('dlDeleteAllBtn');
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Удаляю...';
+        }
+
+        // Удаляем через RPC не надо — просто DELETE по всем id из state
+        const ids = state.downloadLogsData.map(l => l.id);
+        const result = await _deleteDownloadLogsByIds(ids);
+
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-trash-alt"></i> Удалить все';
+        }
+
+        if (result.ok) {
+            Admin.showToast(`Удалено ${result.count} записей.`, 'success');
+            state.downloadLogsSelected = new Set();
+            await loadDownloads();
+        } else {
+            alert('Ошибка удаления: ' + (result.error || 'неизвестная'));
+            await loadDownloads();
+        }
     }
 
     // ============================================================
@@ -2059,7 +2362,13 @@
         unhideOne,
         unhideAll,
 
+        // ─── Скачивания (обновлённая вкладка) ───
         loadDownloads,
+        renderDownloadsFiltered,
+        renderDownloadsTable,
+        deleteSelectedDownloadLogs,
+        deleteAllDownloadLogs,
+
         loadStats,
 
         loadErrors,
