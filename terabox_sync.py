@@ -6,7 +6,7 @@ terabox_sync.py (v4)
 
 Логика:
   1. Читает активные разделы из Supabase (site_sections).
-  2. Оставляет только те, чей yandex_url содержит terabox.com / 1024terabox.com.
+  2. Оставляет только те, чей yandex_url содержит хотя бы одну TeraBox-ссылку.
   3. Для каждого раздела:
        • Открывает Chromium, авторизуется cookie 'ndus'.
        • Заходит в рабочую папку (yandex_path или автоматически «Программы»).
@@ -15,6 +15,11 @@ terabox_sync.py (v4)
        • Пишет результаты в Google Sheets.
        • Делает backup, находит orphans, сохраняет их в Supabase.
   4. По завершении отправляет итоговый отчёт в Telegram (через notify.py).
+
+Поддерживает МУЛЬТИ-URL в поле yandex_url: несколько ссылок, разделённых
+переводом строки или символом ';'. Берутся только TeraBox-ссылки
+(1024terabox / terabox / 1024tera / 4funbox), Яндекс-ссылки игнорируются —
+они обрабатываются yandex_disk_sync.py, но результат пишется в тот же лист.
 
 Переменные окружения:
   TERABOX_COOKIE, GOOGLE_CREDENTIALS_JSON, SPREADSHEET_ID,
@@ -188,6 +193,23 @@ def _detect_source(link):
     return "unknown"
 
 
+def is_terabox_link(link):
+    """True, если ссылка ведёт на TeraBox."""
+    return _detect_source(link) == "terabox"
+
+
+def split_urls(raw):
+    """
+    Разбивает поле yandex_url на отдельные ссылки.
+    Разделители: перевод строки, точка с запятой.
+    Возвращает список непустых строк без пробелов по краям.
+    """
+    if not raw:
+        return []
+    parts = re.split(r"[\n;]+", str(raw))
+    return [p.strip() for p in parts if p.strip()]
+
+
 # ============================================================
 # SUPABASE
 # ============================================================
@@ -216,10 +238,10 @@ def load_sections_from_supabase():
         return []
 
 
-def is_terabox_url(url):
-    if not url:
-        return False
-    return any(d in url.lower() for d in TERABOX_DOMAINS)
+def section_has_terabox(section):
+    """True, если в yandex_url раздела есть хотя бы одна TeraBox-ссылка."""
+    urls = split_urls(section.get("yandex_url") or "")
+    return any(is_terabox_link(u) for u in urls)
 
 
 def save_orphans_to_supabase(section_key, section_label,
@@ -318,12 +340,6 @@ def ensure_headers(sheet, headers):
 
 
 def load_sheet_snapshot(sheet, headers):
-    """
-    Возвращает (all_values, existing_by_link, existing_by_key).
-
-      existing_by_link — {download_link: {"row":N, "values":[...]}}
-      existing_by_key  — {(folder_lower, title_lower): {...}}
-    """
     try:
         rows = sheet.get_all_values()
     except Exception as e:
@@ -1132,17 +1148,20 @@ def sync_terabox_section(section, gs_client):
     """
     Синхронизирует один раздел.
     Возвращает dict со статистикой {added, updated, orphans, errors}
-    или None, если раздел был пропущен.
+    или None, если раздел не содержит TeraBox-ссылок.
+
+    Поддерживает несколько URL в yandex_url (разделители \\n и ;).
+    Обрабатываются только TeraBox-ссылки; Яндекс-ссылки игнорируются.
     """
     label = section.get("label") or section.get("key")
     section_key = section.get("key")
-    yandex_url = section.get("yandex_url") or ""
+    yandex_url_raw = section.get("yandex_url") or ""
     sheet_name = section.get("sheet_name") or label
     columns = section.get("columns") or ["folder", "title", "description",
                                           "download_link"]
 
     print(f"\n=== Раздел TeraBox: {label} ({section_key}) ===")
-    print(f"Ссылка:      {yandex_url[:100]}")
+    print(f"Источник(и): {yandex_url_raw or '(не задан)'}")
     print(f"Лист Sheets: {sheet_name}")
     print(f"Handler:     {section.get('handler_type') or 'universal'}")
     print(f"yandex_path: {section.get('yandex_path') or '(авто)'}")
@@ -1151,16 +1170,32 @@ def sync_terabox_section(section, gs_client):
         print("  [!] TERABOX_COOKIE не задан — пропускаю раздел.")
         return None
 
+    # ─── Разбиваем yandex_url и оставляем только TeraBox ───
+    all_urls = split_urls(yandex_url_raw)
+    terabox_urls = [u for u in all_urls if is_terabox_link(u)]
+    ignored = [u for u in all_urls if u not in terabox_urls]
+
+    if ignored:
+        print(f"  [i] Игнорируются не-TeraBox ссылки ({len(ignored)}):")
+        for u in ignored:
+            print(f"      • {u[:80]}")
+
+    if not terabox_urls:
+        print("  [!] В разделе нет TeraBox-ссылок — пропускаю.")
+        print("      (только Яндекс → обрабатывается yandex_disk_sync.py)")
+        return None
+
     diag = Diag(label)
 
-    urls = [u.strip() for u in yandex_url.split("\n") if u.strip()]
     all_records = []
-    for u in urls:
-        print(f"\n  Загрузка TeraBox: {u[:90]}")
+    for url_idx, u in enumerate(terabox_urls, 1):
+        print(f"\n  ─── TeraBox-источник [{url_idx}/{len(terabox_urls)}]: "
+              f"{u[:90]}")
         recs = fetch_terabox_records(u, section, diag)
         print(f"  Получено записей: {len(recs)}")
         all_records.extend(recs)
 
+    # Дедупликация по (folder, title)
     dedup = {}
     for r in all_records:
         key = ((r.get("folder") or "").lower(),
@@ -1357,9 +1392,8 @@ def main():
         )
         return
 
-    terabox_sections = [
-        s for s in sections if is_terabox_url(s.get("yandex_url", ""))
-    ]
+    # ─── Оставляем только разделы с TeraBox-ссылками ───
+    terabox_sections = [s for s in sections if section_has_terabox(s)]
     print(f"  Найдено TeraBox-разделов: {len(terabox_sections)}")
 
     if SYNC_SECTIONS_FILTER:
