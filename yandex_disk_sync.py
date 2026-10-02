@@ -7,6 +7,11 @@ yandex_disk_sync.py
 Разделы и их настройки читаются из таблицы site_sections (Supabase),
 поэтому добавлять/менять разделы можно через админ-панель без правки Python.
 
+Поддерживает МУЛЬТИ-URL в поле yandex_url: несколько ссылок, разделённых
+переводом строки или символом ';'. Берутся только Яндекс-ссылки
+(disk.yandex / yadi.sk), TeraBox-ссылки игнорируются — они
+обрабатываются terabox_sync.py, но результат пишется в тот же лист Sheets.
+
 Режимы ускорения:
   • SYNC_SECTIONS=programs,music   — синхронизировать только перечисленные
     разделы (через запятую). Пусто → все активные разделы.
@@ -250,6 +255,18 @@ def _detect_source(link):
 def is_yandex_link(link):
     """True, если ссылка ведёт на Яндекс.Диск."""
     return _detect_source(link) == "yandex"
+
+
+def split_urls(raw):
+    """
+    Разбивает поле yandex_url на отдельные ссылки.
+    Разделители: перевод строки, точка с запятой.
+    Возвращает список непустых строк без пробелов по краям.
+    """
+    if not raw:
+        return []
+    parts = re.split(r"[\n;]+", str(raw))
+    return [p.strip() for p in parts if p.strip()]
 
 
 # ============================================================
@@ -1700,11 +1717,14 @@ def sync_section(section, gs_client, cache):
     """
     Синхронизирует один раздел.
     Возвращает dict со статистикой {added, updated, orphans} или None,
-    если раздел был пропущен (не относится к Яндексу, нет токена и т.п.).
+    если раздел не содержит Яндекс-ссылок.
+
+    Поддерживает несколько URL в yandex_url (разделители \n и ;).
+    Обрабатываются только Яндекс-ссылки; TeraBox-ссылки игнорируются.
     """
     label = section.get("label") or section.get("key")
     section_key = section.get("key")
-    yandex_url  = section.get("yandex_url") or ""
+    yandex_url_raw = section.get("yandex_url") or ""
     start_path  = section.get("yandex_path") or "/"
     sheet_name  = section.get("sheet_name") or label
     handler_type = section.get("handler_type") or "universal"
@@ -1721,26 +1741,31 @@ def sync_section(section, gs_client, cache):
 
     print(f"\n=== Раздел: {label} ({section_key}) ===")
     print(f"Handler:         {handler_type}")
-    print(f"Источник:        {yandex_url or '(не задан)'}")
+    print(f"Источник(и):     {yandex_url_raw or '(не задан)'}")
     print(f"Подпапка:        {start_path}")
     print(f"Лист Sheets:     {sheet_name}")
     print(f"manual_override: {manual_override}")
     print(f"strip_prefix:    {strip_mode}")
 
-    if yandex_url and ("terabox.com" in yandex_url.lower()
-                       or "1024terabox.com" in yandex_url.lower()):
-        print("  [i] Раздел относится к TeraBox — обрабатывается terabox_sync.py.")
-        return None
+    # ─── Разбиваем yandex_url на ссылки и оставляем только Яндекс ───
+    all_urls = split_urls(yandex_url_raw)
+    yandex_urls = [u for u in all_urls if is_yandex_link(u)]
+    ignored = [u for u in all_urls if u not in yandex_urls]
 
-    if not yandex_url:
-        print("  [!] yandex_url не задан — раздел пропускается.")
+    if ignored:
+        print(f"  [i] Игнорируются не-Яндекс ссылки ({len(ignored)}):")
+        for u in ignored:
+            print(f"      • {u[:80]}")
+
+    if not yandex_urls:
+        print("  [!] В разделе нет Яндекс-ссылок — пропускаю.")
+        print("      (только TeraBox → обрабатывается terabox_sync.py)")
         return None
 
     if yadisk is None:
         print("  [!] yadisk не установлен.")
         return None
 
-    public_key = get_public_key(yandex_url)
     token = os.environ.get("YADISK_TOKEN")
     if not token:
         print("  [!] YADISK_TOKEN не задан.")
@@ -1748,25 +1773,23 @@ def sync_section(section, gs_client, cache):
 
     sp = (start_path or "").strip("/")
 
-    if not sp:
-        strip_prefix = False
-        is_root = False
-    elif strip_mode == "always":
-        strip_prefix = True
-        is_root = False
-    elif strip_mode == "never":
-        strip_prefix = False
-        is_root = True
-    else:  # auto
-        is_root = is_public_root_link(yandex_url, start_path)
-        strip_prefix = not is_root
+    # ─── Открываем spreadsheet один раз ───
+    try:
+        sh = open_spreadsheet(gs_client)
+    except Exception as e:
+        print(f"  [!] Не удалось открыть таблицу: {e}")
+        return None
 
-    print(f"  [i] strip_prefix_mode='{strip_mode}', start_path='{start_path}' → "
-          f"{'ОТРЕЗАЕМ' if strip_prefix else 'НЕ отрезаем'} префикс "
-          f"(is_root={is_root})")
+    sheet = get_or_create_sheet(sh, sheet_name)
 
     diag = Diag(label)
+    headers = headers_from_columns(columns)
+    ensure_headers(sheet, headers)
 
+    all_rows = []
+    total_files = 0
+
+    # ─── Проходим по каждой Яндекс-ссылке ───
     with yadisk.Client(token=token) as client:
         try:
             if not client.check_token():
@@ -1776,39 +1799,68 @@ def sync_section(section, gs_client, cache):
             print(f"  [!] Ошибка проверки токена: {e}")
             return None
 
-        print_folder_diagnostics(client, public_key, start_path)
-        files = list_public_files_recursive(client, public_key, path=start_path)
+        for url_idx, yandex_url in enumerate(yandex_urls, 1):
+            print(f"\n  ─── Яндекс-источник [{url_idx}/{len(yandex_urls)}]: "
+                  f"{yandex_url[:80]}")
 
-        diag.found = len(files)
-        print(f"  Найдено файлов: {len(files)}")
+            try:
+                public_key = get_public_key(yandex_url)
+            except Exception as e:
+                print(f"    [!] Ошибка парсинга URL: {e}")
+                continue
 
-        headers = headers_from_columns(columns)
+            # ─── Определение режима отрезания префикса ───
+            if not sp:
+                strip_prefix = False
+                is_root = False
+            elif strip_mode == "always":
+                strip_prefix = True
+                is_root = False
+            elif strip_mode == "never":
+                strip_prefix = False
+                is_root = True
+            else:  # auto
+                is_root = is_public_root_link(yandex_url, start_path)
+                strip_prefix = not is_root
 
-        if handler_type == "books":
-            rows = build_rows_books(client, files, yandex_url, start_path,
-                                    strip_prefix, headers, cache, diag)
-        elif handler_type == "music":
-            rows = build_rows_music(files, yandex_url, start_path,
-                                    strip_prefix, headers, diag)
-        elif handler_type == "programs":
-            rows = build_rows_programs(files, yandex_url, start_path,
-                                       strip_prefix, headers, diag)
-        else:  # universal
-            rows = build_rows_universal(files, yandex_url, start_path,
-                                        strip_prefix, headers, diag)
+            print(f"    strip_prefix_mode='{strip_mode}', "
+                  f"start_path='{start_path}' → "
+                  f"{'ОТРЕЗАЕМ' if strip_prefix else 'НЕ отрезаем'} "
+                  f"(is_root={is_root})")
 
-    diag.kept = len(rows)
-    print(f"\n  Сгенерировано строк: {len(rows)}")
+            print_folder_diagnostics(client, public_key, start_path)
+            files = list_public_files_recursive(
+                client, public_key, path=start_path
+            )
+            total_files += len(files)
+            print(f"    Найдено файлов: {len(files)}")
 
-    try:
-        sh = open_spreadsheet(gs_client)
-    except Exception as e:
-        print(f"  [!] Не удалось открыть таблицу: {e}")
-        return None
+            if handler_type == "books":
+                rows_i = build_rows_books(client, files, yandex_url,
+                                           start_path, strip_prefix,
+                                           headers, cache, diag)
+            elif handler_type == "music":
+                rows_i = build_rows_music(files, yandex_url,
+                                           start_path, strip_prefix,
+                                           headers, diag)
+            elif handler_type == "programs":
+                rows_i = build_rows_programs(files, yandex_url,
+                                              start_path, strip_prefix,
+                                              headers, diag)
+            else:
+                rows_i = build_rows_universal(files, yandex_url,
+                                               start_path, strip_prefix,
+                                               headers, diag)
 
-    sheet = get_or_create_sheet(sh, sheet_name)
-    ensure_headers(sheet, headers)
+            all_rows.extend(rows_i)
+            print(f"    Сгенерировано строк: {len(rows_i)}")
 
+    diag.found = total_files
+    diag.kept = len(all_rows)
+    print(f"\n  Итого файлов: {total_files}, "
+          f"сгенерировано строк: {len(all_rows)}")
+
+    # ─── Загружаем снимок листа ───
     all_values, existing = load_sheet_snapshot(sheet)
     print(f"  Существующих строк: {len(existing)}")
 
@@ -1817,7 +1869,8 @@ def sync_section(section, gs_client, cache):
     n_cols = len(headers)
     end_col_letter = _col_letter(n_cols - 1)
 
-    orphans = find_orphan_rows(existing, rows, headers, link_idx)
+    # ─── Детект сирот (только Яндекс-строки) ───
+    orphans = find_orphan_rows(existing, all_rows, headers, link_idx)
     diag.orphans_found = len(orphans)
     if orphans:
         print(f"  Осиротевших строк: {len(orphans)} "
@@ -1828,12 +1881,13 @@ def sync_section(section, gs_client, cache):
         save_orphans_to_supabase(section_key, label, sheet_name,
                                  [], headers)
 
+    # ─── Изменения ───
     updates = []
     to_add = []
     preserved_rows = 0
     unchanged_rows = 0
 
-    for row in rows:
+    for row in all_rows:
         link = str(row[link_idx]).strip() if link_idx < len(row) else ""
 
         if not link or link not in existing:
