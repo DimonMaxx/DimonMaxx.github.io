@@ -3,91 +3,223 @@
      width="1200" height="630"
      viewBox="0 0 1200 630">
 
-    <!-- Фон: градиент сине-фиолетовый -->
+    <!-- ─── ГРАДИЕНТЫ ─── -->
     <defs>
-        <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#2563eb"/>
+        <!-- Основной фон: светлый сине-фиолетовый -->
+        <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#dbeafe"/>
+            <stop offset="50%"  stop-color="#e0e7ff"/>
+            <stop offset="100%" stop-color="#ede9fe"/>
+        </linearGradient>
+
+        <!-- Цветное пятно слева сверху -->
+        <radialGradient id="blob1" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#60a5fa" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#60a5fa" stop-opacity="0"/>
+        </radialGradient>
+
+        <!-- Цветное пятно справа снизу -->
+        <radialGradient id="blob2" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#a78bfa" stop-opacity="0.35"/>
+            <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
+        </radialGradient>
+
+        <!-- Мягкое свечение по центру -->
+        <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%"   stop-color="#ffffff" stop-opacity="0.6"/>
+            <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+        </radialGradient>
+
+        <!-- Градиент карточки -->
+        <linearGradient id="card" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%"   stop-color="#ffffff"/>
+            <stop offset="100%" stop-color="#f8fafc"/>
+        </linearGradient>
+
+        <!-- Градиент логотипа -->
+        <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%"   stop-color="#2563eb"/>
             <stop offset="100%" stop-color="#7c3aed"/>
         </linearGradient>
-        <linearGradient id="card" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stop-color="rgba(255,255,255,0.98)"/>
-            <stop offset="100%" stop-color="rgba(255,255,255,0.92)"/>
+
+        <!-- Градиент для бейджа -->
+        <linearGradient id="badgeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#2563eb"/>
+            <stop offset="100%" stop-color="#3b82f6"/>
         </linearGradient>
+
+        <!-- Градиент для второго бейджа -->
+        <linearGradient id="orangeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%"   stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#fbbf24"/>
+        </linearGradient>
+
+        <!-- Тень карточки -->
+        <filter id="cardShadow" x="-10%" y="-10%" width="120%" height="130%">
+            <feDropShadow dx="0" dy="20" stdDeviation="30"
+                          flood-color="#1e3a8a" flood-opacity="0.15"/>
+        </filter>
+
+        <!-- Тень логотипа -->
+        <filter id="logoShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feDropShadow dx="0" dy="6" stdDeviation="10"
+                          flood-color="#2563eb" flood-opacity="0.3"/>
+        </filter>
+
+        <!-- Мягкое размытие для декора -->
+        <filter id="softBlur" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="40"/>
+        </filter>
     </defs>
 
-    <!-- Фон -->
-    <rect width="1200" height="630" fill="url(#bg)"/>
+    <!-- ─── ФОН ─── -->
+    <rect width="1200" height="630" fill="url(#bgGradient)"/>
 
-    <!-- Декоративные круги -->
-    <circle cx="1050" cy="120" r="180" fill="rgba(255,255,255,0.08)"/>
-    <circle cx="150" cy="560" r="220" fill="rgba(255,255,255,0.06)"/>
-    <circle cx="900" cy="560" r="120" fill="rgba(255,255,255,0.05)"/>
+    <!-- ─── ДЕКОРАТИВНЫЕ ПЯТНА (мягкие, светлые) ─── -->
+    <circle cx="120"  cy="80"  r="280" fill="url(#blob1)" filter="url(#softBlur)"/>
+    <circle cx="1120" cy="580" r="320" fill="url(#blob2)" filter="url(#softBlur)"/>
+    <circle cx="980"  cy="100" r="220" fill="url(#blob2)" filter="url(#softBlur)"/>
+    <circle cx="180"  cy="560" r="240" fill="url(#blob1)" filter="url(#softBlur)"/>
 
-    <!-- Белая карточка -->
-    <rect x="80" y="90" width="1040" height="450"
-          rx="32" ry="32" fill="url(#card)"/>
+    <!-- Свечение за карточкой -->
+    <ellipse cx="600" cy="315" rx="480" ry="260"
+             fill="url(#glow)" filter="url(#softBlur)"/>
 
-    <!-- Логотип (кубик) -->
-    <g transform="translate(140, 150)">
-        <rect width="90" height="90" rx="20" fill="#2563eb"/>
-        <path d="M 25 30 L 65 30 L 65 60 L 25 60 Z"
-              fill="none" stroke="white" stroke-width="5"
-              stroke-linejoin="round"/>
-        <path d="M 25 30 L 45 15 L 65 30"
-              fill="none" stroke="white" stroke-width="5"
-              stroke-linejoin="round"/>
-        <path d="M 65 30 L 65 60 L 45 75 L 25 60"
-              fill="none" stroke="white" stroke-width="5"
-              stroke-linejoin="round"/>
-        <path d="M 45 15 L 45 45 M 45 45 L 65 60 M 45 45 L 25 60"
-              fill="none" stroke="white" stroke-width="5"
-              stroke-linejoin="round" opacity="0.7"/>
+    <!-- ─── МАЛЕНЬКИЕ ТОЧКИ-ЗВЁЗДОЧКИ ─── -->
+    <g fill="#3b82f6" opacity="0.35">
+        <circle cx="150" cy="150" r="4"/>
+        <circle cx="220" cy="90"  r="3"/>
+        <circle cx="300" cy="520" r="4"/>
+        <circle cx="1050" cy="200" r="4"/>
+        <circle cx="1100" cy="300" r="3"/>
+        <circle cx="1000" cy="500" r="4"/>
+        <circle cx="140" cy="440" r="3"/>
+    </g>
+    <g fill="#8b5cf6" opacity="0.35">
+        <circle cx="180" cy="220" r="3"/>
+        <circle cx="1080" cy="440" r="3"/>
+        <circle cx="250" cy="580" r="3"/>
+        <circle cx="1000" cy="80"  r="3"/>
     </g>
 
-    <!-- Название сайта -->
+    <!-- ─── БЕЛАЯ КАРТОЧКА ─── -->
+    <rect x="80" y="90" width="1040" height="450"
+          rx="32" ry="32"
+          fill="url(#card)"
+          filter="url(#cardShadow)"/>
+
+    <!-- Тонкая цветная полоса сверху карточки -->
+    <rect x="80" y="90" width="1040" height="6"
+          rx="3" ry="3"
+          fill="url(#logoGrad)" opacity="0.8"/>
+
+    <!-- ─── ЛОГОТИП-КУБ ─── -->
+    <g transform="translate(140, 150)" filter="url(#logoShadow)">
+        <!-- Подложка с градиентом -->
+        <rect width="90" height="90" rx="20" fill="url(#logoGrad)"/>
+
+        <!-- Контур куба -->
+        <path d="M 25 30 L 65 30 L 65 60 L 25 60 Z"
+              fill="none" stroke="white" stroke-width="4"
+              stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M 25 30 L 45 15 L 65 30"
+              fill="none" stroke="white" stroke-width="4"
+              stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M 65 30 L 65 60 L 45 75 L 25 60"
+              fill="none" stroke="white" stroke-width="4"
+              stroke-linejoin="round" stroke-linecap="round"/>
+        <path d="M 45 15 L 45 45 M 45 45 L 65 60 M 45 45 L 25 60"
+              fill="none" stroke="white" stroke-width="4"
+              stroke-linejoin="round" stroke-linecap="round" opacity="0.75"/>
+    </g>
+
+    <!-- ─── НАЗВАНИЕ САЙТА ─── -->
     <text x="260" y="205"
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-          font-size="52" font-weight="800" fill="#0f172a">
+          font-size="54" font-weight="800"
+          fill="#0f172a"
+          letter-spacing="-0.5">
         MyFiles
     </text>
 
-    <!-- Подзаголовок -->
+    <!-- Маленький бейдж "beta" рядом с названием -->
+    <rect x="510" y="170" width="70" height="28"
+          rx="14" ry="14" fill="#eef2ff"/>
+    <text x="545" y="189"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+          font-size="13" font-weight="700"
+          fill="#4f46e5"
+          text-anchor="middle"
+          letter-spacing="1">
+        RU
+    </text>
+
+    <!-- ─── ЗАГОЛОВОК ─── -->
     <text x="140" y="300"
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-          font-size="34" font-weight="700" fill="#0f172a">
+          font-size="34" font-weight="700"
+          fill="#0f172a">
         Библиотека бесплатных файлов
     </text>
 
-    <text x="140" y="350"
+    <!-- ─── РАЗДЕЛЫ ─── -->
+    <text x="140" y="352"
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-          font-size="22" font-weight="400" fill="#475569">
+          font-size="22" font-weight="500"
+          fill="#475569">
         Программы · Книги · Музыка · Игры · Фильмы
     </text>
 
-    <text x="140" y="390"
+    <!-- ─── ПОДЗАГОЛОВОК ─── -->
+    <text x="140" y="392"
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-          font-size="18" font-weight="400" fill="#64748b">
-        Прямые ссылки на облако без регистрации для просмотра каталога
+          font-size="17" font-weight="400"
+          fill="#64748b">
+        Прямые ссылки на облако · Каталог доступен без регистрации
     </text>
 
-    <!-- Нижняя плашка -->
-    <rect x="140" y="440" width="280" height="50"
-          rx="25" ry="25" fill="#2563eb"/>
-    <text x="280" y="472"
+    <!-- ─── КНОПКИ-ПЛАШКИ ─── -->
+    <!-- Синяя: адрес сайта -->
+    <g filter="url(#logoShadow)">
+        <rect x="140" y="440" width="330" height="52"
+              rx="26" ry="26"
+              fill="url(#badgeGrad)"/>
+    </g>
+    <text x="305" y="472"
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-          font-size="18" font-weight="700" fill="white"
-          text-anchor="middle">
-        dimonmaxx.github.io
+          font-size="17" font-weight="700"
+          fill="white"
+          text-anchor="middle"
+          letter-spacing="0.3">
+        dimonmaxx.github.io/my-site
     </text>
 
-    <!-- Бейдж "бесплатно" -->
-    <rect x="440" y="440" width="180" height="50"
-          rx="25" ry="25" fill="#f59e0b"/>
-    <text x="530" y="472"
+    <!-- Оранжевая: бейдж бесплатности -->
+    <rect x="490" y="440" width="200" height="52"
+          rx="26" ry="26"
+          fill="url(#orangeGrad)"/>
+    <text x="590" y="472"
           font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
-          font-size="18" font-weight="700" fill="white"
-          text-anchor="middle">
+          font-size="17" font-weight="700"
+          fill="white"
+          text-anchor="middle"
+          letter-spacing="0.3">
         100% бесплатно
+    </text>
+
+    <!-- Светло-голубая: "без регистрации" -->
+    <rect x="710" y="440" width="230" height="52"
+          rx="26" ry="26"
+          fill="#eff6ff"
+          stroke="#3b82f6"
+          stroke-width="2"/>
+    <text x="825" y="472"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+          font-size="16" font-weight="700"
+          fill="#1e40af"
+          text-anchor="middle"
+          letter-spacing="0.3">
+        Без регистрации
     </text>
 
 </svg>
