@@ -1,5 +1,5 @@
 # generate_from_sheets.py
-# Google Sheets → JSON.
+# Google Sheets → JSON + sitemap.xml.
 # Разделы читаются из Supabase (site_sections, is_active = true),
 # поэтому новые разделы, добавленные через админ-панель,
 # генерируются автоматически без правки этого файла.
@@ -10,12 +10,15 @@
 # Поддерживает скрытие записей через Supabase-таблицу hidden_items:
 # строки, у которых (folder, title) в hidden_items, НЕ попадают в JSON.
 #
+# Генерирует sitemap.xml (главная + разделы) для SEO.
+#
 # Устойчив к «дубликатам заголовков» и «хвостам» старых колонок:
 # не использует get_all_records(), а читает значения напрямую.
 
 import os
 import sys
 import json
+import datetime
 import traceback
 
 import pandas as pd
@@ -42,6 +45,13 @@ SUPABASE_URL = os.environ.get(
     "https://rmoonebbvpmvthvpcmpt.supabase.co",
 )
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
+
+# Базовый URL сайта — используется для sitemap.xml.
+# Если сайт переедет на другой домен — достаточно изменить переменную окружения.
+SITE_BASE_URL = os.environ.get(
+    "SITE_BASE_URL",
+    "https://dimonmaxx.github.io/my-site",
+).rstrip("/")
 
 _raw_sync_sections = os.environ.get("SYNC_SECTIONS", "").strip()
 SYNC_SECTIONS_FILTER = [
@@ -140,7 +150,6 @@ def load_hidden_items(section_key):
                 hidden.add((folder, title))
         return hidden
     except Exception as e:
-        # Например, таблицы нет — не падаем, просто логируем
         print(f"  [!] hidden_items недоступна для '{section_key}': {e}")
         return set()
 
@@ -166,6 +175,11 @@ def _read_records_safe(worksheet, headers):
     """
     Читает лист построчно БЕЗ get_all_records().
     Возвращает список dict {RU-заголовок: значение}.
+
+    Устойчив к:
+      • дубликатам заголовков;
+      • «хвостам» старых колонок;
+      • пустым заголовкам.
     """
     try:
         all_values = worksheet.get_all_values()
@@ -178,14 +192,18 @@ def _read_records_safe(worksheet, headers):
 
     raw_header = all_values[0]
 
+    # Сопоставляем ожидаемые заголовки с позициями в листе.
+    # При дубликатах берём ПЕРВОЕ совпадение.
     positions = {}
     for want_idx, want in enumerate(headers):
         want_clean = want.strip()
         pos = None
+        # 1. Точное совпадение (регистронезависимо, без пробелов)
         for i, h in enumerate(raw_header):
             if (h or "").strip().lower() == want_clean.lower():
                 pos = i
                 break
+        # 2. Частичное совпадение (например, «Размер» vs «Размер (МБ)»)
         if pos is None:
             for i, h in enumerate(raw_header):
                 if want_clean.lower() in (h or "").strip().lower():
@@ -279,7 +297,7 @@ def generate_json_for_section(worksheet, json_path, columns=None,
 
     json_data = []
     skipped_no_title = 0
-    skipped_hidden   = 0
+    skipped_hidden = 0
 
     for row in records:
         item = row_to_item(row, columns)
@@ -287,7 +305,7 @@ def generate_json_for_section(worksheet, json_path, columns=None,
             skipped_no_title += 1
             continue
 
-        # ─── Фильтрация скрытых ───
+        # Фильтрация скрытых
         if hidden_set:
             folder_val = (item.get("folder") or "").strip().lower()
             title_val  = (item.get("title")  or "").strip().lower()
@@ -325,6 +343,62 @@ def generate_json_for_section(worksheet, json_path, columns=None,
 
 
 # ============================================================
+# ГЕНЕРАЦИЯ SITEMAP.XML
+# ============================================================
+
+def generate_sitemap(sections):
+    """
+    Создаёт sitemap.xml в корне репозитория.
+    Включает главную страницу + каждый активный раздел.
+
+    :param sections: список разделов из Supabase (используются key/label)
+    """
+    # Основные статические страницы (относительные пути от корня сайта)
+    static_pages = [
+        {"loc": "/index.html", "changefreq": "daily",  "priority": "1.0"},
+        {"loc": "/forum.html", "changefreq": "weekly", "priority": "0.7"},
+    ]
+
+    # Разделы (hash-роутинг на главной)
+    section_pages = []
+    for s in sections:
+        key = s.get("key")
+        if not key:
+            continue
+        section_pages.append({
+            "loc":        f"/#{key}",
+            "changefreq": "daily",
+            "priority":   "0.9",
+        })
+
+    today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+
+    lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    ]
+
+    for page in static_pages + section_pages:
+        lines.append("  <url>")
+        lines.append(f"    <loc>{SITE_BASE_URL}{page['loc']}</loc>")
+        lines.append(f"    <lastmod>{today}</lastmod>")
+        lines.append(f"    <changefreq>{page['changefreq']}</changefreq>")
+        lines.append(f"    <priority>{page['priority']}</priority>")
+        lines.append("  </url>")
+
+    lines.append("</urlset>")
+
+    try:
+        with open("sitemap.xml", "w", encoding="utf-8") as f:
+            f.write("\n".join(lines) + "\n")
+        total = len(static_pages) + len(section_pages)
+        print(f"\n=== sitemap.xml ===")
+        print(f"  ✓ Создан: {total} URL (base: {SITE_BASE_URL})")
+    except Exception as e:
+        print(f"  [!] Ошибка sitemap.xml: {e}")
+
+
+# ============================================================
 # MAIN
 # ============================================================
 
@@ -332,6 +406,7 @@ def main():
     print("=" * 60)
     print("generate_from_sheets.py — старт")
     print("=" * 60)
+    print(f"SITE_BASE_URL = {SITE_BASE_URL}")
 
     if SYNC_SECTIONS_FILTER:
         print(f"SYNC_SECTIONS_FILTER = {SYNC_SECTIONS_FILTER}")
@@ -348,18 +423,21 @@ def main():
         print("[!] Нет активных разделов — завершаю.")
         sys.exit(0)
 
+    # ─── Фильтр по SYNC_SECTIONS ───
+    sections_for_generation = sections
     if SYNC_SECTIONS_FILTER:
         before = len(sections)
-        sections = [s for s in sections
-                    if s.get("key") in SYNC_SECTIONS_FILTER]
-        print(f"  [i] SYNC_SECTIONS отфильтровал {len(sections)} "
-              f"из {before} разделов")
-        if not sections:
+        sections_for_generation = [
+            s for s in sections if s.get("key") in SYNC_SECTIONS_FILTER
+        ]
+        print(f"  [i] SYNC_SECTIONS отфильтровал "
+              f"{len(sections_for_generation)} из {before} разделов")
+        if not sections_for_generation:
             print("[!] Ни один раздел не попал под фильтр — завершаю.")
             sys.exit(0)
 
-    print(f"  Получено разделов: {len(sections)}")
-    for s in sections:
+    print(f"  Получено разделов: {len(sections_for_generation)}")
+    for s in sections_for_generation:
         print(
             f"    • {s.get('key'):<12} "
             f"→ лист «{s.get('sheet_name') or '—'}», "
@@ -389,7 +467,7 @@ def main():
     total_records = 0
     failed = []
 
-    for section in sections:
+    for section in sections_for_generation:
         key = section.get("key") or "?"
         label = section.get("label") or key
         sheet_name = section.get("sheet_name") or label
@@ -403,7 +481,7 @@ def main():
             failed.append((key, "нет json_path"))
             continue
 
-        # ─── Скрытые записи ───
+        # Загружаем скрытые записи
         hidden_set = load_hidden_items(key)
 
         try:
@@ -417,16 +495,27 @@ def main():
             failed.append((key, str(e)))
             continue
 
-        count = generate_json_for_section(worksheet, json_path, columns,
-                                          hidden_set=hidden_set)
+        count = generate_json_for_section(
+            worksheet, json_path, columns, hidden_set=hidden_set
+        )
         if count >= 0:
             total_ok += 1
             total_records += count
         else:
             failed.append((key, "ошибка генерации"))
 
+    # ─── Sitemap ───
+    # Генерируем всегда по полному списку активных разделов,
+    # даже если SYNC_SECTIONS отфильтровал часть —
+    # sitemap должен содержать все разделы сайта.
+    try:
+        generate_sitemap(sections)
+    except Exception as e:
+        print(f"[!] Ошибка генерации sitemap: {e}")
+        traceback.print_exc()
+
     print("\n" + "=" * 60)
-    print(f"Обработано разделов:  {total_ok} из {len(sections)}")
+    print(f"Обработано разделов:  {total_ok} из {len(sections_for_generation)}")
     print(f"Всего записей:        {total_records}")
     if failed:
         print(f"\nПроблемные разделы ({len(failed)}):")
