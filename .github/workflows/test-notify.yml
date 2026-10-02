@@ -1,0 +1,50 @@
+name: Test Telegram notify
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Send test message
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          python - <<'PY'
+          import os
+          from notify import notify_result, is_telegram_enabled
+
+          print("Token set:", bool(os.environ.get("TELEGRAM_BOT_TOKEN")))
+          print("Chat  set:", bool(os.environ.get("TELEGRAM_CHAT_ID")))
+          print("Enabled  :", is_telegram_enabled())
+
+          ok = notify_result(
+              title="Тест уведомлений",
+              status="success",
+              details="Связка GitHub Actions → Telegram работает.",
+              extra_lines=[
+                  f"Repo: {os.environ.get('GITHUB_REPOSITORY', '—')}",
+                  f"Run:  {os.environ.get('GITHUB_RUN_ID', '—')}",
+              ],
+              run_url=(
+                  f"https://github.com/{os.environ.get('GITHUB_REPOSITORY','')}"
+                  f"/actions/runs/{os.environ.get('GITHUB_RUN_ID','')}"
+              ),
+          )
+          print("Sent:", ok)
+          if not ok:
+              raise SystemExit(1)
+          PY
