@@ -610,6 +610,71 @@
         .toast-info { border-left: 4px solid #2563eb; }
         .toast-info i { color: #2563eb; }
 
+        /* ─── Ошибки JS ─── */
+        .errors-banner {
+            margin-bottom: 18px; padding: 16px 20px;
+            background: #fef2f2; border: 1px solid #fecaca;
+            border-radius: 14px; font-size: 14px; color: #7f1d1d;
+            display: flex; gap: 12px; align-items: flex-start;
+        }
+        .errors-banner i { font-size: 20px; color: #dc2626; flex-shrink: 0; margin-top: 2px; }
+        .errors-banner strong { color: #991b1b; }
+
+        .error-row-msg {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #7f1d1d;
+            word-break: break-word;
+            max-width: 480px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            display: block;
+        }
+        .error-row-page {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            color: #1e40af;
+            background: #dbeafe;
+            padding: 2px 8px;
+            border-radius: 6px;
+            display: inline-block;
+        }
+        .error-row-time {
+            font-size: 12px;
+            color: #64748b;
+            white-space: nowrap;
+        }
+        .error-detail-pre {
+            background: #0f172a;
+            color: #e2e8f0;
+            padding: 14px 16px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 340px;
+            overflow-y: auto;
+            margin-top: 4px;
+        }
+        .error-detail-label {
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            color: #64748b;
+            letter-spacing: 0.5px;
+            margin-top: 16px;
+            margin-bottom: 4px;
+        }
+        .error-detail-value {
+            font-size: 13px;
+            color: #1e293b;
+            word-break: break-word;
+        }
+
         @media (max-width: 900px) {
             body { padding: 8px; }
             .container { border-radius: 20px; }
@@ -669,6 +734,7 @@
             .orphan-body td:first-child { width: 120px; font-size: 11px; }
             .admin-folder-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
             .toast { left: 20px; right: 20px; max-width: none; }
+            .error-row-msg { max-width: 220px; }
         }
     </style>
 </head>
@@ -707,6 +773,10 @@
                 <i class="fas fa-link-slash"></i> Осиротевшие
                 <span class="badge-count" id="orphansBadge" style="display:none;">0</span>
             </button>
+            <button class="nav-link" data-tab="errors">
+                <i class="fas fa-bug"></i> Ошибки JS
+                <span class="badge-count" id="errorsBadge" style="display:none;">0</span>
+            </button>
             <button class="nav-link" data-tab="downloads"><i class="fas fa-download"></i> Скачивания</button>
             <button class="nav-link" data-tab="stats"><i class="fas fa-chart-simple"></i> Статистика</button>
         </aside>
@@ -735,12 +805,10 @@
     </div>
 </div>
 
-<!-- Универсальная модалка (пользователи, разделы, orphans) -->
 <div class="modal-overlay" id="userEditModal">
     <div class="modal-box"></div>
 </div>
 
-<!-- Модалка обновления контента -->
 <div class="modal-overlay" id="refreshModal">
     <div class="modal-box" style="max-width: 620px;">
         <h3><i class="fas fa-sync-alt"></i> Обновление контента</h3>
@@ -797,6 +865,18 @@
     // ─── Скрытые ───
     let hiddenItems = new Map();
     let hiddenTotalCount = 0;
+
+    // ─── Ошибки JS ───
+    let errorsData = [];
+    let errorsFiltered = [];
+    let errorsPage = 1;
+    let errorsPageSize = CFG.DEFAULT_PAGE_SIZE;
+    let errorsFilter = {
+        period: 'week',   // today | week | month | all
+        page:   '',
+        search: '',
+    };
+    let errorsBadgeCount = 0;
 
     const contentViews = {};
     const contentFolderFilters = {};
@@ -1064,6 +1144,7 @@
         await loadDownloadCounts();
         await loadHiddenItems();
         await refreshOrphansBadge();
+        await refreshErrorsBadge();
         await loadSection('programs');
     }
 
@@ -1072,7 +1153,6 @@
         window.location.href = 'index.html';
     });
 
-    // Обработчики модалки обновления
     document.getElementById('contentRefreshBtn').addEventListener('click', openRefreshModal);
     document.getElementById('refreshCancelBtn').addEventListener('click', closeRefreshModal);
     document.getElementById('refreshStartBtn').addEventListener('click', startRefresh);
@@ -1166,6 +1246,7 @@
         else if (tab === 'visitors') loadVisitors();
         else if (tab === 'orphans') loadOrphans();
         else if (tab === 'hidden') loadHidden();
+        else if (tab === 'errors') loadErrors();
         else loadSection(tab);
     }
 
@@ -2341,6 +2422,510 @@
     }
 
     // ============================================================
+    // ОШИБКИ JS
+    // ============================================================
+    async function refreshErrorsBadge() {
+        try {
+            const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+            const { count, error } = await supabaseClient
+                .from('client_errors')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', cutoff);
+            if (error) return;
+            errorsBadgeCount = count || 0;
+            const badge = document.getElementById('errorsBadge');
+            if (!badge) return;
+            if (errorsBadgeCount > 0) {
+                badge.textContent = errorsBadgeCount;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        } catch (e) {
+            // тихо
+        }
+    }
+
+    async function loadErrors() {
+        document.getElementById('sectionTitle').innerHTML =
+            `<i class="fas fa-bug"></i> Ошибки JavaScript`;
+        document.getElementById('toolbar').style.display = 'flex';
+        document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('hideSelectedBtn').style.display = 'none';
+        document.getElementById('unhideSelectedBtn').style.display = 'none';
+        document.getElementById('refreshBtn').style.display = 'inline-flex';
+
+        const wrapper = document.getElementById('tableWrapper');
+        wrapper.innerHTML = `<p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка ошибок...</p>`;
+
+        // Загружаем последние 500 записей
+        let query = supabaseClient
+            .from('client_errors')
+            .select('id, user_id, page, message, stack, user_agent, meta, created_at')
+            .order('created_at', { ascending: false })
+            .limit(500);
+
+        // Фильтр по периоду
+        if (errorsFilter.period !== 'all') {
+            const now = Date.now();
+            const map = {
+                today: 1,
+                week:  7,
+                month: 30,
+            };
+            const days = map[errorsFilter.period] || 30;
+            const cutoff = new Date(now - days * 24 * 60 * 60 * 1000).toISOString();
+            query = query.gte('created_at', cutoff);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            wrapper.innerHTML = `<p class="empty-block">Ошибка загрузки: ${MF.escapeHtml(error.message)}</p>`;
+            return;
+        }
+
+        errorsData = data || [];
+        errorsPage = 1;
+
+        renderErrorsFiltered();
+    }
+
+    function renderErrorsFiltered() {
+        // Локальная фильтрация: страница + поиск по сообщению
+        let filtered = errorsData.slice();
+
+        if (errorsFilter.page) {
+            filtered = filtered.filter(e => (e.page || '') === errorsFilter.page);
+        }
+        if (errorsFilter.search) {
+            const q = errorsFilter.search.toLowerCase();
+            filtered = filtered.filter(e => {
+                const m = (e.message || '').toLowerCase();
+                const s = (e.stack || '').toLowerCase();
+                return m.includes(q) || s.includes(q);
+            });
+        }
+
+        errorsFiltered = filtered;
+        renderErrorsTable();
+    }
+
+    function renderErrorsTable() {
+        const wrapper = document.getElementById('tableWrapper');
+        const filtered = errorsFiltered;
+        const totalItems = filtered.length;
+
+        const totalPages = Math.max(1, Math.ceil(totalItems / errorsPageSize));
+        if (errorsPage > totalPages) errorsPage = totalPages;
+        if (errorsPage < 1) errorsPage = 1;
+        const startIdx = (errorsPage - 1) * errorsPageSize;
+        const pageItems = filtered.slice(startIdx, startIdx + errorsPageSize);
+
+        // Уникальные страницы для фильтра select
+        const pagesSet = new Set();
+        errorsData.forEach(e => { if (e.page) pagesSet.add(e.page); });
+        const pagesList = Array.from(pagesSet).sort();
+
+        const optionsHtml = pagesList.map(p => {
+            const sel = errorsFilter.page === p ? ' selected' : '';
+            return `<option value="${MF.escapeAttr(p)}"${sel}>${MF.escapeHtml(p)}</option>`;
+        }).join('');
+
+        const periodOptions = [
+            { value: 'today', label: 'За сегодня' },
+            { value: 'week',  label: 'За неделю' },
+            { value: 'month', label: 'За месяц' },
+            { value: 'all',   label: 'За всё время (500 последних)' },
+        ].map(o => {
+            const sel = errorsFilter.period === o.value ? ' selected' : '';
+            return `<option value="${o.value}"${sel}>${o.label}</option>`;
+        }).join('');
+
+        const filterBarHtml = `
+            <div class="filters">
+                <label>Период:
+                    <select id="errorsFilterPeriod">${periodOptions}</select>
+                </label>
+                <label>Страница:
+                    <select id="errorsFilterPage">
+                        <option value="">Все страницы</option>
+                        ${optionsHtml}
+                    </select>
+                </label>
+                <label>Поиск:
+                    <input type="text" id="errorsFilterSearch"
+                           placeholder="По сообщению или stack..."
+                           value="${MF.escapeAttr(errorsFilter.search)}">
+                </label>
+                <span class="spacer" style="flex:1;"></span>
+                <button class="btn-secondary" id="errorsFilterReset">
+                    <i class="fas fa-times"></i> Сбросить
+                </button>
+            </div>
+        `;
+
+        const bannerHtml = totalItems === 0
+            ? ''
+            : `<div class="errors-banner">
+                    <i class="fas fa-bug"></i>
+                    <div>
+                        Найдено <strong>${totalItems}</strong> ошибок
+                        в текущей выборке.
+                        <br>
+                        <small>
+                            Вкладка хранит <strong>последние 500 записей</strong>.
+                            Старые автоматически удаляются при чистке.
+                        </small>
+                        <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+                            <button class="btn-danger" id="errorsCleanupBtn">
+                                <i class="fas fa-broom"></i> Очистить старше 30 дней
+                            </button>
+                            <button class="btn-secondary" id="errorsDeleteAllBtn">
+                                <i class="fas fa-trash-alt"></i> Удалить все (${errorsData.length})
+                            </button>
+                        </div>
+                    </div>
+               </div>`;
+
+        let headHtml = `<tr>
+            <th class="center"><input type="checkbox" id="errorsSelectAll"></th>
+            <th>Время</th>
+            <th>Страница</th>
+            <th>Сообщение</th>
+            <th>Пользователь</th>
+            <th>Браузер</th>
+        </tr>`;
+
+        let bodyHtml = '';
+        if (pageItems.length === 0) {
+            bodyHtml = `<tr><td colspan="6" class="empty-block">Ошибок за выбранный период нет ✓</td></tr>`;
+        } else {
+            pageItems.forEach(e => {
+                const dt = new Date(e.created_at);
+                const dateStr = dt.toLocaleDateString('ru-RU') + ' ' +
+                                dt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+
+                // Короткий user-agent
+                const ua = e.user_agent || '';
+                let uaShort = '—';
+                if (ua) {
+                    const browserMatch = ua.match(/(Firefox|Chrome|Safari|Edge|Opera|OPR|YaBrowser)\/[\d.]+/);
+                    const osMatch = ua.match(/\((Windows NT [\d.]+|Mac OS X [\d_.]+|Linux|Android [\d.]+|iPhone OS [\d_.]+)\)/);
+                    const browser = browserMatch ? browserMatch[0] : ua.slice(0, 25);
+                    const os = osMatch ? osMatch[1].replace(/_/g, '.').slice(0, 20) : '';
+                    uaShort = (browser + (os ? ' • ' + os : '')).slice(0, 60);
+                }
+
+                const userIdShort = e.user_id ? e.user_id.slice(0, 8) + '…' : '—';
+
+                bodyHtml += `<tr data-error-id="${e.id}">
+                    <td class="center checkbox-cell">
+                        <input type="checkbox" class="error-row-checkbox" data-id="${e.id}">
+                    </td>
+                    <td><span class="error-row-time">${MF.escapeHtml(dateStr)}</span></td>
+                    <td><span class="error-row-page">${MF.escapeHtml(e.page || '—')}</span></td>
+                    <td title="${MF.escapeAttr(e.message || '')}">
+                        <span class="error-row-msg">${MF.escapeHtml(e.message || '')}</span>
+                    </td>
+                    <td><code style="font-size:11px;">${MF.escapeHtml(userIdShort)}</code></td>
+                    <td title="${MF.escapeAttr(ua)}"><span style="font-size:11px; color:#64748b;">${MF.escapeHtml(uaShort)}</span></td>
+                </tr>`;
+            });
+        }
+
+        const paginationTop = (totalPages > 1)
+            ? MF.renderPagination('errors-container', totalItems, totalPages,
+                { pageSize: errorsPageSize, currentPage: errorsPage, totalItems }, 'top')
+            : '';
+        const paginationBottom = (totalPages > 1)
+            ? MF.renderPagination('errors-container', totalItems, totalPages,
+                { pageSize: errorsPageSize, currentPage: errorsPage, totalItems }, 'bottom')
+            : '';
+
+        wrapper.innerHTML = `
+            ${filterBarHtml}
+            ${bannerHtml}
+            <div id="errors-container">
+                ${paginationTop}
+                <div class="content-table-wrapper">
+                    <table class="content-table">
+                        <thead>${headHtml}</thead>
+                        <tbody>${bodyHtml}</tbody>
+                    </table>
+                </div>
+                ${paginationBottom}
+            </div>`;
+
+        // Обработчики фильтров
+        const periodSel = document.getElementById('errorsFilterPeriod');
+        if (periodSel) periodSel.addEventListener('change', function () {
+            errorsFilter.period = this.value;
+            loadErrors();
+        });
+        const pageSel = document.getElementById('errorsFilterPage');
+        if (pageSel) pageSel.addEventListener('change', function () {
+            errorsFilter.page = this.value;
+            errorsPage = 1;
+            renderErrorsFiltered();
+        });
+        const searchInput = document.getElementById('errorsFilterSearch');
+        if (searchInput) {
+            let t = null;
+            searchInput.addEventListener('input', function () {
+                clearTimeout(t);
+                const val = this.value;
+                t = setTimeout(() => {
+                    errorsFilter.search = val;
+                    errorsPage = 1;
+                    renderErrorsFiltered();
+                    // фокус не теряем
+                    const ni = document.getElementById('errorsFilterSearch');
+                    if (ni) {
+                        ni.focus();
+                        ni.setSelectionRange(ni.value.length, ni.value.length);
+                    }
+                }, 300);
+            });
+        }
+        const resetBtn = document.getElementById('errorsFilterReset');
+        if (resetBtn) resetBtn.addEventListener('click', () => {
+            errorsFilter = { period: 'week', page: '', search: '' };
+            errorsPage = 1;
+            loadErrors();
+        });
+
+        // Очистка старше 30 дней
+        const cleanupBtn = document.getElementById('errorsCleanupBtn');
+        if (cleanupBtn) cleanupBtn.addEventListener('click', cleanupOldErrors);
+
+        // Удалить все
+        const deleteAllBtn = document.getElementById('errorsDeleteAllBtn');
+        if (deleteAllBtn) deleteAllBtn.addEventListener('click', deleteAllErrors);
+
+        // Select all
+        const selectAll = document.getElementById('errorsSelectAll');
+        if (selectAll) selectAll.addEventListener('change', function () {
+            wrapper.querySelectorAll('.error-row-checkbox').forEach(cb => cb.checked = this.checked);
+            updateErrorsSelectionUI();
+        });
+        wrapper.querySelectorAll('.error-row-checkbox').forEach(cb => {
+            cb.addEventListener('change', updateErrorsSelectionUI);
+        });
+
+        // Клик по строке (кроме checkbox) — открыть детали
+        wrapper.querySelectorAll('tbody tr[data-error-id]').forEach(tr => {
+            tr.style.cursor = 'pointer';
+            tr.addEventListener('click', function (e) {
+                if (e.target.tagName === 'INPUT' ||
+                    e.target.closest('input[type="checkbox"]')) return;
+                const id = parseInt(this.dataset.errorId, 10);
+                openErrorDetails(id);
+            });
+        });
+
+        updateErrorsSelectionUI();
+
+        // Пагинация
+        const errorsContainer = document.getElementById('errors-container');
+        if (errorsContainer && totalPages > 1) {
+            MF.attachPaginationHandlers(
+                errorsContainer,
+                'errors-container',
+                { pageSize: errorsPageSize, currentPage: errorsPage, totalItems },
+                () => {
+                    errorsPage = arguments === undefined
+                        ? errorsPage
+                        : errorsPage;
+                    // Восстанавливаем из state, который attach меняет по ссылке
+                    // (state уже мутирован — берём из локальной переменной)
+                    // Нужно переопределить:
+                    // см. ниже — используем кастомный обработчик
+                    // Для простоты перепишем:
+                },
+                { scrollTarget: errorsContainer, scrollOffset: 120 }
+            );
+        }
+    }
+
+    // Кастомная обработка для вкладки ошибок: две панели + фильтр + пагинация.
+    // Мы используем ту же схему, что и везде, но состояние хранится отдельно.
+    function attachErrorsPagination() {
+        const errorsContainer = document.getElementById('errors-container');
+        if (!errorsContainer) return;
+
+        const state = {
+            pageSize: errorsPageSize,
+            currentPage: errorsPage,
+            totalItems: errorsFiltered.length,
+        };
+
+        MF.attachPaginationHandlers(
+            errorsContainer,
+            'errors-container',
+            state,
+            () => {
+                errorsPage = state.currentPage;
+                errorsPageSize = state.pageSize;
+                renderErrorsTable();
+            },
+            { scrollTarget: errorsContainer, scrollOffset: 120 }
+        );
+    }
+
+    function updateErrorsSelectionUI() {
+        const selected = [];
+        document.querySelectorAll('.error-row-checkbox:checked').forEach(cb => {
+            selected.push(parseInt(cb.dataset.id, 10));
+        });
+
+        // Никаких отдельных кнопок для массового удаления в этой вкладке —
+        // но обновим счетчик (если понадобится).
+        const selectAll = document.getElementById('errorsSelectAll');
+        const all = document.querySelectorAll('.error-row-checkbox');
+        if (selectAll && all.length > 0) {
+            selectAll.checked = selected.length === all.length;
+        }
+    }
+
+    async function openErrorDetails(id) {
+        const err = errorsData.find(e => e.id === id);
+        if (!err) return;
+
+        const modal = document.getElementById('userEditModal');
+        const box = modal.querySelector('.modal-box');
+
+        const dt = new Date(err.created_at);
+        const dateStr = dt.toLocaleString('ru-RU');
+
+        const pageHtml = err.page
+            ? `<span class="error-row-page">${MF.escapeHtml(err.page)}</span>`
+            : '—';
+
+        const userIdHtml = err.user_id
+            ? `<code>${MF.escapeHtml(err.user_id)}</code>`
+            : '<i>аноним</i>';
+
+        const metaHtml = err.meta
+            ? `<pre class="error-detail-pre">${MF.escapeHtml(JSON.stringify(err.meta, null, 2))}</pre>`
+            : '<i style="color:#94a3b8;">нет данных</i>';
+
+        const stackHtml = err.stack
+            ? `<pre class="error-detail-pre">${MF.escapeHtml(err.stack)}</pre>`
+            : '<i style="color:#94a3b8;">стек не передан</i>';
+
+        box.innerHTML = `
+            <h3><i class="fas fa-bug" style="color:#dc2626;"></i> Детали ошибки #${err.id}</h3>
+
+            <div class="error-detail-label">Время</div>
+            <div class="error-detail-value">${MF.escapeHtml(dateStr)}</div>
+
+            <div class="error-detail-label">Страница</div>
+            <div class="error-detail-value">${pageHtml}</div>
+
+            <div class="error-detail-label">Пользователь</div>
+            <div class="error-detail-value">${userIdHtml}</div>
+
+            <div class="error-detail-label">Сообщение</div>
+            <div class="error-detail-value" style="font-weight:600; color:#7f1d1d;">
+                ${MF.escapeHtml(err.message || '')}
+            </div>
+
+            <div class="error-detail-label">Стек вызовов</div>
+            ${stackHtml}
+
+            <div class="error-detail-label">User-Agent</div>
+            <div class="error-detail-value" style="font-size:12px; color:#475569; word-break:break-all;">
+                ${MF.escapeHtml(err.user_agent || '—')}
+            </div>
+
+            <div class="error-detail-label">Дополнительно (meta)</div>
+            ${metaHtml}
+
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="closeUserEditModal()">Закрыть</button>
+                <button class="btn-danger" id="errorDeleteBtn">
+                    <i class="fas fa-trash"></i> Удалить эту ошибку
+                </button>
+            </div>
+        `;
+        modal.classList.add('active');
+
+        document.getElementById('errorDeleteBtn').addEventListener('click', async () => {
+            if (!confirm('Удалить эту запись об ошибке?')) return;
+            const { error } = await supabaseClient
+                .from('client_errors').delete().eq('id', id);
+            if (error) { alert('Ошибка: ' + error.message); return; }
+            closeUserEditModal();
+            showToast('Запись удалена.', 'success');
+            await refreshErrorsBadge();
+            await loadErrors();
+        });
+    }
+
+    async function cleanupOldErrors() {
+        if (!confirm(
+            'Удалить все записи об ошибках старше 30 дней?\n\n' +
+            'Это действие необратимо.'
+        )) return;
+
+        const cutoff = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        const btn = document.getElementById('errorsCleanupBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Очищаю...'; }
+
+        const { error } = await supabaseClient
+            .from('client_errors')
+            .delete()
+            .lt('created_at', cutoff);
+
+        if (btn) { btn.disabled = false; btn.innerHTML =
+            '<i class="fas fa-broom"></i> Очистить старше 30 дней'; }
+
+        if (error) { alert('Ошибка: ' + error.message); return; }
+        showToast('Старые записи удалены.', 'success');
+        await refreshErrorsBadge();
+        await loadErrors();
+    }
+
+    async function deleteAllErrors() {
+        if (!confirm(
+            `Удалить ВСЕ записи об ошибках (${errorsData.length})?\n\n` +
+            `Это действие необратимо.`
+        )) return;
+
+        const btn = document.getElementById('errorsDeleteAllBtn');
+        if (btn) { btn.disabled = true; btn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Удаляю...'; }
+
+        // Удаляем порциями по 100 через .in('id', [...])
+        const ids = errorsData.map(e => e.id);
+        const chunks = [];
+        for (let i = 0; i < ids.length; i += 100) {
+            chunks.push(ids.slice(i, i + 100));
+        }
+
+        for (const chunk of chunks) {
+            const { error } = await supabaseClient
+                .from('client_errors').delete().in('id', chunk);
+            if (error) {
+                if (btn) { btn.disabled = false; btn.innerHTML =
+                    '<i class="fas fa-trash-alt"></i> Удалить все'; }
+                alert('Ошибка удаления: ' + error.message);
+                return;
+            }
+        }
+
+        if (btn) { btn.disabled = false; btn.innerHTML =
+            '<i class="fas fa-trash-alt"></i> Удалить все'; }
+
+        showToast(`Удалено ${ids.length} записей.`, 'success');
+        await refreshErrorsBadge();
+        await loadErrors();
+    }
+
+    // ============================================================
     // СКАЧИВАНИЯ
     // ============================================================
     async function loadDownloadCounts() {
@@ -3217,6 +3802,7 @@
         else if (currentTab === 'visitors') loadVisitors();
         else if (currentTab === 'orphans') loadOrphans();
         else if (currentTab === 'hidden') loadHidden();
+        else if (currentTab === 'errors') loadErrors();
         else loadSection(currentTab);
     });
 
