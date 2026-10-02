@@ -31,8 +31,49 @@
     state.hideInProgress      = false;
     state.unhideInProgress    = false;
 
-    // ID интервала автообновления badge
     let _badgesIntervalId = null;
+
+    // ============================================================
+    // ПРОКСИ-ССЫЛКА ДЛЯ СКАЧИВАНИЯ
+    // ============================================================
+    // Определяет источник по домену URL и формирует ссылку
+    // на соответствующую Edge Function.
+    //   TeraBox  → /functions/v1/terabox-download?url=...&name=...
+    //   Яндекс   → /functions/v1/yandex-download?folder=...&path=...
+    // Используется в admin-content.js, чтобы файлы в админке
+    // скачивались через прокси (с авторизацией), а не напрямую.
+    function buildProxyUrl(downloadUrl, fileName) {
+        if (!downloadUrl) return '';
+        try {
+            const parsed = new URL(downloadUrl);
+            const host = parsed.hostname.toLowerCase();
+
+            // ─── TeraBox ───
+            if (host.includes('terabox')
+                || host.includes('1024tera')
+                || host.includes('4funbox')
+                || host.includes('teraboxapp')) {
+                let fname = fileName && String(fileName).trim();
+                if (!fname) {
+                    const fromPath = parsed.searchParams.get('path');
+                    fname = fromPath
+                        ? decodeURIComponent(fromPath).split('/').pop()
+                        : '';
+                }
+                return `${SUPABASE_URL}/functions/v1/terabox-download`
+                     + `?url=${encodeURIComponent(downloadUrl)}`
+                     + `&name=${encodeURIComponent(fname)}`;
+            }
+
+            // ─── Яндекс.Диск ───
+            const folder = `${parsed.origin}${parsed.pathname}`;
+            const path = parsed.searchParams.get('path');
+            if (!folder || !path) return downloadUrl;
+            return `${SUPABASE_URL}/functions/v1/yandex-download`
+                 + `?folder=${encodeURIComponent(folder)}`
+                 + `&path=${encodeURIComponent(path)}`;
+        } catch (e) { return downloadUrl; }
+    }
 
     // ============================================================
     // ТОСТ-УВЕДОМЛЕНИЯ
@@ -366,10 +407,6 @@
         }
     }
 
-    /**
-     * Автообновление badge в сайдбаре раз в 60 секунд.
-     * Обновляет: orphans + errors.
-     */
     function startBadgesAutoRefresh() {
         if (_badgesIntervalId !== null) {
             clearInterval(_badgesIntervalId);
@@ -411,7 +448,6 @@
     async function checkAuth() {
         const { data, error } = await supabaseClient.auth.getUser();
         if (error || !data?.user) {
-            // ← ИЗМЕНЕНО: ../login.html
             window.location.href = '../login.html';
             return false;
         }
@@ -421,7 +457,6 @@
             .from('profiles').select('*').eq('id', state.currentUser.id).single();
         if (pe || profile?.role !== 'admin') {
             alert('Доступ запрещён. Только для администраторов.');
-            // ← ИЗМЕНЕНО: ../index.html
             window.location.href = '../index.html';
             return false;
         }
@@ -495,7 +530,6 @@
             logoutBtn.addEventListener('click', async () => {
                 stopBadgesAutoRefresh();
                 await supabaseClient.auth.signOut();
-                // ← ИЗМЕНЕНО: ../index.html
                 window.location.href = '../index.html';
             });
         }
@@ -520,7 +554,7 @@
     }
 
     // ============================================================
-    // ОБРАБОТЧИКИ САЙДБАРА (управление)
+    // ОБРАБОТЧИКИ САЙДБАРА
     // ============================================================
     function bindSidebar() {
         document.querySelectorAll('.sidebar .nav-link[data-tab]').forEach(btn => {
@@ -606,7 +640,6 @@
         bindToolbar();
         bindResize();
 
-        // Автообновление badge раз в 60 секунд
         startBadgesAutoRefresh();
 
         await switchToTab('programs');
@@ -618,6 +651,10 @@
     Object.assign(Admin, {
         getState: () => state,
         showToast,
+
+        // ─── НОВОЕ: прокси-ссылка для скачивания ───
+        buildProxyUrl,
+
         checkAuth,
         buildAdminNav,
         switchToTab,
