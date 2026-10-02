@@ -52,15 +52,6 @@
         return pages;
     }
 
-    /**
-     * Возвращает HTML панели пагинации.
-     *
-     * @param {string} containerId — идентификатор контейнера (для data-pagination-for)
-     * @param {number} totalItems  — всего записей
-     * @param {number} totalPages  — всего страниц
-     * @param {object} state       — { pageSize, currentPage }
-     * @param {string} [position]  — 'top' | 'bottom' (по умолчанию 'bottom')
-     */
     function renderPagination(containerId, totalItems, totalPages, state, position) {
         position = position === 'top' ? 'top' : 'bottom';
         const PAGE_SIZES = window.APP_CONFIG.PAGE_SIZES;
@@ -93,9 +84,6 @@
         `;
     }
 
-    /**
-     * Плавный скролл к элементу.
-     */
     function scrollToContainer(el, offset) {
         if (!el) return;
         const off = typeof offset === 'number' ? offset : 100;
@@ -103,19 +91,6 @@
         window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
 
-    /**
-     * Навешивает обработчики на ВСЕ панели пагинации внутри container,
-     * относящиеся к containerId.
-     *
-     * @param {HTMLElement} container — контейнер, внутри которого ищем панели
-     * @param {string} containerId    — идентификатор (совпадает с data-pagination-for)
-     * @param {object} state          — состояние (pageSize, currentPage, totalItems)
-     * @param {function} onRender     — вызывается после изменения состояния
-     * @param {object} [opts]         — { scrollTarget, scrollOffset }
-     *   scrollTarget: селектор (строка) или HTMLElement, к которому скроллить после onRender.
-     *                 По умолчанию — '.content-table-wrapper' внутри container, иначе сам container.
-     *   scrollOffset: отступ сверху (px), по умолчанию 100.
-     */
     function attachPaginationHandlers(container, containerId, state, onRender, opts) {
         if (!state || !container) return;
         opts = opts || {};
@@ -143,7 +118,6 @@
 
         const afterRender = () => {
             onRender();
-            // Даём браузеру время отрисовать новое содержимое
             setTimeout(doScroll, 60);
         };
 
@@ -230,18 +204,10 @@
         }
     }
 
-    /**
-     * Скачивает файл по url.
-     * Если передан filename — устанавливает его в атрибут download
-     * (важно при скачивании через прокси, чтобы браузер использовал
-     * правильное имя и не открывал вложение вместо сохранения).
-     */
     function triggerDownload(url, filename) {
         const a = document.createElement('a');
         a.href = url;
-        if (filename) {
-            a.download = String(filename);
-        }
+        if (filename) a.download = String(filename);
         a.rel = 'noopener';
         a.style.display = 'none';
         document.body.appendChild(a);
@@ -286,8 +252,137 @@
     }
 
     // ============================================================
+    // ЛОГИРОВАНИЕ JS-ОШИБОК В SUPABASE
+    // ============================================================
+    // Защита от лавины: не более 5 ошибок в минуту с одной вкладки.
+    // Защита от бесконечного цикла: если ошибка возникла внутри самой
+    // отправки — не пытаемся снова.
+    let _errorQueue = [];
+    let _errorWindowStart = Date.now();
+    let _errorSendInFlight = false;
+    let _errorHandlerInstalled = false;
+
+    const ERR_MAX_PER_WINDOW = 5;
+    const ERR_WINDOW_MS      = 60 * 1000; // 1 минута
+
+    function _truncate(s, n) {
+        if (!s) return '';
+        const str = String(s);
+        return str.length > n ? str.slice(0, n) : str;
+    }
+
+    function _sendQueuedErrors() {
+        if (_errorSendInFlight) return;
+        if (_errorQueue.length === 0) return;
+
+        _errorSendInFlight = true;
+        const batch = _errorQueue.splice(0, _errorQueue.length);
+
+        let client;
+        try {
+            client = getSupabaseClient();
+        } catch (_) {
+            // Supabase не готов — тихо выходим
+            _errorSendInFlight = false;
+            return;
+        }
+
+        // Пытаемся получить user_id (может быть null)
+        client.auth.getUser().then(({ data }) => {
+            const userId = data?.user?.id || null;
+            const rows = batch.map(item => ({
+                user_id:    userId,
+                page:       item.page,
+                message:    item.message,
+                stack:      item.stack,
+                user_agent: item.user_agent,
+                meta:       item.meta || null,
+            }));
+
+            client.from('client_errors').insert(rows).then(
+                () => { _errorSendInFlight = false; },
+                () => { _errorSendInFlight = false; }
+            );
+        }).catch(() => {
+            _errorSendInFlight = false;
+        });
+    }
+
+    function _pushError(payload) {
+        // Защита от лавины
+        const now = Date.now();
+        if (now - _errorWindowStart > ERR_WINDOW_MS) {
+            _errorWindowStart = now;
+            _errorQueue = [];
+        }
+        if (_errorQueue.length >= ERR_MAX_PER_WINDOW) {
+            return; // слишком много — пропускаем
+        }
+
+        _errorQueue.push(payload);
+        // Дебаунс: отправляем батчем через 500 мс
+        setTimeout(_sendQueuedErrors, 500);
+    }
+
+    function installErrorHandler(extraMeta) {
+        if (_errorHandlerInstalled) return;
+        _errorHandlerInstalled = true;
+
+        // 1. Синхронные ошибки
+        window.addEventListener('error', function (e) {
+            try {
+                // Игнорируем ошибки от сторонних скриптов (без e.error)
+                // и ошибки загрузки ресурсов (target, а не message)
+                if (!e.message && !e.error) return;
+
+                const message = e.message || String(e.error && e.error.message) || 'Unknown error';
+                const stack   = (e.error && e.error.stack) || `${e.filename || ''}:${e.lineno || 0}:${e.colno || 0}`;
+
+                _pushError({
+                    page:       window.location.pathname,
+                    message:    _truncate(message, 500),
+                    stack:      _truncate(stack, 2000),
+                    user_agent: _truncate(navigator.userAgent, 500),
+                    meta:       extraMeta || null,
+                });
+            } catch (_) { /* сам хендлер не должен падать */ }
+        }, true); // capture: true — ловит и на этапе capturing
+
+        // 2. Необработанные отклонения промисов
+        window.addEventListener('unhandledrejection', function (e) {
+            try {
+                const reason = e.reason;
+                let message;
+                let stack;
+
+                if (reason instanceof Error) {
+                    message = reason.message;
+                    stack   = reason.stack;
+                } else if (typeof reason === 'string') {
+                    message = reason;
+                    stack   = '';
+                } else {
+                    try {
+                        message = 'Unhandled rejection: ' + JSON.stringify(reason).slice(0, 500);
+                    } catch (_) {
+                        message = 'Unhandled rejection: ' + String(reason);
+                    }
+                    stack = '';
+                }
+
+                _pushError({
+                    page:       window.location.pathname,
+                    message:    _truncate('Unhandled: ' + message, 500),
+                    stack:      _truncate(stack, 2000),
+                    user_agent: _truncate(navigator.userAgent, 500),
+                    meta:       extraMeta || null,
+                });
+            } catch (_) { /* ignore */ }
+        });
+    }
+
+    // ============================================================
     // Безопасная замена содержимого SECTIONS
-    // (не переприсваиваем ссылку — мутируем объект)
     // ============================================================
     function _replaceSections(cfg, newSections) {
         if (!cfg.SECTIONS || typeof cfg.SECTIONS !== 'object') {
@@ -383,8 +478,23 @@
         renderPagination, attachPaginationHandlers,
         scrollToContainer,
         toggleDesc, triggerDownload, formatDateRu,
-        getSupabaseClient, loadSections
+        getSupabaseClient, loadSections,
+        installErrorHandler,
     });
 
     window.toggleDesc = toggleDesc;
+
+    // ─── Автоматически подключаем перехват ошибок, если есть конфиг ───
+    // Небольшая задержка: даём config.js и supabase-js прогрузиться.
+    if (window.APP_CONFIG) {
+        // Уже загружен — сразу
+        installErrorHandler();
+    } else {
+        // Ещё нет — ждём DOMContentLoaded
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.APP_CONFIG) {
+                installErrorHandler();
+            }
+        });
+    }
 })();
