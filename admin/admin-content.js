@@ -49,7 +49,6 @@
         document.getElementById('hideSelectedBtn').style.display = 'inline-flex';
         document.getElementById('unhideSelectedBtn').style.display = 'inline-flex';
 
-        // ← ИЗМЕНЕНО: '../' + info.json — чтобы попасть в корень репо из /admin/
         try {
             const resp = await fetch('../' + info.json + '?t=' + Date.now());
             state.sectionData[section] = resp.ok ? await resp.json() : [];
@@ -134,7 +133,6 @@
 
         html += '<div class="admin-folder-grid">';
 
-        // Карточка «Все материалы»
         html += `<div class="admin-folder-card all-card" data-folder="__ALL__">
                     <div class="folder-icon"><i class="fas fa-layer-group"></i></div>
                     <div class="folder-name">Все материалы</div>
@@ -142,7 +140,6 @@
                     ${hiddenInSection > 0 ? `<div class="folder-hidden-badge">${hiddenInSection} скрыто</div>` : ''}
                  </div>`;
 
-        // Карточки папок
         folders.forEach(f => {
             const total = counts[f];
             const hidden = hiddenCounts[f] || 0;
@@ -159,7 +156,6 @@
                      </div>`;
         });
 
-        // Карточка «Без папки»
         if (withoutFolder > 0) {
             html += `<div class="admin-folder-card nofolder-card" data-folder="__NOFOLDER__">
                         <div class="folder-icon"><i class="fas fa-question-circle"></i></div>
@@ -172,12 +168,10 @@
 
         document.getElementById('tableWrapper').innerHTML = html;
 
-        // Скрываем кнопки, которые не применимы к сетке
         document.getElementById('hideSelectedBtn').style.display = 'none';
         document.getElementById('unhideSelectedBtn').style.display = 'none';
         document.getElementById('deleteSelectedBtn').style.display = 'none';
 
-        // Обработчики клика по карточкам
         document.querySelectorAll('.admin-folder-card').forEach(card => {
             card.addEventListener('click', () => {
                 const folder = card.dataset.folder;
@@ -287,7 +281,6 @@
         const startIdx = (stateTbl.currentPage - 1) * stateTbl.pageSize;
         const pageItems = filtered.slice(startIdx, startIdx + stateTbl.pageSize);
 
-        // Кнопка «К папкам»
         let backBar = '';
         if (info.folderable) {
             const folderFilter = state.contentFolderFilters[section];
@@ -306,7 +299,6 @@
                 </div>`;
         }
 
-        // Заголовок
         let headHtml = '<tr>';
         headHtml += `<th class="center"><input type="checkbox" id="selectAllCheckbox"></th>`;
         cols.forEach(col => {
@@ -329,7 +321,6 @@
         });
         headHtml += '</tr>';
 
-        // Тело таблицы
         let tbodyHtml = '';
         if (pageItems.length === 0) {
             tbodyHtml = `<tr><td colspan="${cols.length + 1}" class="empty-block">Ничего не найдено</td></tr>`;
@@ -348,6 +339,7 @@
 
                 cols.forEach(col => {
                     const val = item[col.key];
+
                     if (col.type === 'cover') {
                         tbodyHtml += val
                             ? `<td class="col-cover"><img src="${MF.escapeAttr(val)}" alt=""></td>`
@@ -357,9 +349,19 @@
                         const shortVal = s.length > 120 ? s.slice(0, 120) + '...' : s;
                         tbodyHtml += `<td title="${MF.escapeAttr(val || '')}">${MF.escapeHtml(shortVal)}</td>`;
                     } else if (col.type === 'download') {
-                        tbodyHtml += val
-                            ? `<td><a href="${MF.escapeAttr(val)}" target="_blank" style="color:#2563eb;">Скачать</a></td>`
-                            : `<td>—</td>`;
+                        // ← ИЗМЕНЕНО: используем прокси-ссылку через Edge Function
+                        if (val) {
+                            const proxied = Admin.buildProxyUrl(val, titleVal);
+                            tbodyHtml += `<td>
+                                <a href="${MF.escapeAttr(proxied)}"
+                                   target="_blank" rel="noopener"
+                                   style="color:#2563eb; font-weight:600;">
+                                    <i class="fas fa-download"></i> Скачать
+                                </a>
+                            </td>`;
+                        } else {
+                            tbodyHtml += `<td>—</td>`;
+                        }
                     } else if (col.key === 'title') {
                         const badge = rowHidden
                             ? '<span class="hidden-badge"><i class="fas fa-eye-slash"></i> Скрыто</span>'
@@ -375,7 +377,6 @@
             });
         }
 
-        // Две панели пагинации
         const paginationTop = (totalPages > 1)
             ? MF.renderPagination(section, totalItems, totalPages, stateTbl, 'top')
             : '';
@@ -397,7 +398,6 @@
                 ${paginationBottom}
             </div>`;
 
-        // Кнопка «К папкам»
         const backBtn = document.getElementById('backToFoldersBtn');
         if (backBtn) {
             backBtn.addEventListener('click', () => {
@@ -414,7 +414,6 @@
             });
         }
 
-        // Сортировка
         wrapper.querySelectorAll('.th-label').forEach(el => el.addEventListener('click', function () {
             const key = this.dataset.sortKey;
             if (stateTbl.sortKey === key) {
@@ -427,7 +426,6 @@
             renderContentTable(section);
         }));
 
-        // Поиск по колонкам
         wrapper.querySelectorAll('.col-search').forEach(input => input.addEventListener('input', function () {
             const key = this.dataset.searchKey;
             stateTbl.searches[key] = this.value;
@@ -443,7 +441,6 @@
             }, 250);
         }));
 
-        // Чекбоксы
         const selectAll = document.getElementById('selectAllCheckbox');
         if (selectAll) {
             selectAll.addEventListener('change', function () {
@@ -456,7 +453,6 @@
         );
         updateSelectionButtons();
 
-        // Пагинация + автоскролл
         MF.attachPaginationHandlers(
             wrapper,
             section,
