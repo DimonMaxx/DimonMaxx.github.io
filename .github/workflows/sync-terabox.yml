@@ -60,7 +60,6 @@ jobs:
           BACKUP_KEEP_COUNT:         "2"
           SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
           TERABOX_COOKIE:            ${{ secrets.TERABOX_COOKIE }}
-          # Telegram-уведомления
           TELEGRAM_BOT_TOKEN:        ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:          ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python terabox_sync.py
@@ -70,6 +69,7 @@ jobs:
           GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
           SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SITE_BASE_URL:             "https://dimonmaxx.github.io/my-site"
           SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
         run: python generate_from_sheets.py
 
@@ -79,6 +79,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add _content/ || true
+          git add sitemap.xml || true
 
           if git diff --staged --quiet; then
             echo "Нет изменений для коммита."
@@ -91,12 +92,12 @@ jobs:
             echo "Rebase conflict — оставляем свежую генерацию"
             git checkout --theirs _content/ 2>/dev/null || true
             git add _content/ || true
+            git add sitemap.xml || true
             GIT_EDITOR=true git rebase --continue || git rebase --skip || true
           }
 
           git push
 
-      # ─── Telegram-уведомление о падении ───
       - name: Notify Telegram on failure
         if: failure() || cancelled()
         env:
