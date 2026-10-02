@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-terabox_sync.py (v3)
+terabox_sync.py (v4)
 Синхронизация TeraBox → Google Sheets через Playwright.
 
 Логика:
@@ -14,11 +14,13 @@ terabox_sync.py (v3)
        • Обходит все подпапки, собирая файлы (folder = имя подпапки).
        • Пишет результаты в Google Sheets.
        • Делает backup, находит orphans, сохраняет их в Supabase.
+  4. По завершении отправляет итоговый отчёт в Telegram (через notify.py).
 
 Переменные окружения:
   TERABOX_COOKIE, GOOGLE_CREDENTIALS_JSON, SPREADSHEET_ID,
   SUPABASE_SERVICE_ROLE_KEY, PRESERVE_USER_EDITS, BACKUP_BEFORE_SYNC,
-  BACKUP_KEEP_COUNT, SYNC_SECTIONS.
+  BACKUP_KEEP_COUNT, SYNC_SECTIONS,
+  TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID (для уведомлений).
 """
 
 import os
@@ -41,6 +43,15 @@ try:
     from playwright.sync_api import sync_playwright
 except ImportError:
     sync_playwright = None
+
+# ─── Уведомления в Telegram (опционально) ───
+try:
+    from notify import notify_telegram, notify_result
+except ImportError:
+    def notify_telegram(text, **kw):
+        return False
+    def notify_result(**kw):
+        return False
 
 
 # ============================================================
@@ -312,8 +323,6 @@ def load_sheet_snapshot(sheet, headers):
 
       existing_by_link — {download_link: {"row":N, "values":[...]}}
       existing_by_key  — {(folder_lower, title_lower): {...}}
-                         используется как первичный ключ для TeraBox,
-                         чтобы пережить смену dlink между синхронизациями.
     """
     try:
         rows = sheet.get_all_values()
@@ -513,10 +522,6 @@ class Catcher:
 
 def collect_items(page, catcher, start_resp_idx,
                   max_iters=40, iter_wait_ms=700):
-    """
-    Собирает элементы через скролл. Vue подгружает по 20 штук.
-    Возвращает список уникальных элементов.
-    """
     seen = {}
     last_total = 0
     stable = 0
@@ -580,9 +585,6 @@ def find_folder_locator(page, name):
 
 
 def open_folder(page, catcher, name, max_attempts=FOLDER_OPEN_ATTEMPTS):
-    """
-    Открывает папку и возвращает все её элементы (с догрузкой).
-    """
     for attempt in range(max_attempts):
         prev_resp = catcher.count()
         scroll_list_top(page)
@@ -919,11 +921,6 @@ def parse_filename_title(filename):
 # ============================================================
 
 def fetch_terabox_records(start_url, section, diag):
-    """
-    Открывает раздел TeraBox и возвращает список записей:
-      [{"folder": "...", "title": "...", "description": "...",
-        "size": "...", "download_link": "..."}]
-    """
     if sync_playwright is None:
         print("  [!] playwright не установлен.")
         return []
@@ -957,7 +954,6 @@ def fetch_terabox_records(start_url, section, diag):
             catcher = Catcher()
             catcher.attach(page)
 
-            # ─── Открываем корень ───
             print(f"  Открываю {start_url}")
             page.goto(start_url, wait_until="domcontentloaded", timeout=60000)
             page.wait_for_timeout(7000)
@@ -974,7 +970,6 @@ def fetch_terabox_records(start_url, section, diag):
             root_items = collect_items(page, catcher, 0)
             print(f"  Корень: {len(root_items)} элементов")
 
-            # ─── Определяем рабочую папку ───
             work_items = root_items
             work_folder_name = None
 
@@ -1005,7 +1000,6 @@ def fetch_terabox_records(start_url, section, diag):
 
             print(f"  Содержимое рабочей папки: {len(work_items)} элементов")
 
-            # ─── Разделяем ───
             desc_items = []
             root_files = []
             subdirs = []
@@ -1030,7 +1024,6 @@ def fetch_terabox_records(start_url, section, diag):
             print(f"    Прочих файлов:   {len(root_files)}")
             print(f"    Подпапок:        {len(subdirs)}")
 
-            # ─── Парсим описания ───
             programs = []
             if handler == "programs" and desc_items:
                 print(f"\n  Парсинг описаний...")
@@ -1070,13 +1063,11 @@ def fetch_terabox_records(start_url, section, diag):
                     "download_link": item.get("dlink", ""),
                 }
 
-            # ─── Файлы в корне рабочей папки (folder = "") ───
             for it in root_files:
                 rec = _make_record(it, "")
                 if rec:
                     records.append(rec)
 
-            # ─── Обход подпапок ───
             for i, sub in enumerate(subdirs):
                 sub_name = sub.get("server_filename")
                 print(f"\n    ── [{i+1}/{len(subdirs)}] {sub_name}")
@@ -1138,6 +1129,11 @@ def fetch_terabox_records(start_url, section, diag):
 # ============================================================
 
 def sync_terabox_section(section, gs_client):
+    """
+    Синхронизирует один раздел.
+    Возвращает dict со статистикой {added, updated, orphans, errors}
+    или None, если раздел был пропущен.
+    """
     label = section.get("label") or section.get("key")
     section_key = section.get("key")
     yandex_url = section.get("yandex_url") or ""
@@ -1153,7 +1149,7 @@ def sync_terabox_section(section, gs_client):
 
     if not TERABOX_COOKIE:
         print("  [!] TERABOX_COOKIE не задан — пропускаю раздел.")
-        return
+        return None
 
     diag = Diag(label)
 
@@ -1184,7 +1180,7 @@ def sync_terabox_section(section, gs_client):
         sh = open_spreadsheet(gs_client)
     except Exception as e:
         print(f"  [!] Не удалось открыть таблицу: {e}")
-        return
+        return None
 
     sheet = get_or_create_sheet(sh, sheet_name)
     ensure_headers(sheet, headers)
@@ -1201,7 +1197,7 @@ def sync_terabox_section(section, gs_client):
     n_cols = len(headers)
     end_col_letter = _col_letter(n_cols - 1)
 
-    # ─── Осиротевшие строки (только «наши» — TeraBox) ───
+    # ─── Осиротевшие строки (только TeraBox) ───
     new_keys = set()
     for r in all_records:
         new_keys.add(((r.get("folder") or "").lower(),
@@ -1223,7 +1219,6 @@ def sync_terabox_section(section, gs_client):
         if key in new_keys:
             continue
 
-        # ─── КЛЮЧЕВОЕ: пропускаем строки чужого источника ───
         values = info["values"]
         link_val = values[link_idx] if link_idx < len(values) else ""
         if _detect_source(link_val) != "terabox":
@@ -1246,7 +1241,6 @@ def sync_terabox_section(section, gs_client):
     save_orphans_to_supabase(section_key, label, sheet_name,
                              orphans, headers)
 
-    # ─── Изменения ───
     updates = []
     to_add = []
     preserved = 0
@@ -1311,6 +1305,12 @@ def sync_terabox_section(section, gs_client):
 
     diag.report()
 
+    return {
+        "added":   diag.added,
+        "updated": diag.updated,
+        "orphans": diag.orphans_found,
+    }
+
 
 # ============================================================
 # MAIN
@@ -1318,7 +1318,7 @@ def sync_terabox_section(section, gs_client):
 
 def main():
     print("=" * 60)
-    print("terabox_sync.py (v3) — старт")
+    print("terabox_sync.py (v4) — старт")
     print("=" * 60)
     print(f"PRESERVE_USER_EDITS = {PRESERVE_USER_EDITS}")
     print(f"BACKUP_BEFORE_SYNC  = {BACKUP_BEFORE_SYNC}")
@@ -1330,16 +1330,31 @@ def main():
         print("[!] playwright не установлен.")
         print("    Добавьте 'playwright' в requirements.txt и выполните")
         print("    python -m playwright install chromium")
+        notify_result(
+            title="Sync TeraBox",
+            status="failure",
+            details="playwright не установлен",
+        )
         return
 
     if not TERABOX_COOKIE:
         print("[!] TERABOX_COOKIE не задан — выходим.")
+        notify_result(
+            title="Sync TeraBox",
+            status="failure",
+            details="TERABOX_COOKIE не задан",
+        )
         return
 
     print("\nЗагрузка разделов из Supabase...")
     sections = load_sections_from_supabase()
     if not sections:
         print("[!] Нет активных разделов — выходим.")
+        notify_result(
+            title="Sync TeraBox",
+            status="failure",
+            details="Не удалось загрузить разделы из Supabase",
+        )
         return
 
     terabox_sections = [
@@ -1367,19 +1382,66 @@ def main():
         gs_client = get_gspread_client()
     except Exception as e:
         print(f"[!] Google Sheets: {e}")
+        notify_result(
+            title="Sync TeraBox",
+            status="failure",
+            details=f"Ошибка Google Sheets: {e}",
+        )
         return
     print("Клиент создан.")
 
+    # ─── Аккумулируем статистику по всем разделам ───
+    total_stats = {
+        "added":    0,
+        "updated":  0,
+        "orphans":  0,
+        "errors":   0,
+        "sections": [],
+    }
+
     for section in terabox_sections:
         try:
-            sync_terabox_section(section, gs_client)
+            stats = sync_terabox_section(section, gs_client)
+            if stats:
+                total_stats["added"]   += stats.get("added", 0)
+                total_stats["updated"] += stats.get("updated", 0)
+                total_stats["orphans"] += stats.get("orphans", 0)
+                total_stats["sections"].append(
+                    f"{section.get('label')}: +{stats.get('added', 0)} / "
+                    f"~{stats.get('updated', 0)}"
+                )
         except Exception as e:
+            total_stats["errors"] += 1
             print(f"\n[!!!] Ошибка в разделе {section.get('key')}: {e}")
             traceback.print_exc()
 
     print("\n" + "=" * 60)
     print("terabox_sync.py — готово!")
     print("=" * 60)
+
+    # ─── Telegram-уведомление с итогами ───
+    run_url = None
+    if os.environ.get("GITHUB_RUN_ID"):
+        repo = os.environ.get("GITHUB_REPOSITORY", "")
+        run_url = (f"https://github.com/{repo}/actions/runs/"
+                   f"{os.environ['GITHUB_RUN_ID']}")
+
+    status = "failure" if total_stats["errors"] > 0 else "success"
+
+    details = (f"Обновлено: {total_stats['updated']}, "
+               f"добавлено: {total_stats['added']}, "
+               f"осиротевших: {total_stats['orphans']}")
+
+    if total_stats["errors"]:
+        details += f" • Ошибок: {total_stats['errors']}"
+
+    notify_result(
+        title="Sync TeraBox",
+        status=status,
+        details=details,
+        extra_lines=total_stats["sections"] or None,
+        run_url=run_url,
+    )
 
 
 if __name__ == "__main__":
