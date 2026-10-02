@@ -38,6 +38,8 @@ jobs:
           SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           DELETE_LIST:               ${{ github.event.inputs.delete_list }}
+          TELEGRAM_BOT_TOKEN:        ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:          ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python delete_content.py
 
       - name: Regenerate JSON
@@ -69,3 +71,30 @@ jobs:
           }
 
           git push
+
+      # ─── Telegram-уведомление о падении ───
+      # delete_content.py сам отправляет короткое уведомление об успехе,
+      # здесь — страховка на случай, если что-то упало раньше.
+      - name: Notify Telegram on failure
+        if: failure() || cancelled()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "cancelled" ]; then
+            EMOJI="⚠️"
+          else
+            EMOJI="❌"
+          fi
+
+          TEXT="$EMOJI Delete content — $STATUS"
+          TEXT="$TEXT
+          Запуск: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          curl -s -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d disable_web_page_preview=true \
+            > /dev/null || true
