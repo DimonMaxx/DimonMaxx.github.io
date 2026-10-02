@@ -117,11 +117,7 @@
             color: #0f172a;
             margin-bottom: 12px;
         }
-        .welcome-card ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+        .welcome-card ul { list-style: none; padding: 0; margin: 0; }
         .welcome-card li {
             display: flex;
             align-items: flex-start;
@@ -155,33 +151,12 @@
             gap: 8px;
             transition: 0.2s;
         }
-        .welcome-actions .btn-login {
-            background: #2563eb;
-            color: white;
-            box-shadow: 0 4px 14px rgba(37,99,235,0.3);
-        }
-        .welcome-actions .btn-login:hover {
-            background: #1d4ed8;
-            transform: translateY(-2px);
-        }
-        .welcome-actions .btn-register {
-            background: #f59e0b;
-            color: #1e293b;
-            box-shadow: 0 4px 14px rgba(245,158,11,0.3);
-        }
-        .welcome-actions .btn-register:hover {
-            background: #d97706;
-            color: white;
-            transform: translateY(-2px);
-        }
-        .welcome-actions .btn-submit {
-            background: white;
-            color: #2563eb;
-            border: 2px solid #2563eb;
-        }
-        .welcome-actions .btn-submit:hover {
-            background: #eff6ff;
-        }
+        .welcome-actions .btn-login { background: #2563eb; color: white; box-shadow: 0 4px 14px rgba(37,99,235,0.3); }
+        .welcome-actions .btn-login:hover { background: #1d4ed8; transform: translateY(-2px); }
+        .welcome-actions .btn-register { background: #f59e0b; color: #1e293b; box-shadow: 0 4px 14px rgba(245,158,11,0.3); }
+        .welcome-actions .btn-register:hover { background: #d97706; color: white; transform: translateY(-2px); }
+        .welcome-actions .btn-submit { background: white; color: #2563eb; border: 2px solid #2563eb; }
+        .welcome-actions .btn-submit:hover { background: #eff6ff; }
 
         .welcome-hint {
             margin-top: 20px;
@@ -197,46 +172,13 @@
         }
         .welcome-hint i { color: #8b5cf6; font-size: 18px; margin-top: 2px; }
 
-        .programs-notice {
-            background: #eff6ff;
-            border-left: 5px solid #2563eb;
-            border-radius: 12px;
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            line-height: 1.65;
-            color: #1e3a8a;
-        }
-        .programs-notice .notice-title {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-weight: 700;
-            font-size: 15px;
-            color: #1e40af;
-            margin-bottom: 8px;
-        }
-        .programs-notice .notice-title i {
-            color: #2563eb;
-            font-size: 18px;
-        }
-        .programs-notice p {
-            margin-bottom: 8px;
-        }
+        .programs-notice { background: #eff6ff; border-left: 5px solid #2563eb; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; font-size: 14px; line-height: 1.65; color: #1e3a8a; }
+        .programs-notice .notice-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: #1e40af; margin-bottom: 8px; }
+        .programs-notice .notice-title i { color: #2563eb; font-size: 18px; }
+        .programs-notice p { margin-bottom: 8px; }
         .programs-notice p:last-child { margin-bottom: 0; }
-        .programs-notice a {
-            color: #1d4ed8;
-            font-weight: 600;
-            text-decoration: underline;
-        }
-        .programs-notice a:hover {
-            color: #1e3a8a;
-        }
-        .programs-notice.warning {
-            background: #fffbeb;
-            border-left-color: #f59e0b;
-            color: #78350f;
-        }
+        .programs-notice a { color: #1d4ed8; font-weight: 600; text-decoration: underline; }
+        .programs-notice.warning { background: #fffbeb; border-left-color: #f59e0b; color: #78350f; }
         .programs-notice.warning .notice-title { color: #92400e; }
         .programs-notice.warning .notice-title i { color: #d97706; }
         .programs-notice.warning a { color: #b45309; }
@@ -283,59 +225,18 @@
         .btn-download-sm.disabled { background: #94a3b8; cursor: not-allowed; }
         .empty-block { text-align: center; color: #94a3b8; padding: 40px 20px; font-style: italic; background: #f8fafc; border-radius: 12px; }
 
-        .audio-cell {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            min-width: 280px;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            user-select: none;
-        }
-        .audio-cell audio {
-            width: 320px;
-            height: 40px;
-            outline: none;
-        }
+        .audio-cell { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 280px; -webkit-user-select: none; -moz-user-select: none; user-select: none; }
+        .audio-cell audio { width: 320px; height: 40px; outline: none; }
         .audio-cell audio::-webkit-media-controls-overflow-button,
         .audio-cell audio::-webkit-media-controls-download-button,
-        .audio-cell audio::-internal-media-controls-download-button {
-            display: none !important;
-            -webkit-appearance: none !important;
-        }
+        .audio-cell audio::-internal-media-controls-download-button { display: none !important; -webkit-appearance: none !important; }
         .audio-cell audio::-webkit-media-controls-panel .audio-overflow-button,
         .audio-cell audio::-webkit-media-controls-panel [aria-label="More options"],
-        .audio-cell audio::-webkit-media-controls-panel [aria-label="More"] {
-            display: none !important;
-        }
+        .audio-cell audio::-webkit-media-controls-panel [aria-label="More"] { display: none !important; }
 
-        .audio-controls {
-            display: flex;
-            gap: 8px;
-            margin-top: 2px;
-        }
-        .audio-seek-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            padding: 3px 10px;
-            border-radius: 20px;
-            border: 1px solid #cbd5e1;
-            background: #f8fafc;
-            color: #475569;
-            font-size: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.15s;
-            font-family: 'Inter', sans-serif;
-            line-height: 1.4;
-        }
-        .audio-seek-btn:hover {
-            background: #eef2ff;
-            border-color: #2563eb;
-            color: #1e40af;
-        }
+        .audio-controls { display: flex; gap: 8px; margin-top: 2px; }
+        .audio-seek-btn { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 20px; border: 1px solid #cbd5e1; background: #f8fafc; color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; transition: 0.15s; font-family: 'Inter', sans-serif; line-height: 1.4; }
+        .audio-seek-btn:hover { background: #eef2ff; border-color: #2563eb; color: #1e40af; }
         .audio-seek-btn:active { transform: scale(0.96); }
         .audio-seek-btn i { font-size: 11px; }
 
@@ -343,12 +244,7 @@
         .audio-download:hover { text-decoration: underline; }
         .audio-download.disabled { color: #94a3b8; cursor: not-allowed; }
 
-        /* ─── Пагинация (верхняя и нижняя) ─── */
-        .pagination-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            flex-wrap: wrap; gap: 12px; padding: 12px 18px;
-            background: #f8fafc; border-radius: 12px; font-size: 14px;
-        }
+        .pagination-bar { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; padding: 12px 18px; background: #f8fafc; border-radius: 12px; font-size: 14px; }
         .pagination-top    { margin-bottom: 12px; }
         .pagination-bottom { margin-top: 15px; }
         .pagination-total strong { color: #0f172a; font-size: 16px; }
@@ -359,6 +255,44 @@
         .page-num.active { background: #2563eb; color: white; border-color: #2563eb; }
         .page-jump-input { width: 60px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; text-align: center; }
         .page-jump-btn { padding: 6px 12px; border-radius: 8px; border: none; background: #2563eb; color: white; font-weight: 600; cursor: pointer; }
+
+        /* ─── Модалка обновления контента ─── */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 9999; padding: 15px; }
+        .modal-overlay.active { display: flex; }
+        .modal-box { background: white; border-radius: 20px; padding: 30px; max-width: 720px; width: 100%; box-shadow: 0 20px 60px rgba(0,20,80,0.15); max-height: 90vh; overflow-y: auto; }
+        .modal-box h3 { font-size: 20px; font-weight: 700; margin-bottom: 12px; color: #0f172a; display: flex; align-items: center; gap: 10px; }
+        .modal-box h3 i { color: #f59e0b; }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .modal-actions button { padding: 10px 24px; border-radius: 30px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
+        .modal-actions .btn-secondary { background: #64748b; color: white; }
+        .modal-actions .btn-secondary:hover { background: #475569; }
+        .modal-actions .btn-primary { background: #f59e0b; color: white; }
+        .modal-actions .btn-primary:hover { background: #d97706; }
+        .modal-actions .btn-primary:disabled { background: #cbd5e1; cursor: not-allowed; }
+
+        .refresh-modal-sources { display: flex; flex-direction: column; gap: 16px; margin: 18px 0; max-height: 55vh; overflow-y: auto; padding-right: 4px; }
+        .refresh-source-block { border: 2px solid #e2e8f0; border-radius: 14px; padding: 16px 18px; background: #f8fafc; }
+        .refresh-source-header { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: #0f172a; cursor: pointer; user-select: none; padding-bottom: 12px; border-bottom: 1px dashed #cbd5e1; margin-bottom: 12px; }
+        .refresh-source-header input[type="checkbox"] { width: 18px; height: 18px; accent-color: #f59e0b; cursor: pointer; }
+        .refresh-source-header i { color: #f59e0b; font-size: 18px; }
+        .refresh-source-sections { display: flex; flex-direction: column; gap: 4px; padding-left: 28px; }
+        .refresh-source-sections label { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #334155; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background 0.15s; }
+        .refresh-source-sections label:hover { background: #eef2ff; }
+        .refresh-source-sections input[type="checkbox"] { width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer; }
+        .refresh-empty { color: #94a3b8; font-style: italic; font-size: 13px; padding: 8px 0 4px; }
+        .refresh-loading { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 14px; }
+        .refresh-hint { color: #64748b; font-size: 13px; margin-bottom: 6px; line-height: 1.5; }
+
+        /* ─── Тост-уведомление ─── */
+        .toast { position: fixed; top: 20px; right: 20px; background: white; padding: 14px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,20,80,0.18); display: flex; align-items: flex-start; gap: 10px; font-weight: 600; font-size: 14px; z-index: 10001; transform: translateX(120%); transition: transform 0.3s ease; max-width: 420px; }
+        .toast.show { transform: translateX(0); }
+        .toast i { font-size: 20px; margin-top: 1px; flex-shrink: 0; }
+        .toast-success { border-left: 4px solid #16a34a; }
+        .toast-success i { color: #16a34a; }
+        .toast-error { border-left: 4px solid #dc2626; }
+        .toast-error i { color: #dc2626; }
+        .toast-info { border-left: 4px solid #2563eb; }
+        .toast-info i { color: #2563eb; }
 
         @media (max-width: 900px) {
             body { padding: 8px; }
@@ -383,6 +317,8 @@
             .welcome-hero h1 { font-size: 22px; }
             .pagination-bar { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 12px; font-size: 12px; }
             .pagination-controls { justify-content: center; gap: 6px; flex-wrap: wrap; }
+            .modal-box { padding: 20px; }
+            .toast { left: 20px; right: 20px; max-width: none; }
         }
     </style>
 </head>
@@ -399,9 +335,9 @@
             <a href="admin-panel.html" class="btn-admin-panel" id="adminPanelLink" style="display:none;">
                 <i class="fas fa-shield-alt"></i> Админ-панель
             </a>
-            <a href="#" class="btn-update" id="adminUpdateBtn" style="display:none;">
-               <i class="fas fa-sync-alt"></i> Обновить
-            </a>
+            <button class="btn-update" id="contentRefreshBtn" style="display:none;">
+                <i class="fas fa-sync-alt"></i> Обновление контента
+            </button>
             <div id="authWidget" style="display:flex; align-items:center; gap:6px;"></div>
         </div>
     </header>
@@ -410,7 +346,6 @@
         <aside class="sidebar" id="sidebarNav">
             <nav class="sidebar-nav" id="sidebarNavInner">
                 <div class="nav-link active" data-tab="home"><i class="fas fa-home"></i> Главная</div>
-                <!-- Остальные пункты будут добавлены динамически из SECTIONS -->
             </nav>
 
             <div class="stats-panel" id="statsPanel">
@@ -460,15 +395,9 @@
                         </div>
 
                         <div class="welcome-actions">
-                            <a href="login.html" class="btn-login" id="heroLoginBtn">
-                                <i class="fas fa-sign-in-alt"></i> Войти
-                            </a>
-                            <a href="login.html" class="btn-register" id="heroRegisterBtn">
-                                <i class="fas fa-user-plus"></i> Зарегистрироваться
-                            </a>
-                            <a href="submit.html" class="btn-submit">
-                                <i class="fas fa-paper-plane"></i> Предложить материал
-                            </a>
+                            <a href="login.html" class="btn-login" id="heroLoginBtn"><i class="fas fa-sign-in-alt"></i> Войти</a>
+                            <a href="login.html" class="btn-register" id="heroRegisterBtn"><i class="fas fa-user-plus"></i> Зарегистрироваться</a>
+                            <a href="submit.html" class="btn-submit"><i class="fas fa-paper-plane"></i> Предложить материал</a>
                         </div>
                     </div>
 
@@ -482,7 +411,6 @@
                         </div>
                     </div>
                 </div>
-                <!-- Остальные вкладки будут созданы динамически -->
             </div>
         </div>
     </div>
@@ -490,6 +418,28 @@
     <footer style="text-align:center; font-size:14px; color:#94a3b8; border-top:2px solid #e5e7eb; padding:18px 30px; background:white;">
         <span><i class="fas fa-copyright"></i> 2026 MyFiles — все материалы бесплатны</span>
     </footer>
+</div>
+
+<!-- ─── Модалка обновления контента ─── -->
+<div class="modal-overlay" id="refreshModal">
+    <div class="modal-box" style="max-width: 620px;">
+        <h3><i class="fas fa-sync-alt"></i> Обновление контента</h3>
+        <p class="refresh-hint">
+            Выберите источники и разделы, которые нужно обновить.
+            После запуска результат придёт в Telegram-бот.
+        </p>
+        <div class="refresh-modal-sources" id="refreshSources">
+            <div class="refresh-loading">
+                <i class="fas fa-spinner fa-spin"></i> Загрузка разделов...
+            </div>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-secondary" id="refreshCancelBtn">Отмена</button>
+            <button class="btn-primary" id="refreshStartBtn" disabled>
+                <i class="fas fa-play"></i> Запустить обновление
+            </button>
+        </div>
+    </div>
 </div>
 
 <script src="config.js"></script>
@@ -526,6 +476,29 @@
         }
     }, true);
 
+    // ============================================================
+    // ТОСТ-УВЕДОМЛЕНИЯ
+    // ============================================================
+    function showToast(message, type) {
+        type = type || 'success';
+        const iconMap = {
+            success: 'check-circle',
+            error:   'exclamation-circle',
+            info:    'info-circle',
+        };
+        const icon = iconMap[type] || 'check-circle';
+
+        const toast = document.createElement('div');
+        toast.className = `toast toast-${type}`;
+        toast.innerHTML = `<i class="fas fa-${icon}"></i><div>${MF.escapeHtml(message)}</div>`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.classList.add('show'), 20);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 400);
+        }, 4500);
+    }
+
     // --- Прокси ---
     function buildProxyUrl(downloadUrl, fileName) {
         if (!downloadUrl) return '';
@@ -544,9 +517,7 @@
                         ? decodeURIComponent(fromPath).split('/').pop()
                         : 'file.bin';
                 }
-                if (!/\.[a-z0-9]{1,6}$/i.test(fname)) {
-                    fname += '.bin';
-                }
+                if (!/\.[a-z0-9]{1,6}$/i.test(fname)) fname += '.bin';
                 return `${SUPABASE_URL}/functions/v1/terabox-download`
                      + `?url=${encodeURIComponent(downloadUrl)}`
                      + `&name=${encodeURIComponent(fname)}`;
@@ -662,7 +633,6 @@
             });
         }
 
-        // Скрыть/показать кнопки на welcome-hero
         const heroLogin    = document.getElementById('heroLoginBtn');
         const heroRegister = document.getElementById('heroRegisterBtn');
         if (heroLogin)    heroLogin.style.display    = isLoggedIn ? 'none' : 'inline-flex';
@@ -670,17 +640,228 @@
 
         const isAdmin = isLoggedIn && currentProfile?.role === 'admin';
         const pl = document.getElementById('adminPanelLink');
-        const ub = document.getElementById('adminUpdateBtn');
+        const refreshBtn = document.getElementById('contentRefreshBtn');
         if (pl) pl.style.display = isAdmin ? 'inline-flex' : 'none';
-        if (ub) {
-            ub.style.display = isAdmin ? 'inline-flex' : 'none';
-            if (isAdmin) {
-                // Ведём на страницу GitHub Actions репозитория
-                ub.href = `https://github.com/${CFG.GITHUB_OWNER}/${CFG.GITHUB_REPO}/actions`;
-            }
+        if (refreshBtn) {
+            refreshBtn.style.display = isAdmin ? 'inline-flex' : 'none';
+            refreshBtn.onclick = isAdmin ? openRefreshModal : null;
         }
     }
 
+    // ============================================================
+    // МОДАЛКА «ОБНОВЛЕНИЕ КОНТЕНТА»
+    // ============================================================
+    function detectSectionSources(section) {
+        const urlRaw = section.yandex_url || '';
+        const urls = urlRaw.split(/[\n;]+/).map(s => s.trim()).filter(Boolean);
+        let hasYandex = false;
+        let hasTerabox = false;
+        for (const u of urls) {
+            const l = u.toLowerCase();
+            if (l.includes('disk.yandex') || l.includes('yadi.sk')) hasYandex = true;
+            if (l.includes('terabox') || l.includes('1024tera')
+                || l.includes('4funbox') || l.includes('teraboxapp')) hasTerabox = true;
+        }
+        return { hasYandex, hasTerabox };
+    }
+
+    async function openRefreshModal() {
+        const modal = document.getElementById('refreshModal');
+        const sourcesEl = document.getElementById('refreshSources');
+        const startBtn = document.getElementById('refreshStartBtn');
+
+        sourcesEl.innerHTML = '<div class="refresh-loading"><i class="fas fa-spinner fa-spin"></i> Загрузка разделов...</div>';
+        startBtn.disabled = true;
+        modal.classList.add('active');
+
+        let sections = [];
+        try {
+            const { data, error } = await supabaseClient
+                .from('site_sections')
+                .select('key, label, icon, yandex_url, sort_order')
+                .eq('is_active', true)
+                .order('sort_order');
+            if (error) throw error;
+            sections = data || [];
+        } catch (e) {
+            sourcesEl.innerHTML = `<div class="refresh-empty">Ошибка загрузки: ${MF.escapeHtml(e.message || '')}</div>`;
+            return;
+        }
+
+        const yandexList = [];
+        const teraboxList = [];
+        sections.forEach(s => {
+            const src = detectSectionSources(s);
+            if (src.hasYandex) yandexList.push(s);
+            if (src.hasTerabox) teraboxList.push(s);
+        });
+
+        function renderSourceBlock(sourceKey, sourceLabel, iconClass, sections) {
+            if (sections.length === 0) {
+                return `
+                    <div class="refresh-source-block" data-source="${sourceKey}">
+                        <label class="refresh-source-header">
+                            <input type="checkbox" class="source-cb" data-source="${sourceKey}" disabled>
+                            <i class="fas ${iconClass}"></i> ${sourceLabel}
+                        </label>
+                        <div class="refresh-source-sections">
+                            <div class="refresh-empty">Нет разделов с ссылками на ${sourceLabel}</div>
+                        </div>
+                    </div>`;
+            }
+            const listHtml = sections.map(s => `
+                <label>
+                    <input type="checkbox" class="section-cb"
+                           data-source="${sourceKey}"
+                           data-key="${MF.escapeAttr(s.key)}" checked>
+                    <span>${MF.escapeHtml(s.label)}</span>
+                </label>
+            `).join('');
+
+            return `
+                <div class="refresh-source-block" data-source="${sourceKey}">
+                    <label class="refresh-source-header">
+                        <input type="checkbox" class="source-cb" data-source="${sourceKey}" checked>
+                        <i class="fas ${iconClass}"></i> ${sourceLabel}
+                    </label>
+                    <div class="refresh-source-sections">
+                        ${listHtml}
+                    </div>
+                </div>`;
+        }
+
+        sourcesEl.innerHTML =
+            renderSourceBlock('yandex', 'Яндекс.Диск', 'fa-cloud', yandexList) +
+            renderSourceBlock('terabox', 'TeraBox', 'fa-cloud-upload-alt', teraboxList);
+
+        // ─── Обработчики ───
+        sourcesEl.querySelectorAll('.source-cb').forEach(cb => {
+            cb.addEventListener('change', function () {
+                const src = this.dataset.source;
+                const checked = this.checked;
+                sourcesEl.querySelectorAll(`.section-cb[data-source="${src}"]`)
+                    .forEach(inner => { inner.checked = checked; });
+                updateStartBtnState();
+            });
+        });
+        sourcesEl.querySelectorAll('.section-cb').forEach(cb => {
+            cb.addEventListener('change', updateStartBtnState);
+        });
+
+        function updateStartBtnState() {
+            const anyChecked = sourcesEl.querySelectorAll('.section-cb:checked').length > 0;
+            startBtn.disabled = !anyChecked;
+        }
+        updateStartBtnState();
+    }
+
+    function closeRefreshModal() {
+        document.getElementById('refreshModal').classList.remove('active');
+    }
+
+    async function startRefresh() {
+        const startBtn = document.getElementById('refreshStartBtn');
+        const sourcesEl = document.getElementById('refreshSources');
+
+        const yandexSections = [];
+        const teraboxSections = [];
+
+        sourcesEl.querySelectorAll('.section-cb[data-source="yandex"]:checked').forEach(cb => {
+            yandexSections.push(cb.dataset.key);
+        });
+        sourcesEl.querySelectorAll('.section-cb[data-source="terabox"]:checked').forEach(cb => {
+            teraboxSections.push(cb.dataset.key);
+        });
+
+        if (yandexSections.length === 0 && teraboxSections.length === 0) {
+            showToast('Не выбрано ни одного раздела', 'error');
+            return;
+        }
+
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        if (!session) {
+            showToast('Сессия истекла. Войдите заново.', 'error');
+            return;
+        }
+        const token = session.access_token;
+
+        const tasks = [];
+        if (yandexSections.length > 0) {
+            tasks.push({
+                label:   'Яндекс.Диск',
+                workflow: 'sync-yandex.yml',
+                inputs:   { sections: yandexSections.join(',') },
+            });
+        }
+        if (teraboxSections.length > 0) {
+            tasks.push({
+                label:   'TeraBox',
+                workflow: 'sync-terabox.yml',
+                inputs:   { sections: teraboxSections.join(',') },
+            });
+        }
+
+        startBtn.disabled = true;
+        startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Запускаю...';
+
+        const launched = [];
+        const failed = [];
+
+        for (const t of tasks) {
+            try {
+                const resp = await fetch(`${SUPABASE_URL}/functions/v1/github-dispatch`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`,
+                    },
+                    body: JSON.stringify({
+                        workflow: t.workflow,
+                        inputs: t.inputs,
+                    }),
+                });
+                let payload = {};
+                try { payload = await resp.json(); } catch (_) {}
+                if (resp.ok && payload.ok) {
+                    launched.push(t.label);
+                } else {
+                    failed.push(`${t.label}: ${payload.error || 'HTTP ' + resp.status}`);
+                }
+            } catch (e) {
+                failed.push(`${t.label}: ${e.message}`);
+            }
+            // Небольшая пауза между вызовами
+            if (tasks.indexOf(t) < tasks.length - 1) {
+                await new Promise(r => setTimeout(r, 1500));
+            }
+        }
+
+        startBtn.disabled = false;
+        startBtn.innerHTML = '<i class="fas fa-play"></i> Запустить обновление';
+
+        if (failed.length === 0) {
+            closeRefreshModal();
+            const text = launched.length === 1
+                ? `Обновление ${launched[0]} запущено. Результат придёт в Telegram.`
+                : `Обновление запущено (${launched.join(', ')}). Результат придёт в Telegram.`;
+            showToast(text, 'success');
+        } else if (launched.length > 0) {
+            closeRefreshModal();
+            showToast(`Запущено: ${launched.join(', ')}. Ошибки: ${failed.join('; ')}`, 'info');
+        } else {
+            showToast('Не удалось запустить: ' + failed.join('; '), 'error');
+        }
+    }
+
+    document.getElementById('refreshCancelBtn').addEventListener('click', closeRefreshModal);
+    document.getElementById('refreshStartBtn').addEventListener('click', startRefresh);
+    document.getElementById('refreshModal').addEventListener('click', function (e) {
+        if (e.target === this) closeRefreshModal();
+    });
+
+    // ============================================================
+    // ЗАГРУЗКА ДАННЫХ
+    // ============================================================
     async function loadStats() {
         try {
             const r1 = await supabaseClient.rpc('get_total_visitors');
@@ -838,14 +1019,12 @@
                 else if (folder === '__NOFOLDER__') state.folderFilter = '__NOFOLDER__';
                 else state.folderFilter = folder;
 
-                // ─── Сбрасываем поиск и сортировку при входе в папку ───
                 state.searches = {};
                 state.sortKey = null;
                 state.sortDir = 'asc';
                 state.currentPage = 1;
 
                 renderSection(containerId, container, renderFn);
-                // ─── Плавный скролл к началу таблицы ───
                 MF.scrollToContainer(container, 120);
             });
         });
@@ -1097,7 +1276,6 @@
             state.sortKey = null;
             state.sortDir = 'asc';
             renderSection(containerId, container, renderFn);
-            // ─── Плавный скролл к началу сетки папок ───
             MF.scrollToContainer(container, 120);
         });
 
