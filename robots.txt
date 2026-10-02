@@ -1,27 +1,25 @@
 # robots.txt для MyFiles
-# https://dimonmaxx.github.io/
+# https://dimonmaxx.github.io/my-site/
 
 User-agent: *
-Allow: /$
-Allow: /index.html
-Allow: /forum.html
-Allow: /_content/
-Allow: /assets/
+Allow: /my-site/$
+Allow: /my-site/index.html
+Allow: /my-site/forum.html
+Allow: /my-site/_content/
+Allow: /my-site/assets/
 
 # Запрещаем индексацию служебных и админских страниц
-Disallow: /admin/
-Disallow: /login.html
-Disallow: /profile.html
-Disallow: /submit.html
+Disallow: /my-site/admin/
+Disallow: /my-site/login.html
+Disallow: /my-site/profile.html
+Disallow: /my-site/submit.html
 
-# Яндекс и Google — не индексировать параметры URL
+# Не индексировать параметры URL
 Disallow: /*?t=
 Disallow: /*?utm_
 
-# Sitemap
-Sitemap: https://dimonmaxx.github.io/sitemap.xml
+Sitemap: https://dimonmaxx.github.io/my-site/sitemap.xml
 
-# Замедляющие боты (краулеры SEO)
 User-agent: AhrefsBot
 Crawl-delay: 10
 
