@@ -1,0 +1,47 @@
+name: Cleanup old JS errors
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Удалить ошибки старше N дней'
+        required: false
+        default: '30'
+        type: string
+  schedule:
+    # Каждое воскресенье в 04:30 UTC
+    - cron: '30 4 * * 0'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cleanup-errors
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Run cleanup_errors.py
+        env:
+          SUPABASE_URL:              "https://rmoonebbvpmvthvpcmpt.supabase.co"
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          CLEANUP_ERRORS_DAYS:       ${{ github.event.inputs.days || '30' }}
+          # Telegram-уведомления
+          TELEGRAM_BOT_TOKEN:        ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:          ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python cleanup_errors.py
