@@ -76,7 +76,6 @@ jobs:
           BACKUP_KEEP_COUNT:         "3"
           SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
           SKIP_ENRICHMENT:           ${{ github.event.inputs.skip_enrichment == 'true' && '1' || '0' }}
-          # Telegram-уведомления
           TELEGRAM_BOT_TOKEN:        ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:          ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python yandex_disk_sync.py
@@ -86,6 +85,7 @@ jobs:
           GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
           SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SITE_BASE_URL:             "https://dimonmaxx.github.io/my-site"
           SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
         run: python generate_from_sheets.py
 
@@ -95,6 +95,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
           git add _content/ || true
+          git add sitemap.xml || true
           if [ -d _cache ]; then
             git add _cache/ || true
           fi
@@ -110,14 +111,12 @@ jobs:
             echo "Rebase conflict — оставляем свежую генерацию"
             git checkout --theirs _content/ 2>/dev/null || true
             git add _content/ || true
+            git add sitemap.xml || true
             GIT_EDITOR=true git rebase --continue || git rebase --skip || true
           }
 
           git push
 
-      # ─── Telegram-уведомление о падении ───
-      # При успехе подробный отчёт уже отправил yandex_disk_sync.py.
-      # Здесь только страховка: если что-то упало раньше — узнаете.
       - name: Notify Telegram on failure
         if: failure() || cancelled()
         env:
