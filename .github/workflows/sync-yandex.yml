@@ -76,6 +76,9 @@ jobs:
           BACKUP_KEEP_COUNT:         "3"
           SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
           SKIP_ENRICHMENT:           ${{ github.event.inputs.skip_enrichment == 'true' && '1' || '0' }}
+          # Telegram-уведомления
+          TELEGRAM_BOT_TOKEN:        ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:          ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python yandex_disk_sync.py
 
       - name: Run generate_from_sheets.py
@@ -111,3 +114,30 @@ jobs:
           }
 
           git push
+
+      # ─── Telegram-уведомление о падении ───
+      # При успехе подробный отчёт уже отправил yandex_disk_sync.py.
+      # Здесь только страховка: если что-то упало раньше — узнаете.
+      - name: Notify Telegram on failure
+        if: failure() || cancelled()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "cancelled" ]; then
+            EMOJI="⚠️"
+          else
+            EMOJI="❌"
+          fi
+
+          TEXT="$EMOJI Sync Yandex.Disk — $STATUS"
+          TEXT="$TEXT
+          Запуск: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          curl -s -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d disable_web_page_preview=true \
+            > /dev/null || true
