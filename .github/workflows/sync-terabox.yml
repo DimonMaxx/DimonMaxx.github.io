@@ -69,7 +69,7 @@ jobs:
           GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
           SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          SITE_BASE_URL:             "https://dimonmaxx.github.io/my-site"
+          SITE_BASE_URL:             "https://dimonmaxx.github.io"
           SYNC_SECTIONS:             ${{ github.event.inputs.sections || '' }}
         run: python generate_from_sheets.py
 
