@@ -50,7 +50,7 @@ SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 # Если сайт переедет на другой домен — достаточно изменить переменную окружения.
 SITE_BASE_URL = os.environ.get(
     "SITE_BASE_URL",
-    "https://dimonmaxx.github.io/my-site",
+    "https://dimonmaxx.github.io",
 ).rstrip("/")
 
 _raw_sync_sections = os.environ.get("SYNC_SECTIONS", "").strip()
