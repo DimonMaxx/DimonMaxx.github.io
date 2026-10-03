@@ -54,7 +54,7 @@
 
         // ─── GitHub (для ссылок и запуска workflow) ───
         GITHUB_OWNER: 'DimonMaxx',
-        GITHUB_REPO: 'my-site',
+        GITHUB_REPO: 'DimonMaxx.github.io',
         GITHUB_BRANCH: 'main',
 
         // Актуальные workflow-файлы (используются Edge Function github-dispatch):
