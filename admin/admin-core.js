@@ -37,22 +37,10 @@
     // ============================================================
     // ЖУРНАЛ ДЕЙСТВИЙ АДМИНИСТРАТОРА
     // ============================================================
-    /**
-     * Записывает действие админа в таблицу admin_actions.
-     * Работает "fire and forget" — не блокирует UI, ошибки
-     * логируются в консоль и НЕ прерывают основную операцию.
-     *
-     * @param {string} action       Тип: 'hide_items', 'delete_items',
-     *                              'section_update', 'user_role_change' и т.д.
-     * @param {string} sectionKey   Ключ раздела ('programs','books',...) или null
-     * @param {string} target       Конкретный объект: title, user_id, key раздела
-     * @param {object} details      Любые доп. данные (JSON-сериализуемые)
-     */
     function logAdminAction(action, sectionKey, target, details) {
         if (!state.currentUser) return;
         if (!action) return;
 
-        // Собираем payload
         const payload = {
             admin_id:    state.currentUser.id,
             admin_name:  state.currentProfile?.username
@@ -64,7 +52,6 @@
             details:     details || null,
         };
 
-        // Fire and forget — не ждём результат
         supabaseClient
             .from('admin_actions')
             .insert([payload])
@@ -81,44 +68,11 @@
     // ============================================================
     // ПРОКСИ-ССЫЛКА ДЛЯ СКАЧИВАНИЯ
     // ============================================================
-    // Определяет источник по домену URL и формирует ссылку
-    // на соответствующую Edge Function.
-    //   TeraBox  → /functions/v1/terabox-download?url=...&name=...
-    //   Яндекс   → /functions/v1/yandex-download?folder=...&path=...
-    // Используется в admin-content.js, чтобы файлы в админке
-    // скачивались через прокси (с авторизацией), а не напрямую.
-    function buildProxyUrl(downloadUrl, fileName) {
-        if (!downloadUrl) return '';
-        try {
-            const parsed = new URL(downloadUrl);
-            const host = parsed.hostname.toLowerCase();
-
-            // ─── TeraBox ───
-            if (host.includes('terabox')
-                || host.includes('1024tera')
-                || host.includes('4funbox')
-                || host.includes('teraboxapp')) {
-                let fname = fileName && String(fileName).trim();
-                if (!fname) {
-                    const fromPath = parsed.searchParams.get('path');
-                    fname = fromPath
-                        ? decodeURIComponent(fromPath).split('/').pop()
-                        : '';
-                }
-                return `${SUPABASE_URL}/functions/v1/terabox-download`
-                     + `?url=${encodeURIComponent(downloadUrl)}`
-                     + `&name=${encodeURIComponent(fname)}`;
-            }
-
-            // ─── Яндекс.Диск ───
-            const folder = `${parsed.origin}${parsed.pathname}`;
-            const path = parsed.searchParams.get('path');
-            if (!folder || !path) return downloadUrl;
-            return `${SUPABASE_URL}/functions/v1/yandex-download`
-                 + `?folder=${encodeURIComponent(folder)}`
-                 + `&path=${encodeURIComponent(path)}`;
-        } catch (e) { return downloadUrl; }
-    }
+    // Единый источник правды — MF.buildProxyUrl в shared.js.
+    // Здесь оставлен публичный алиас для обратной совместимости
+    // (admin-content.js вызывает Admin.buildProxyUrl).
+    // ============================================================
+    const buildProxyUrl = MF.buildProxyUrl;
 
     // ============================================================
     // ТОСТ-УВЕДОМЛЕНИЯ
@@ -733,10 +687,8 @@
         getState: () => state,
         showToast,
 
-        // ─── Журнал ───
         logAdminAction,
 
-        // ─── Прокси для скачивания ───
         buildProxyUrl,
 
         checkAuth,
