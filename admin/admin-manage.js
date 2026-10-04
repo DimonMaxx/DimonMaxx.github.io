@@ -15,7 +15,7 @@
 
     const state = window.AdminState;
 
-    // ─── Дополняем state полями, специфичными для этого модуля ───
+    // ─── Дополняем state полями ───
     if (state.usersData === undefined)         state.usersData = [];
     if (state.usersDataMap === undefined)      state.usersDataMap = {};
     if (state.usersPage === undefined)         state.usersPage = 1;
@@ -35,11 +35,57 @@
     if (state.errorsPageSize === undefined)    state.errorsPageSize = CFG.DEFAULT_PAGE_SIZE;
     if (state.errorsFilter === undefined)      state.errorsFilter = { period: 'week', page: '', search: '' };
 
-    // ─── Скачивания (новая вкладка) ───
     if (state.downloadLogsData === undefined)     state.downloadLogsData = [];
     if (state.downloadLogsFiltered === undefined) state.downloadLogsFiltered = [];
     if (state.downloadLogsSelected === undefined) state.downloadLogsSelected = new Set();
     if (state.downloadLogsFilter === undefined)   state.downloadLogsFilter = { search: '', period: 'all' };
+
+    // ─── Журнал действий ───
+    if (state.actionsData === undefined)     state.actionsData = [];
+    if (state.actionsFiltered === undefined) state.actionsFiltered = [];
+    if (state.actionsPage === undefined)     state.actionsPage = 1;
+    if (state.actionsPageSize === undefined) state.actionsPageSize = CFG.DEFAULT_PAGE_SIZE;
+    if (state.actionsFilter === undefined)   state.actionsFilter = {
+        period: 'week',   // today | week | month | all
+        action: '',       // '' = все
+        admin:  '',       // '' = все
+        search: '',
+    };
+
+    // Справочник человекочитаемых названий действий
+    const ACTION_LABELS = {
+        hide_items:             'Скрытие записей',
+        unhide_items:           'Восстановление записей',
+        unhide_all_items:       'Восстановление всех в разделе',
+        delete_items:           'Удаление записей',
+        run_workflow:           'Запуск синхронизации',
+        run_workflow_partial:   'Частичный запуск синхронизации',
+
+        section_create:         'Создание раздела',
+        section_update:         'Изменение раздела',
+        section_delete:         'Удаление раздела',
+
+        folder_create:          'Создание папки',
+        folder_delete:          'Удаление папки',
+
+        user_role_change:       'Смена роли',
+        user_update:            'Изменение пользователя',
+        user_delete:            'Удаление пользователя',
+
+        orphan_delete_selected: 'Удаление выбранных осиротевших',
+        orphan_delete_all:      'Удаление всех осиротевших',
+
+        error_delete_group:     'Удаление группы ошибок',
+        error_cleanup:          'Очистка старых ошибок',
+        error_delete_all:       'Удаление всех ошибок',
+
+        downloads_delete_selected: 'Удаление выбранных скачиваний',
+        downloads_delete_all:      'Удаление всех скачиваний',
+    };
+
+    function actionLabel(action) {
+        return ACTION_LABELS[action] || action;
+    }
 
     // ============================================================
     // РАЗДЕЛЫ САЙТА (CRUD)
@@ -122,9 +168,21 @@
 
     async function deleteSection(key) {
         if (!confirm(`Удалить раздел "${key}"?\n\nФайл JSON останется, но раздел исчезнет с сайта.`)) return;
+
+        // Найдём label для журнала
+        const sectionObj = state.sectionsList.find(x => x.key === key) || {};
+        const label = sectionObj.label || key;
+
         const { error } = await supabaseClient
             .from('site_sections').delete().eq('key', key);
         if (error) { alert('Ошибка: ' + error.message); return; }
+
+        Admin.logAdminAction('section_delete', key, label, {
+            label,
+            handler_type: sectionObj.handler_type,
+            json_path: sectionObj.json_path,
+        });
+
         alert('Раздел удалён.');
         await renderSectionsAdmin();
     }
@@ -331,6 +389,19 @@
         const { error } = await op;
         if (error) { alert('Ошибка: ' + error.message); return; }
 
+        Admin.logAdminAction(
+            isEdit ? 'section_update' : 'section_create',
+            key,
+            label,
+            {
+                handler_type: handlerType,
+                folderable: folderable,
+                is_active: isActive,
+                sheet_name: sheetName,
+                json_path: jsonPath,
+            }
+        );
+
         Admin.closeUserEditModal();
         alert('Сохранено. Перезагрузите страницу, чтобы увидеть изменения в меню.');
         await renderSectionsAdmin();
@@ -377,12 +448,21 @@
         document.getElementById('newFolderBtn').addEventListener('click', async () => {
             const name = prompt('Название папки:');
             if (!name || !name.trim()) return;
+            const cleanName = name.trim();
             const { error } = await supabaseClient
                 .from('section_folders').insert([{
                     section_key: state.currentFolderSection,
-                    name: name.trim(),
+                    name: cleanName,
                 }]);
             if (error) { alert('Ошибка: ' + error.message); return; }
+
+            Admin.logAdminAction(
+                'folder_create',
+                state.currentFolderSection,
+                cleanName,
+                null
+            );
+
             renderFoldersAdmin();
         });
 
@@ -476,6 +556,13 @@
         const { error } = await supabaseClient
             .from('section_folders').delete().eq('id', id);
         if (error) { alert('Ошибка: ' + error.message); return; }
+
+        Admin.logAdminAction(
+            'folder_delete',
+            state.currentFolderSection,
+            name,
+            { files_count: itemsToDelete.length }
+        );
 
         if (itemsToDelete.length > 0) {
             try {
@@ -620,12 +707,21 @@
             sel.addEventListener('change', async function () {
                 const userId = this.dataset.id;
                 const newRole = this.value;
+                const oldRole = state.usersDataMap[userId]?.role || 'user';
+                const username = state.usersDataMap[userId]?.username || '';
+
                 const { error } = await supabaseClient
                     .from('profiles').update({ role: newRole }).eq('id', userId);
                 if (error) {
                     alert('Ошибка: ' + error.message);
                     await loadUsers();
                 } else {
+                    Admin.logAdminAction(
+                        'user_role_change',
+                        null,
+                        userId,
+                        { username, from: oldRole, to: newRole }
+                    );
                     Admin.showToast('Роль обновлена!', 'success');
                 }
             });
@@ -716,6 +812,8 @@
         if (!userId) return;
         if (!username) { alert('Ник не может быть пустым.'); return; }
 
+        const oldUser = state.usersDataMap[userId] || {};
+
         const { error } = await supabaseClient.from('profiles').update({
             username,
             full_name: fullName || null,
@@ -726,6 +824,25 @@
         if (error) {
             alert('Ошибка сохранения: ' + error.message);
         } else {
+            Admin.logAdminAction(
+                'user_update',
+                null,
+                userId,
+                {
+                    old: {
+                        username: oldUser.username,
+                        full_name: oldUser.full_name,
+                        role: oldUser.role,
+                        admin_note: oldUser.admin_note,
+                    },
+                    new: {
+                        username,
+                        full_name: fullName || null,
+                        role,
+                        admin_note: adminNote || null,
+                    },
+                }
+            );
             Admin.showToast('Данные обновлены!', 'success');
             Admin.closeUserEditModal();
             await loadUsers();
@@ -752,6 +869,12 @@
             });
             const data = await resp.json();
             if (resp.ok && data.success) {
+                Admin.logAdminAction(
+                    'user_delete',
+                    null,
+                    userId,
+                    { username, email: data.email || null }
+                );
                 Admin.showToast('Пользователь удалён.', 'success');
                 await loadUsers();
             } else {
@@ -1164,6 +1287,12 @@
         }
 
         if (ok) {
+            Admin.logAdminAction(
+                'orphan_delete_selected',
+                sectionKey,
+                null,
+                { count: items.length, items: items.slice(0, 50) }
+            );
             Admin.showToast(`Запрос на удаление ${items.length} строк отправлен.`, 'success');
             setTimeout(() => { window.location.reload(); }, 5000);
         }
@@ -1203,6 +1332,12 @@
         }
 
         if (ok) {
+            Admin.logAdminAction(
+                'orphan_delete_all',
+                null,
+                null,
+                { count: allItems.length, items: allItems.slice(0, 50) }
+            );
             Admin.showToast(`Запрос на удаление ${allItems.length} строк отправлен.`, 'success');
             setTimeout(() => { window.location.reload(); }, 5000);
         }
@@ -1312,12 +1447,30 @@
 
     async function unhideOne(id) {
         if (!confirm('Показать этот файл на сайте?')) return;
+
+        // Найдём данные записи для журнала
+        let hiddenItem = null;
+        state.hiddenItems.forEach(item => {
+            if (item.id === id) hiddenItem = item;
+        });
+
         const { error } = await supabaseClient
             .from('hidden_items').delete().eq('id', id);
         if (error) {
             alert('Ошибка: ' + error.message);
             return;
         }
+
+        Admin.logAdminAction(
+            'unhide_items',
+            hiddenItem?.section_key || null,
+            hiddenItem?.title || null,
+            { count: 1, items: hiddenItem ? [{
+                folder: hiddenItem.folder,
+                title:  hiddenItem.title,
+            }] : [] }
+        );
+
         await Admin.loadHiddenItems();
         await loadHidden();
     }
@@ -1336,7 +1489,8 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Возвращаю...';
         }
 
-        const ids = Array.from(state.hiddenItems.values()).map(it => it.id);
+        const allItems = Array.from(state.hiddenItems.values());
+        const ids = allItems.map(it => it.id);
 
         const { error } = await supabaseClient
             .from('hidden_items').delete().in('id', ids);
@@ -1351,13 +1505,27 @@
             return;
         }
 
+        Admin.logAdminAction(
+            'unhide_all_items',
+            null,
+            null,
+            {
+                count: ids.length,
+                items: allItems.slice(0, 50).map(it => ({
+                    section: it.section_key,
+                    folder:  it.folder,
+                    title:   it.title,
+                })),
+            }
+        );
+
         await Admin.loadHiddenItems();
         await loadHidden();
         Admin.showToast(`Возвращено на сайт: ${ids.length}.`, 'success');
     }
 
     // ============================================================
-    // СКАЧИВАНИЯ — обновлённая вкладка с фильтрами и удалением
+    // СКАЧИВАНИЯ (с фильтрами и удалением)
     // ============================================================
     async function loadDownloads() {
         document.getElementById('sectionTitle').innerHTML =
@@ -1394,7 +1562,6 @@
 
         let filtered = state.downloadLogsData.slice();
 
-        // Поиск
         if (search) {
             filtered = filtered.filter(log => {
                 const fileName = (log.file_name || '').toLowerCase();
@@ -1406,13 +1573,8 @@
             });
         }
 
-        // Период
         if (period !== 'all') {
-            const limits = {
-                today: 1,
-                week: 7,
-                month: 30,
-            };
+            const limits = { today: 1, week: 7, month: 30 };
             const days = limits[period] || 1;
             const cutoff = now - days * 24 * 60 * 60 * 1000;
             filtered = filtered.filter(log => {
@@ -1601,7 +1763,6 @@
             deleteBtn.disabled = selected === 0;
         }
 
-        // Обновим состояние "выбрать все"
         const selectAll = document.getElementById('dlSelectAllCheckbox');
         const rowCheckboxes = document.querySelectorAll('.dl-row-checkbox');
         if (selectAll && rowCheckboxes.length > 0) {
@@ -1612,7 +1773,6 @@
     async function _deleteDownloadLogsByIds(ids) {
         if (!ids || ids.length === 0) return { ok: true, count: 0 };
 
-        // Удаляем порциями по 100 (лимит .in())
         const chunks = [];
         for (let i = 0; i < ids.length; i += 100) {
             chunks.push(ids.slice(i, i + 100));
@@ -1654,6 +1814,12 @@
         }
 
         if (result.ok) {
+            Admin.logAdminAction(
+                'downloads_delete_selected',
+                null,
+                null,
+                { count: ids.length }
+            );
             Admin.showToast(`Удалено ${result.count} записей.`, 'success');
             state.downloadLogsSelected = new Set();
             await loadDownloads();
@@ -1681,7 +1847,6 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Удаляю...';
         }
 
-        // Удаляем через RPC не надо — просто DELETE по всем id из state
         const ids = state.downloadLogsData.map(l => l.id);
         const result = await _deleteDownloadLogsByIds(ids);
 
@@ -1691,6 +1856,12 @@
         }
 
         if (result.ok) {
+            Admin.logAdminAction(
+                'downloads_delete_all',
+                null,
+                null,
+                { count: result.count }
+            );
             Admin.showToast(`Удалено ${result.count} записей.`, 'success');
             state.downloadLogsSelected = new Set();
             await loadDownloads();
@@ -2185,6 +2356,16 @@
                 deleteGroupBtn.innerHTML = `<i class="fas fa-trash"></i> Удалить всю группу (${g.count})`;
 
                 if (allOk) {
+                    Admin.logAdminAction(
+                        'error_delete_group',
+                        null,
+                        null,
+                        {
+                            count: ids.length,
+                            page: g.page,
+                            message: (g.message || '').slice(0, 200),
+                        }
+                    );
                     Admin.showToast(`Удалено ${ids.length} записей группы.`, 'success');
                     Admin.closeUserEditModal();
                     await Admin.refreshErrorsBadge();
@@ -2222,6 +2403,14 @@
             alert('Ошибка: ' + error.message);
             return;
         }
+
+        Admin.logAdminAction(
+            'error_cleanup',
+            null,
+            null,
+            { cutoff: cutoff, days: 30 }
+        );
+
         Admin.showToast('Старые записи удалены.', 'success');
         await Admin.refreshErrorsBadge();
         await loadErrors();
@@ -2267,6 +2456,12 @@
         }
 
         if (allOk) {
+            Admin.logAdminAction(
+                'error_delete_all',
+                null,
+                null,
+                { count: ids.length }
+            );
             Admin.showToast(`Удалено ${ids.length} записей.`, 'success');
             await Admin.refreshErrorsBadge();
             await loadErrors();
@@ -2332,9 +2527,442 @@
     }
 
     // ============================================================
+    // ЖУРНАЛ ДЕЙСТВИЙ АДМИНИСТРАТОРА
+    // ============================================================
+
+    async function loadAdminActions() {
+        document.getElementById('sectionTitle').innerHTML =
+            `<i class="fas fa-clipboard-list"></i> Журнал действий`;
+        document.getElementById('toolbar').style.display = 'flex';
+        document.getElementById('deleteSelectedBtn').style.display = 'none';
+        document.getElementById('hideSelectedBtn').style.display = 'none';
+        document.getElementById('unhideSelectedBtn').style.display = 'none';
+
+        const wrapper = document.getElementById('tableWrapper');
+        wrapper.innerHTML = `<p class="empty-block"><i class="fas fa-spinner fa-spin"></i> Загрузка журнала...</p>`;
+
+        // Загружаем последние 500 записей
+        let query = supabaseClient
+            .from('admin_actions')
+            .select('id, admin_id, admin_name, action, section_key, target, details, created_at')
+            .order('created_at', { ascending: false })
+            .limit(500);
+
+        // Фильтр по периоду (серверный)
+        const period = state.actionsFilter.period;
+        if (period !== 'all') {
+            const now = Date.now();
+            const daysMap = { today: 1, week: 7, month: 30 };
+            const days = daysMap[period] || 30;
+            const cutoff = new Date(now - days * 24 * 60 * 60 * 1000).toISOString();
+            query = query.gte('created_at', cutoff);
+        }
+
+        const { data, error } = await query;
+
+        if (error) {
+            wrapper.innerHTML = `<p class="empty-block">Ошибка загрузки: ${MF.escapeHtml(error.message)}</p>`;
+            return;
+        }
+
+        state.actionsData = data || [];
+        state.actionsPage = 1;
+
+        renderActionsFiltered();
+    }
+
+    function renderActionsFiltered() {
+        let filtered = state.actionsData.slice();
+
+        // Локальные фильтры: action, admin, поиск
+        const f = state.actionsFilter;
+
+        if (f.action) {
+            filtered = filtered.filter(a => a.action === f.action);
+        }
+
+        if (f.admin) {
+            filtered = filtered.filter(a => a.admin_name === f.admin);
+        }
+
+        if (f.search) {
+            const q = f.search.toLowerCase();
+            filtered = filtered.filter(a => {
+                const t = (a.target || '').toLowerCase();
+                const s = (a.section_key || '').toLowerCase();
+                const d = a.details ? JSON.stringify(a.details).toLowerCase() : '';
+                return t.includes(q) || s.includes(q) || d.includes(q);
+            });
+        }
+
+        state.actionsFiltered = filtered;
+        renderActionsTable();
+    }
+
+    function renderActionsTable() {
+        const wrapper = document.getElementById('tableWrapper');
+        const data = state.actionsFiltered;
+        const totalItems = data.length;
+
+        const totalPages = Math.max(1, Math.ceil(totalItems / state.actionsPageSize));
+        if (state.actionsPage > totalPages) state.actionsPage = totalPages;
+        if (state.actionsPage < 1) state.actionsPage = 1;
+        const startIdx = (state.actionsPage - 1) * state.actionsPageSize;
+        const pageItems = data.slice(startIdx, startIdx + state.actionsPageSize);
+
+        // Уникальные значения для селектов фильтра
+        const actionSet = new Set();
+        state.actionsData.forEach(a => { if (a.action) actionSet.add(a.action); });
+        const actionsList = Array.from(actionSet).sort();
+
+        const adminSet = new Set();
+        state.actionsData.forEach(a => { if (a.admin_name) adminSet.add(a.admin_name); });
+        const adminsList = Array.from(adminSet).sort();
+
+        const actionOptions = actionsList.map(a => {
+            const sel = state.actionsFilter.action === a ? ' selected' : '';
+            return `<option value="${MF.escapeAttr(a)}"${sel}>${MF.escapeHtml(actionLabel(a))}</option>`;
+        }).join('');
+
+        const adminOptions = adminsList.map(a => {
+            const sel = state.actionsFilter.admin === a ? ' selected' : '';
+            return `<option value="${MF.escapeAttr(a)}"${sel}>${MF.escapeHtml(a)}</option>`;
+        }).join('');
+
+        const periodOptions = [
+            { value: 'today', label: 'За сегодня' },
+            { value: 'week',  label: 'За неделю' },
+            { value: 'month', label: 'За месяц' },
+            { value: 'all',   label: 'За всё время (500 последних)' },
+        ].map(o => {
+            const sel = state.actionsFilter.period === o.value ? ' selected' : '';
+            return `<option value="${o.value}"${sel}>${o.label}</option>`;
+        }).join('');
+
+        const filterBarHtml = `
+            <div class="filters">
+                <label>Период:
+                    <select id="actionsFilterPeriod">${periodOptions}</select>
+                </label>
+                <label>Действие:
+                    <select id="actionsFilterAction">
+                        <option value="">Все</option>
+                        ${actionOptions}
+                    </select>
+                </label>
+                <label>Администратор:
+                    <select id="actionsFilterAdmin">
+                        <option value="">Все</option>
+                        ${adminOptions}
+                    </select>
+                </label>
+                <label>Поиск:
+                    <input type="text" id="actionsFilterSearch"
+                           placeholder="Цель или детали..."
+                           value="${MF.escapeAttr(state.actionsFilter.search)}">
+                </label>
+                <span class="spacer" style="flex:1;"></span>
+                <button class="btn-secondary" id="actionsExportCsvBtn">
+                    <i class="fas fa-file-csv"></i> Экспорт в CSV
+                </button>
+                <button class="btn-secondary" id="actionsFilterReset">
+                    <i class="fas fa-times"></i> Сбросить
+                </button>
+            </div>
+        `;
+
+        const bannerHtml = totalItems === 0
+            ? ''
+            : `<div class="errors-banner" style="background:#eff6ff; border-color:#93c5fd; color:#1e3a8a;">
+                    <i class="fas fa-clipboard-list" style="color:#2563eb;"></i>
+                    <div>
+                        Найдено <strong>${totalItems}</strong> действий за выбранный период.
+                        <br>
+                        <small>
+                            Журнал хранит <strong>последние 500 записей</strong>.
+                            Записи неизменяемы — их можно только удалить целиком.
+                        </small>
+                    </div>
+               </div>`;
+
+        let headHtml = `<tr>
+            <th>Время</th>
+            <th>Администратор</th>
+            <th>Действие</th>
+            <th>Раздел</th>
+            <th>Цель</th>
+            <th class="center">Детали</th>
+        </tr>`;
+
+        let bodyHtml = '';
+        if (pageItems.length === 0) {
+            bodyHtml = `<tr><td colspan="6" class="empty-block">За выбранный период действий нет</td></tr>`;
+        } else {
+            pageItems.forEach(a => {
+                const dt = new Date(a.created_at);
+                const dateStr = isFinite(dt.getTime())
+                    ? dt.toLocaleDateString('ru-RU') + ' ' +
+                      dt.toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' })
+                    : '—';
+
+                const hasDetails = a.details && Object.keys(a.details).length > 0;
+                const actionIdx = state.actionsFiltered.indexOf(a);
+
+                bodyHtml += `<tr data-action-idx="${actionIdx}" style="cursor:${hasDetails ? 'pointer' : 'default'};">
+                    <td><span class="error-row-time">${MF.escapeHtml(dateStr)}</span></td>
+                    <td><strong>${MF.escapeHtml(a.admin_name || '—')}</strong></td>
+                    <td><span class="role-badge role-user">${MF.escapeHtml(actionLabel(a.action))}</span></td>
+                    <td>${a.section_key
+                        ? `<code>${MF.escapeHtml(a.section_key)}</code>`
+                        : '—'}</td>
+                    <td title="${MF.escapeAttr(a.target || '')}">
+                        ${a.target
+                            ? MF.escapeHtml(String(a.target).slice(0, 60))
+                            : '—'}
+                    </td>
+                    <td class="center">
+                        ${hasDetails
+                            ? `<i class="fas fa-info-circle" style="color:#2563eb;"></i>`
+                            : '—'}
+                    </td>
+                </tr>`;
+            });
+        }
+
+        const stateObj = {
+            pageSize: state.actionsPageSize,
+            currentPage: state.actionsPage,
+            totalItems: totalItems,
+        };
+
+        const paginationTop = (totalPages > 1)
+            ? MF.renderPagination('actions-container', totalItems, totalPages, stateObj, 'top')
+            : '';
+        const paginationBottom = (totalPages > 1)
+            ? MF.renderPagination('actions-container', totalItems, totalPages, stateObj, 'bottom')
+            : '';
+
+        wrapper.innerHTML = `
+            ${filterBarHtml}
+            ${bannerHtml}
+            <div id="actions-container">
+                ${paginationTop}
+                <div class="content-table-wrapper">
+                    <table class="content-table">
+                        <thead>${headHtml}</thead>
+                        <tbody>${bodyHtml}</tbody>
+                    </table>
+                </div>
+                ${paginationBottom}
+            </div>`;
+
+        // Обработчики фильтров
+        const periodSel = document.getElementById('actionsFilterPeriod');
+        if (periodSel) periodSel.addEventListener('change', function () {
+            state.actionsFilter.period = this.value;
+            loadAdminActions();
+        });
+
+        const actionSel = document.getElementById('actionsFilterAction');
+        if (actionSel) actionSel.addEventListener('change', function () {
+            state.actionsFilter.action = this.value;
+            state.actionsPage = 1;
+            renderActionsFiltered();
+        });
+
+        const adminSel = document.getElementById('actionsFilterAdmin');
+        if (adminSel) adminSel.addEventListener('change', function () {
+            state.actionsFilter.admin = this.value;
+            state.actionsPage = 1;
+            renderActionsFiltered();
+        });
+
+        const searchInput = document.getElementById('actionsFilterSearch');
+        if (searchInput) {
+            let t = null;
+            searchInput.addEventListener('input', function () {
+                clearTimeout(t);
+                const val = this.value;
+                t = setTimeout(() => {
+                    state.actionsFilter.search = val;
+                    state.actionsPage = 1;
+                    renderActionsFiltered();
+                    const ni = document.getElementById('actionsFilterSearch');
+                    if (ni) {
+                        ni.focus();
+                        ni.setSelectionRange(ni.value.length, ni.value.length);
+                    }
+                }, 300);
+            });
+        }
+
+        const resetBtn = document.getElementById('actionsFilterReset');
+        if (resetBtn) resetBtn.addEventListener('click', () => {
+            state.actionsFilter = {
+                period: 'week', action: '', admin: '', search: '',
+            };
+            state.actionsPage = 1;
+            loadAdminActions();
+        });
+
+        const exportBtn = document.getElementById('actionsExportCsvBtn');
+        if (exportBtn) exportBtn.addEventListener('click', exportActionsToCSV);
+
+        // Клик по строке → модалка с деталями
+        wrapper.querySelectorAll('tr[data-action-idx]').forEach(tr => {
+            tr.addEventListener('click', function () {
+                const idx = parseInt(this.dataset.actionIdx, 10);
+                const a = state.actionsFiltered[idx];
+                if (!a || !a.details) return;
+                openActionDetails(a);
+            });
+        });
+
+        const container = document.getElementById('actions-container');
+        if (container && totalPages > 1) {
+            MF.attachPaginationHandlers(
+                container,
+                'actions-container',
+                stateObj,
+                () => {
+                    state.actionsPage = stateObj.currentPage;
+                    state.actionsPageSize = stateObj.pageSize;
+                    renderActionsTable();
+                },
+                { scrollTarget: container, scrollOffset: 120 }
+            );
+        }
+    }
+
+    function openActionDetails(a) {
+        const modal = document.getElementById('userEditModal');
+        const box = modal.querySelector('.modal-box');
+
+        const dt = new Date(a.created_at);
+        const dateStr = dt.toLocaleString('ru-RU');
+
+        // Красиво отформатируем JSON
+        let detailsJson = '';
+        try {
+            detailsJson = JSON.stringify(a.details, null, 2);
+        } catch (e) {
+            detailsJson = String(a.details);
+        }
+
+        box.innerHTML = `
+            <h3><i class="fas fa-clipboard-list" style="color:#2563eb;"></i>
+                Детали действия #${a.id}
+            </h3>
+
+            <div class="error-detail-label">Время</div>
+            <div class="error-detail-value">${MF.escapeHtml(dateStr)}</div>
+
+            <div class="error-detail-label">Администратор</div>
+            <div class="error-detail-value">
+                <strong>${MF.escapeHtml(a.admin_name || '—')}</strong>
+                <br>
+                <small style="color:#94a3b8;">${MF.escapeHtml(a.admin_id || '')}</small>
+            </div>
+
+            <div class="error-detail-label">Действие</div>
+            <div class="error-detail-value">
+                <span class="role-badge role-user">${MF.escapeHtml(actionLabel(a.action))}</span>
+                <code style="margin-left:8px;">${MF.escapeHtml(a.action)}</code>
+            </div>
+
+            ${a.section_key ? `
+                <div class="error-detail-label">Раздел</div>
+                <div class="error-detail-value"><code>${MF.escapeHtml(a.section_key)}</code></div>
+            ` : ''}
+
+            ${a.target ? `
+                <div class="error-detail-label">Цель</div>
+                <div class="error-detail-value">${MF.escapeHtml(a.target)}</div>
+            ` : ''}
+
+            ${detailsJson ? `
+                <div class="error-detail-label">Детали (JSON)</div>
+                <pre class="error-detail-pre">${MF.escapeHtml(detailsJson)}</pre>
+            ` : ''}
+
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="Admin.closeUserEditModal()">Закрыть</button>
+            </div>
+        `;
+        modal.classList.add('active');
+    }
+
+    function exportActionsToCSV() {
+        const rows = state.actionsFiltered;
+        if (rows.length === 0) {
+            alert('Нет данных для экспорта (по текущим фильтрам).');
+            return;
+        }
+
+        const header = [
+            'ID', 'Время', 'Администратор', 'Admin ID',
+            'Действие', 'Раздел', 'Цель', 'Детали (JSON)',
+        ];
+
+        function csvCell(cell) {
+            const s = cell === null || cell === undefined ? '' : String(cell);
+            if (/[",\n\r\t]/.test(s)) {
+                return '"' + s.replace(/"/g, '""') + '"';
+            }
+            return s;
+        }
+
+        const lines = [];
+        lines.push(header.map(csvCell).join(','));
+
+        rows.forEach(a => {
+            let detailsStr = '';
+            if (a.details) {
+                try {
+                    detailsStr = JSON.stringify(a.details);
+                } catch (e) {
+                    detailsStr = String(a.details);
+                }
+            }
+            lines.push([
+                csvCell(a.id),
+                csvCell(a.created_at || ''),
+                csvCell(a.admin_name || ''),
+                csvCell(a.admin_id || ''),
+                csvCell(a.action || ''),
+                csvCell(a.section_key || ''),
+                csvCell(a.target || ''),
+                csvCell(detailsStr),
+            ].join(','));
+        });
+
+        const csv = lines.join('\r\n');
+        const blob = new Blob(['\ufeff' + csv], {
+            type: 'text/csv;charset=utf-8;',
+        });
+
+        const now = new Date();
+        const dateStr = now.toISOString().slice(0, 19).replace(/[:T]/g, '-');
+        const filename = `admin_actions_${dateStr}.csv`;
+
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 4000);
+
+        Admin.showToast(`Экспортировано ${rows.length} записей → ${filename}`, 'success');
+    }
+
+    // ============================================================
     // ЭКСПОРТ
     // ============================================================
     Object.assign(Admin, {
+        // Разделы
         renderSectionsAdmin,
         loadSectionsFromDB,
         editSection,
@@ -2342,35 +2970,42 @@
         openSectionModal,
         saveSection,
 
+        // Папки
         renderFoldersAdmin,
         renderFoldersTable,
         deleteFolder,
 
+        // Пользователи
         loadUsers,
         openUserEditModal,
         saveUser,
         deleteUser,
 
+        // Посетители
         loadVisitors,
 
+        // Осиротевшие
         loadOrphans,
         showOrphansByIndex,
         deleteSelectedOrphans,
         deleteAllOrphans,
 
+        // Скрытые
         loadHidden,
         unhideOne,
         unhideAll,
 
-        // ─── Скачивания (обновлённая вкладка) ───
+        // Скачивания
         loadDownloads,
         renderDownloadsFiltered,
         renderDownloadsTable,
         deleteSelectedDownloadLogs,
         deleteAllDownloadLogs,
 
+        // Статистика
         loadStats,
 
+        // Ошибки JS
         loadErrors,
         renderErrorsFiltered,
         renderErrorsTable,
@@ -2379,5 +3014,13 @@
         deleteAllErrors,
         exportErrorsToCSV,
         groupErrors,
+
+        // Журнал действий
+        loadAdminActions,
+        renderActionsFiltered,
+        renderActionsTable,
+        openActionDetails,
+        exportActionsToCSV,
+        actionLabel,
     });
 })();
