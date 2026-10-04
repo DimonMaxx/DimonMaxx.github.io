@@ -14,8 +14,14 @@
 #
 # Устойчив к «дубликатам заголовков» и «хвостам» старых колонок:
 # не использует get_all_records(), а читает значения напрямую.
+#
+# Стабильный file_id:
+#   В каждый item добавляется поле file_id = slugify(title).
+#   Оно фиксируется в JSON и больше не пересчитывается на фронте.
+#   Это устраняет дубликаты в downloads при смене title в Sheets.
 
 import os
+import re
 import sys
 import json
 import datetime
@@ -85,6 +91,27 @@ for ru, en in RU_TO_EN.items():
     EN_TO_RU.setdefault(en, []).append(ru)
 
 EN_TO_RU.setdefault("body", []).extend(EN_TO_RU.get("text", []))
+
+
+# ============================================================
+# SLUGIFY (совпадает с MF.slugify на фронте)
+# ============================================================
+
+def slugify(text):
+    """
+    Преобразует заголовок в стабильный file_id.
+    Логика один-в-один с MF.slugify в shared.js:
+      1. убрать всё, кроме букв/цифр/пробелов/дефисов (латиница + кириллица)
+      2. привести к нижнему регистру
+      3. пробелы и группы дефисов → одиночный дефис
+    """
+    if not text:
+        return ""
+    s = str(text)
+    s = re.sub(r"[^a-zA-Z0-9а-яА-ЯёЁ\s\-]", "", s)
+    s = s.strip().lower()
+    s = re.sub(r"[\s\-]+", "-", s)
+    return s
 
 
 # ============================================================
@@ -224,6 +251,16 @@ def _read_records_safe(worksheet, headers):
 
 
 def row_to_item(row, columns=None):
+    """
+    Преобразует строку Sheets (RU-заголовки) в JSON-объект (EN-ключи).
+    Дополнительно добавляет стабильный file_id = slugify(title),
+    чтобы избежать дубликатов в downloads при смене title.
+
+    ВАЖНО: file_id фиксируется в JSON в момент генерации.
+    Фронтенд берёт его из item.file_id и НЕ пересчитывает slugify(title).
+    Это устраняет проблему, когда изменение title в Sheets
+    приводило к появлению новой записи в downloads вместо обновления старой.
+    """
     item = {}
     target_keys = [k for k in (columns or []) if k]
     if not target_keys:
@@ -243,6 +280,11 @@ def row_to_item(row, columns=None):
             item[en_key] = str(value)
         else:
             item[en_key] = str(value).strip()
+
+    # Стабильный file_id — фиксируется в JSON и больше не пересчитывается
+    if item.get("title"):
+        item["file_id"] = slugify(item["title"])
+
     return item
 
 
@@ -338,6 +380,10 @@ def generate_json_for_section(worksheet, json_path, columns=None,
         if len(sample_keys) > 8:
             preview += ", ..."
         print(f"    Ключи: {preview}")
+        # Показать пример file_id, если он есть
+        sample_fid = json_data[0].get("file_id")
+        if sample_fid:
+            print(f"    file_id (пример): {sample_fid}")
 
     return len(json_data)
 
