@@ -456,11 +456,91 @@
     }
 
     // ============================================================
-    // Загрузка разделов из Supabase (с fallback на DEFAULT_SECTIONS)
+    // КЭШ site_sections В localStorage
+    // ============================================================
+    // Схема:
+    //   localStorage['mf_site_sections_v1'] = {
+    //       ts: <timestamp ms>,
+    //       sections: { key: { label, icon, json, ... }, ... }
+    //   }
+    //
+    // Зачем:
+    //   При каждом открытии страницы идёт fetch site_sections из Supabase.
+    //   Это 200-500 мс. Кэш на 5 минут убирает эти запросы почти полностью.
+    //
+    // Инвалидация:
+    //   - Автоматически по TTL (5 минут).
+    //   - Вручную через MF.invalidateSectionsCache() — вызывать из админки
+    //     после создания/редактирования/удаления раздела.
+    //
+    // Версия в ключе (_v1) — если изменится структура sections,
+    // достаточно поменять на _v2, и старый кэш не помешает.
+    // ============================================================
+
+    const SECTIONS_CACHE_KEY    = 'mf_site_sections_v1';
+    const SECTIONS_CACHE_TTL_MS = 5 * 60 * 1000;  // 5 минут
+
+    function _readSectionsCache(force) {
+        if (force) return null;
+        try {
+            const raw = localStorage.getItem(SECTIONS_CACHE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || !parsed.sections || !parsed.ts) return null;
+            const age = Date.now() - Number(parsed.ts);
+            if (age > SECTIONS_CACHE_TTL_MS) {
+                // кэш протух — удаляем, чтобы не занимал место
+                localStorage.removeItem(SECTIONS_CACHE_KEY);
+                return null;
+            }
+            return parsed.sections;
+        } catch (e) {
+            console.warn('[sections cache] read failed:', e);
+            return null;
+        }
+    }
+
+    function _writeSectionsCache(sections) {
+        try {
+            const payload = {
+                ts: Date.now(),
+                sections: sections || {},
+            };
+            localStorage.setItem(SECTIONS_CACHE_KEY, JSON.stringify(payload));
+        } catch (e) {
+            // localStorage может быть переполнен или отключён (приватный режим)
+            console.warn('[sections cache] write failed:', e);
+        }
+    }
+
+    function invalidateSectionsCache() {
+        try {
+            localStorage.removeItem(SECTIONS_CACHE_KEY);
+        } catch (_) { /* ignore */ }
+        // Сбрасываем и внутрисессионный промис-мемоизатор,
+        // чтобы следующий вызов loadSections() пошёл в Supabase
+        _sectionsLoaded = null;
+    }
+
+    // ============================================================
+    // Загрузка разделов из Supabase (с кэшем + fallback на DEFAULT_SECTIONS)
+    // ============================================================
+    //
+    // Приоритеты:
+    //   1. force=true               → игнорировать кэш, идти в Supabase
+    //   2. localStorage (свежий)    → использовать мгновенно
+    //   3. Supabase (успех)         → записать в localStorage и применить
+    //   4. Supabase (ошибка)        → старый localStorage или DEFAULT_SECTIONS
+    //
+    // Возвращает Promise<объект SECTIONS>.
     // ============================================================
     let _sectionsLoaded = null;
 
     function loadSections(force) {
+        // Если force=true — сбросить мемоизацию внутри сессии
+        if (force) {
+            _sectionsLoaded = null;
+        }
         if (_sectionsLoaded && !force) return _sectionsLoaded;
 
         _sectionsLoaded = (async function () {
@@ -471,6 +551,21 @@
                 return {};
             }
 
+            // ─── 1. Попытка взять из localStorage ───
+            const cached = _readSectionsCache(force);
+            if (cached) {
+                console.log('[loadSections] из localStorage (кэш):',
+                    Object.keys(cached));
+                _replaceSections(cfg, cached);
+                // Дальше не идём — используем кэш.
+                // Если хочешь ещё и «фоновое обновление» — раскомментируй блок ниже.
+                //
+                // _refreshSectionsInBackground(cfg);
+                //
+                return cfg.SECTIONS;
+            }
+
+            // ─── 2. Идём в Supabase ───
             const applyFallback = () => {
                 console.warn('[loadSections] → fallback на DEFAULT_SECTIONS');
                 _replaceSections(cfg, cfg.DEFAULT_SECTIONS || {});
@@ -516,7 +611,11 @@
                         .forEach(([k, v]) => { sorted[k] = v; });
 
                     _replaceSections(cfg, sorted);
-                    console.log('[loadSections] загружено из Supabase:',
+
+                    // ─── Записываем в localStorage ───
+                    _writeSectionsCache(sorted);
+
+                    console.log('[loadSections] из Supabase (свежие):',
                         Object.keys(cfg.SECTIONS));
                     return cfg.SECTIONS;
                 }
@@ -525,6 +624,19 @@
                 return applyFallback();
             } catch (e) {
                 console.error('[loadSections] исключение:', e);
+                // Если есть устаревший кэш — лучше использовать его,
+                // чем DEFAULT_SECTIONS (вдруг разделы кастомные).
+                try {
+                    const raw = localStorage.getItem(SECTIONS_CACHE_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && parsed.sections) {
+                            console.warn('[loadSections] используем устаревший кэш');
+                            _replaceSections(cfg, parsed.sections);
+                            return cfg.SECTIONS;
+                        }
+                    }
+                } catch (_) { /* ignore */ }
                 return applyFallback();
             }
         })();
@@ -543,6 +655,7 @@
         toggleDesc, triggerDownload, formatDateRu,
         buildProxyUrl, getAudioMimeType,
         getSupabaseClient, loadSections,
+        invalidateSectionsCache,
         installErrorHandler,
     });
 
