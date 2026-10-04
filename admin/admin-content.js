@@ -208,8 +208,15 @@
 
     async function unhideAllInSection(section) {
         const ids = [];
+        const itemsRestored = [];
         state.hiddenItems.forEach(item => {
-            if (item.section_key === section) ids.push(item.id);
+            if (item.section_key === section) {
+                ids.push(item.id);
+                itemsRestored.push({
+                    folder: item.folder,
+                    title:  item.title,
+                });
+            }
         });
         if (ids.length === 0) return;
         if (!confirm(`Показать все ${ids.length} скрытых в разделе?`)) return;
@@ -220,6 +227,14 @@
             alert('Ошибка: ' + error.message);
             return;
         }
+
+        // Логирование
+        Admin.logAdminAction(
+            'unhide_all_items',
+            section,
+            null,
+            { count: ids.length, items: itemsRestored.slice(0, 50) }
+        );
 
         await Admin.loadHiddenItems();
         renderContent(section);
@@ -349,7 +364,6 @@
                         const shortVal = s.length > 120 ? s.slice(0, 120) + '...' : s;
                         tbodyHtml += `<td title="${MF.escapeAttr(val || '')}">${MF.escapeHtml(shortVal)}</td>`;
                     } else if (col.type === 'download') {
-                        // ← ИЗМЕНЕНО: используем прокси-ссылку через Edge Function
                         if (val) {
                             const proxied = Admin.buildProxyUrl(val, titleVal);
                             tbodyHtml += `<td>
@@ -572,6 +586,14 @@
             return;
         }
 
+        // Логирование
+        Admin.logAdminAction(
+            'hide_items',
+            section,
+            null,
+            { count: toHide.length, items: toHide.slice(0, 50) }
+        );
+
         await Admin.loadHiddenItems();
         renderContent(section);
         Admin.showToast(
@@ -589,6 +611,7 @@
         const data = state.sectionData[section] || [];
 
         const idsToDelete = [];
+        const itemsRestored = [];
         selected.forEach(idx => {
             const item = data[idx];
             if (!item) return;
@@ -597,7 +620,10 @@
             if (!title) return;
             const key = Admin.makeHiddenKey(section, folder, title);
             const hidden = state.hiddenItems.get(key);
-            if (hidden && hidden.id) idsToDelete.push(hidden.id);
+            if (hidden && hidden.id) {
+                idsToDelete.push(hidden.id);
+                itemsRestored.push({ folder, title });
+            }
         });
 
         if (idsToDelete.length === 0) {
@@ -629,6 +655,14 @@
             alert('Ошибка: ' + error.message);
             return;
         }
+
+        // Логирование
+        Admin.logAdminAction(
+            'unhide_items',
+            section,
+            null,
+            { count: idsToDelete.length, items: itemsRestored.slice(0, 50) }
+        );
 
         await Admin.loadHiddenItems();
         renderContent(section);
@@ -731,6 +765,14 @@
 
         const ok = await _dispatchDeleteOrphans(items);
         if (ok) {
+            // Логирование
+            Admin.logAdminAction(
+                'delete_items',
+                section,
+                null,
+                { count: items.length, items: items.slice(0, 50) }
+            );
+
             Admin.showToast(
                 `Запрос на удаление ${items.length} записей отправлен.`,
                 'success'
