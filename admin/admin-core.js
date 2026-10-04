@@ -34,14 +34,52 @@
     let _badgesIntervalId = null;
 
     // ============================================================
+    // ЖУРНАЛ ДЕЙСТВИЙ АДМИНИСТРАТОРА
+    // ============================================================
+    /**
+     * Записывает действие админа в таблицу admin_actions.
+     * Работает "fire and forget" — не блокирует UI, ошибки
+     * логируются в консоль и НЕ прерывают основную операцию.
+     *
+     * @param {string} action       Тип: 'hide_items', 'delete_items',
+     *                              'section_update', 'user_role_change' и т.д.
+     * @param {string} sectionKey   Ключ раздела ('programs','books',...) или null
+     * @param {string} target       Конкретный объект: title, user_id, key раздела
+     * @param {object} details      Любые доп. данные (JSON-сериализуемые)
+     */
+    function logAdminAction(action, sectionKey, target, details) {
+        if (!state.currentUser) return;
+        if (!action) return;
+
+        // Собираем payload
+        const payload = {
+            admin_id:    state.currentUser.id,
+            admin_name:  state.currentProfile?.username
+                         || state.currentUser.email
+                         || 'unknown',
+            action:      String(action).slice(0, 100),
+            section_key: sectionKey ? String(sectionKey).slice(0, 100) : null,
+            target:      target ? String(target).slice(0, 500) : null,
+            details:     details || null,
+        };
+
+        // Fire and forget — не ждём результат
+        supabaseClient
+            .from('admin_actions')
+            .insert([payload])
+            .then(({ error }) => {
+                if (error) {
+                    console.warn('[logAdminAction] ошибка записи:', error.message);
+                }
+            })
+            .catch((e) => {
+                console.warn('[logAdminAction] исключение:', e);
+            });
+    }
+
+    // ============================================================
     // ПРОКСИ-ССЫЛКА ДЛЯ СКАЧИВАНИЯ
     // ============================================================
-    // Определяет источник по домену URL и формирует ссылку
-    // на соответствующую Edge Function.
-    //   TeraBox  → /functions/v1/terabox-download?url=...&name=...
-    //   Яндекс   → /functions/v1/yandex-download?folder=...&path=...
-    // Используется в admin-content.js, чтобы файлы в админке
-    // скачивались через прокси (с авторизацией), а не напрямую.
     function buildProxyUrl(downloadUrl, fileName) {
         if (!downloadUrl) return '';
         try {
@@ -289,12 +327,22 @@
 
         if (failed.length === 0) {
             closeRefreshModal();
+            logAdminAction('run_workflow', null, null, {
+                tasks: tasks.map(t => ({
+                    workflow: t.workflow,
+                    sections: t.inputs.sections,
+                })),
+            });
             const text = launched.length === 1
                 ? `Обновление ${launched[0]} запущено. Результат придёт в Telegram.`
                 : `Обновление запущено (${launched.join(', ')}). Результат придёт в Telegram.`;
             showToast(text, 'success');
         } else if (launched.length > 0) {
             closeRefreshModal();
+            logAdminAction('run_workflow_partial', null, null, {
+                launched: launched,
+                failed: failed,
+            });
             showToast(`Запущено: ${launched.join(', ')}. Ошибки: ${failed.join('; ')}`, 'info');
         } else {
             showToast('Не удалось запустить: ' + failed.join('; '), 'error');
@@ -359,7 +407,7 @@
     }
 
     // ============================================================
-    // BADGES: ОСИРОТЕВШИЕ + ОШИБКИ JS
+    // BADGES: ОСИРОТЕВШИЕ + ОШИБКИ JS + ЖУРНАЛ
     // ============================================================
     async function refreshOrphansBadge() {
         try {
@@ -511,6 +559,7 @@
         else if (tab === 'orphans')       Admin.loadOrphans?.();
         else if (tab === 'hidden')        Admin.loadHidden?.();
         else if (tab === 'errors')        Admin.loadErrors?.();
+        else if (tab === 'actions')       Admin.loadAdminActions?.();
         else                              Admin.loadSection?.(tab);
     }
 
@@ -586,6 +635,7 @@
                 else if (tab === 'orphans')    Admin.loadOrphans?.();
                 else if (tab === 'hidden')     Admin.loadHidden?.();
                 else if (tab === 'errors')     Admin.loadErrors?.();
+                else if (tab === 'actions')    Admin.loadAdminActions?.();
                 else                           Admin.loadSection?.(tab);
             });
         }
@@ -652,7 +702,10 @@
         getState: () => state,
         showToast,
 
-        // ─── НОВОЕ: прокси-ссылка для скачивания ───
+        // ─── Журнал ───
+        logAdminAction,
+
+        // ─── Прокси для скачивания ───
         buildProxyUrl,
 
         checkAuth,
