@@ -91,6 +91,11 @@
     // РАЗДЕЛЫ САЙТА (CRUD)
     // ============================================================
     async function loadSectionsFromDB() {
+        // ─── Сброс кэша site_sections ───
+        // Админка всегда должна видеть актуальный список разделов,
+        // а не тот, что мог закэшироваться на главной странице.
+        MF.invalidateSectionsCache();
+
         const { data } = await supabaseClient
             .from('site_sections').select('*').order('sort_order');
         state.sectionsList = data || [];
@@ -176,6 +181,11 @@
         const { error } = await supabaseClient
             .from('site_sections').delete().eq('key', key);
         if (error) { alert('Ошибка: ' + error.message); return; }
+
+        // ─── Сброс кэша site_sections ───
+        // После удаления раздела главная должна увидеть это сразу,
+        // а не через 5 минут (когда истечёт TTL кэша).
+        MF.invalidateSectionsCache();
 
         Admin.logAdminAction('section_delete', key, label, {
             label,
@@ -388,6 +398,11 @@
 
         const { error } = await op;
         if (error) { alert('Ошибка: ' + error.message); return; }
+
+        // ─── Сброс кэша site_sections ───
+        // После создания/изменения раздела главная должна увидеть
+        // изменения сразу, а не через 5 минут (когда истечёт TTL кэша).
+        MF.invalidateSectionsCache();
 
         Admin.logAdminAction(
             isEdit ? 'section_update' : 'section_create',
