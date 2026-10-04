@@ -27,6 +27,7 @@
     state.hiddenTotalCount    = 0;
     state.orphansTotalCount   = 0;
     state.errorsBadgeCount    = 0;
+    state.actionsBadgeCount   = 0;
     state.downloadCounts      = {};
     state.hideInProgress      = false;
     state.unhideInProgress    = false;
@@ -80,6 +81,12 @@
     // ============================================================
     // ПРОКСИ-ССЫЛКА ДЛЯ СКАЧИВАНИЯ
     // ============================================================
+    // Определяет источник по домену URL и формирует ссылку
+    // на соответствующую Edge Function.
+    //   TeraBox  → /functions/v1/terabox-download?url=...&name=...
+    //   Яндекс   → /functions/v1/yandex-download?folder=...&path=...
+    // Используется в admin-content.js, чтобы файлы в админке
+    // скачивались через прокси (с авторизацией), а не напрямую.
     function buildProxyUrl(downloadUrl, fileName) {
         if (!downloadUrl) return '';
         try {
@@ -455,6 +462,28 @@
         }
     }
 
+    async function refreshActionsBadge() {
+        try {
+            const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+            const { count, error } = await supabaseClient
+                .from('admin_actions')
+                .select('*', { count: 'exact', head: true })
+                .gte('created_at', cutoff);
+            if (error) return;
+            state.actionsBadgeCount = count || 0;
+            const badge = document.getElementById('actionsBadge');
+            if (!badge) return;
+            if (state.actionsBadgeCount > 0) {
+                badge.textContent = state.actionsBadgeCount;
+                badge.style.display = 'inline-block';
+            } else {
+                badge.style.display = 'none';
+            }
+        } catch (e) {
+            /* тихо */
+        }
+    }
+
     function startBadgesAutoRefresh() {
         if (_badgesIntervalId !== null) {
             clearInterval(_badgesIntervalId);
@@ -463,6 +492,7 @@
             await Promise.all([
                 refreshOrphansBadge(),
                 refreshErrorsBadge(),
+                refreshActionsBadge(),
             ]);
         }, 60 * 1000);
     }
@@ -684,6 +714,7 @@
         await loadHiddenItems();
         await refreshOrphansBadge();
         await refreshErrorsBadge();
+        await refreshActionsBadge();
 
         bindHeaderButtons();
         bindSidebar();
@@ -715,6 +746,7 @@
         updateHiddenBadge,
         refreshOrphansBadge,
         refreshErrorsBadge,
+        refreshActionsBadge,
         startBadgesAutoRefresh,
         stopBadgesAutoRefresh,
         makeHiddenKey,
