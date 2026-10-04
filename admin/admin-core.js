@@ -32,6 +32,10 @@
     state.hideInProgress      = false;
     state.unhideInProgress    = false;
 
+    // Порог осиротевших для красного badge и тоста
+    // (совпадает с ORPHANS_ALERT_THRESHOLD в workflows, только для UI)
+    const ORPHANS_ALERT_BADGE = 100;
+
     let _badgesIntervalId = null;
 
     // ============================================================
@@ -66,11 +70,7 @@
     }
 
     // ============================================================
-    // ПРОКСИ-ССЫЛКА ДЛЯ СКАЧИВАНИЯ
-    // ============================================================
-    // Единый источник правды — MF.buildProxyUrl в shared.js.
-    // Здесь оставлен публичный алиас для обратной совместимости
-    // (admin-content.js вызывает Admin.buildProxyUrl).
+    // ПРОКСИ-ССЫЛКА ДЛЯ СКАЧИВАНИЯ (единый источник — shared.js)
     // ============================================================
     const buildProxyUrl = MF.buildProxyUrl;
 
@@ -370,6 +370,11 @@
     // ============================================================
     // BADGES: ОСИРОТЕВШИЕ + ОШИБКИ JS + ЖУРНАЛ
     // ============================================================
+
+    // Отдельный флаг: тост о большом числе orphans показывается только раз
+    // за сессию вкладки.
+    let _orphansAlertShown = false;
+
     async function refreshOrphansBadge() {
         try {
             const { data, error } = await supabaseClient
@@ -381,13 +386,41 @@
                 if (Array.isArray(item.orphans)) total += item.orphans.length;
             });
             state.orphansTotalCount = total;
+
             const badge = document.getElementById('orphansBadge');
             if (!badge) return;
+
             if (total > 0) {
                 badge.textContent = total;
                 badge.style.display = 'inline-block';
+
+                // Красный фон при большом числе
+                if (total >= ORPHANS_ALERT_BADGE) {
+                    badge.style.background = '#dc2626';
+                    badge.style.color = '#fff';
+                    badge.style.boxShadow = '0 0 0 3px rgba(220,38,38,0.2)';
+                    badge.title = `Много осиротевших: ${total}. Проверьте раздел.`;
+                } else {
+                    badge.style.background = '';
+                    badge.style.color = '';
+                    badge.style.boxShadow = '';
+                    badge.title = '';
+                }
+
+                // Однократный тост при загрузке админки
+                if (total >= ORPHANS_ALERT_BADGE && !_orphansAlertShown) {
+                    _orphansAlertShown = true;
+                    showToast(
+                        `Найдено ${total} осиротевших строк. Откройте вкладку «Осиротевшие».`,
+                        'error'
+                    );
+                }
             } else {
                 badge.style.display = 'none';
+                badge.style.background = '';
+                badge.style.color = '';
+                badge.style.boxShadow = '';
+                badge.title = '';
             }
         } catch (e) {
             /* тихо */
