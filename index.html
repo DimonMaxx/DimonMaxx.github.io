@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-           <title>MyFiles — бесплатные программы, книги, музыка, игры и фильмы</title>
+    <title>MyFiles — бесплатные программы, книги, музыка, игры и фильмы</title>
     <meta name="description" content="Крупная библиотека бесплатных материалов: программы, книги, музыка, игры и фильмы. Прямые ссылки на облачное хранилище, каталог доступен без регистрации.">
     <meta name="keywords" content="бесплатные файлы, программы, книги, музыка, игры, фильмы, скачать бесплатно">
     <meta name="robots" content="index, follow">
@@ -69,6 +69,9 @@
         .sidebar .nav-link i { width: 24px; font-size: 18px; text-align: center; }
         .sidebar .nav-link:hover { background: #eef2ff; color: #1e293b; }
         .sidebar .nav-link.active { background: #2563eb; color: white; box-shadow: 0 4px 12px rgba(37,99,235,0.25); }
+        .sidebar .nav-link.top10-link i { color: #dc2626; }
+        .sidebar .nav-link.top10-link.active { background: #dc2626; box-shadow: 0 4px 12px rgba(220,38,38,0.3); }
+        .sidebar .nav-link.top10-link.active i { color: white; }
 
         .stats-panel { background: white; border-radius: 16px; padding: 16px 14px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.03); }
         .stats-panel h4 { font-size: 15px; font-weight: 700; color: #0f172a; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; }
@@ -203,9 +206,8 @@
         }
         .welcome-hint i { color: #8b5cf6; font-size: 18px; margin-top: 2px; }
 
-        /* ─── Топ-10 популярных файлов ─── */
+        /* ─── Топ-10 популярных файлов (отдельный раздел) ─── */
         .top10-section {
-            margin-top: 24px;
             background: white;
             border: 2px solid #fee2e2;
             border-radius: 20px;
@@ -216,23 +218,41 @@
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 10px;
-            margin-bottom: 18px;
-            padding-bottom: 12px;
-            border-bottom: 2px dashed #fecaca;
+            gap: 12px;
+            margin-bottom: 8px;
         }
         .top10-title {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 800;
             color: #0f172a;
             display: flex;
             align-items: center;
             gap: 10px;
         }
-        .top10-title i { color: #dc2626; font-size: 22px; }
+        .top10-title i { color: #dc2626; font-size: 24px; }
+        .top10-refresh-btn {
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: none;
+            background: #64748b;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: 0.2s;
+        }
+        .top10-refresh-btn:hover { background: #475569; }
+        .top10-refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .top10-subtitle {
             color: #64748b;
-            font-size: 13px;
+            font-size: 14px;
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 2px dashed #fecaca;
         }
         .top10-grid {
             display: grid;
@@ -313,7 +333,7 @@
             text-align: center;
             color: #94a3b8;
             font-size: 14px;
-            padding: 20px 0;
+            padding: 40px 0;
             font-style: italic;
         }
 
@@ -493,6 +513,9 @@
         <aside class="sidebar" id="sidebarNav">
             <nav class="sidebar-nav" id="sidebarNavInner">
                 <div class="nav-link active" data-tab="home"><i class="fas fa-home"></i> Главная</div>
+                <div class="nav-link top10-link" data-tab="top10">
+                    <i class="fas fa-fire"></i> Топ-10
+                </div>
             </nav>
 
             <div class="stats-panel" id="statsPanel">
@@ -555,19 +578,28 @@
                             Выберите раздел в меню слева — например, «Программы» или «Книги».
                             Внутри раздела можно перейти в подпапку или воспользоваться поиском.
                             Для скачивания любого файла нужна регистрация, для прослушивания музыки — нет.
+                            А чтобы увидеть самое популярное — загляните в раздел «Топ-10».
                         </div>
                     </div>
 
-                    <!-- ─── Топ-10 популярных файлов ─── -->
-                    <div class="top10-section" id="top10Section" style="display:none;">
+                    <!-- ─── Топ-10 перенесён в отдельный раздел ─── -->
+                </div>
+
+                <!-- ─── Отдельный раздел «Топ-10 по скачиваниям» ─── -->
+                <div id="top10" class="tab-content">
+                    <div class="top10-section">
                         <div class="top10-header">
                             <div class="top10-title">
                                 <i class="fas fa-fire"></i>
                                 Топ-10 по скачиваниям
                             </div>
-                            <div class="top10-subtitle">
-                                Самые популярные материалы за всё время
-                            </div>
+                            <button class="top10-refresh-btn" id="top10RefreshBtn">
+                                <i class="fas fa-sync-alt"></i> Обновить
+                            </button>
+                        </div>
+                        <div class="top10-subtitle">
+                            Самые популярные материалы за всё время.
+                            Показаны только те файлы, которые сейчас есть в каталоге.
                         </div>
                         <div class="top10-grid" id="top10Grid">
                             <div class="top10-loading">
@@ -621,6 +653,12 @@
     const tableStates = {};
     let sectionRenderers = {};
     let extraFolders = {};
+
+    // ─── Топ-10: кэш и состояние ───
+    let _top10SectionCache = null;       // { section_key: Set(file_id) }
+    let _top10SectionCacheTs = 0;
+    const TOP10_CACHE_TTL_MS = 5 * 60 * 1000;   // 5 минут
+    let _top10FirstLoadDone = false;             // загружали ли уже в этой сессии
 
     // ─── ГЛОБАЛЬНАЯ ЗАЩИТА ОТ КОНТЕКСТНОГО МЕНЮ НА АУДИО ───
     document.addEventListener('contextmenu', function (e) {
@@ -695,8 +733,11 @@
     function buildSidebarAndTabs() {
         const navInner = document.getElementById('sidebarNavInner');
         const tabsWrapper = document.getElementById('tabsWrapper');
-        navInner.querySelectorAll('.nav-link:not([data-tab="home"])').forEach(el => el.remove());
-        tabsWrapper.querySelectorAll('.tab-content:not(#home)').forEach(el => el.remove());
+        // Удаляем только разделы (не home и не top10)
+        navInner.querySelectorAll('.nav-link:not([data-tab="home"]):not([data-tab="top10"])')
+            .forEach(el => el.remove());
+        tabsWrapper.querySelectorAll('.tab-content:not(#home):not(#top10)')
+            .forEach(el => el.remove());
 
         Object.entries(CFG.SECTIONS).forEach(([key, meta]) => {
             const nav = document.createElement('div');
@@ -780,32 +821,122 @@
 
     // ============================================================
     // ТОП-10 ПОПУЛЯРНЫХ ФАЙЛОВ
+    // Ленивая загрузка: данные тянутся только при переключении на раздел.
+    // Фильтрация: показываем только те файлы, которые реально есть в JSON.
     // ============================================================
-    async function loadTop10() {
-        const section = document.getElementById('top10Section');
+
+    // Загружает индексы file_id по всем (или указанным) разделам
+    async function _loadTop10SectionIndex(force, onlySections) {
+        const now = Date.now();
+        if (!force
+            && _top10SectionCache
+            && (now - _top10SectionCacheTs) < TOP10_CACHE_TTL_MS) {
+            return _top10SectionCache;
+        }
+
+        // Если кэш есть, но не протух, а мы хотим только дополнить — используем его
+        const cache = (_top10SectionCache && !force)
+            ? Object.assign({}, _top10SectionCache)
+            : {};
+
+        // Список разделов, которые нужно загрузить
+        const targetKeys = onlySections && onlySections.size
+            ? Array.from(onlySections)
+            : Object.keys(CFG.SECTIONS);
+
+        await Promise.all(
+            targetKeys.map(async (sectionKey) => {
+                const meta = CFG.SECTIONS[sectionKey];
+                if (!meta || !meta.json) return;
+                if (!force && cache[sectionKey]) return;   // уже загружен
+
+                try {
+                    const resp = await fetch(meta.json + '?t=' + Date.now());
+                    if (!resp.ok) return;
+                    const items = await resp.json();
+                    const ids = new Set();
+                    (items || []).forEach(item => {
+                        if (!item.title) return;
+                        const fid = item.file_id || MF.slugify(item.title);
+                        if (fid) ids.add(fid);
+                    });
+                    cache[sectionKey] = ids;
+                } catch (e) {
+                    console.warn('[top10] fetch section failed', sectionKey, e);
+                }
+            })
+        );
+
+        _top10SectionCache = cache;
+        _top10SectionCacheTs = now;
+        return cache;
+    }
+
+    async function loadTop10(force) {
+        const section = document.getElementById('top10');
         const grid = document.getElementById('top10Grid');
         if (!section || !grid) return;
 
+        // Показываем спиннер при принудительной перезагрузке
+        if (force) {
+            grid.innerHTML = '<div class="top10-loading"><i class="fas fa-spinner fa-spin"></i> Загрузка...</div>';
+        }
+
+        const refreshBtn = document.getElementById('top10RefreshBtn');
+        if (refreshBtn) refreshBtn.disabled = true;
+
         try {
+            // 1. Берём топ с запасом (30), после фильтрации оставим 10
             const { data, error } = await supabaseClient.rpc('get_top_downloads', {
-                p_limit: 10,
+                p_limit: 30,
             });
             if (error) throw error;
 
-            const items = Array.isArray(data) ? data : [];
-            if (items.length === 0) {
-                // Скрываем блок целиком, если данных нет
-                section.style.display = 'none';
+            const rawItems = Array.isArray(data) ? data : [];
+            if (rawItems.length === 0) {
+                grid.innerHTML = '<div class="top10-empty">Пока нет данных о скачиваниях</div>';
+                _top10FirstLoadDone = true;
                 return;
             }
 
-            section.style.display = 'block';
+            // 2. Определяем, какие разделы нужны — их JSON и подгружаем
+            const neededSections = new Set(
+                rawItems
+                    .map(it => it.section_key)
+                    .filter(sk => sk && CFG.SECTIONS[sk])
+            );
+
+            const sectionIndex = await _loadTop10SectionIndex(force, neededSections);
+
+            // 3. Фильтруем: оставляем только те, что реально есть в JSON
+            const items = rawItems.filter(it => {
+                const sk = it.section_key;
+                if (!sk) return false;
+                if (!CFG.SECTIONS[sk]) return false;
+                const ids = sectionIndex[sk];
+                if (!ids) return false;
+
+                const fidFromRpc  = it.file_id || '';
+                const fidFromName = it.file_name ? MF.slugify(it.file_name) : '';
+
+                if (fidFromRpc && ids.has(fidFromRpc)) return true;
+                if (fidFromName && ids.has(fidFromName)) return true;
+                return false;
+            }).slice(0, 10);
+
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="top10-empty">Пока нет доступных материалов</div>';
+                _top10FirstLoadDone = true;
+                return;
+            }
+
+            // 4. Рендер
             let html = '';
             items.forEach((it, idx) => {
                 const rank = idx + 1;
                 const name = it.file_name || it.file_id || 'Без названия';
                 const sectionKey = it.section_key || '';
-                const sectionLabel = (CFG.SECTIONS[sectionKey]?.label) || sectionKey;
+                const sectionLabel = CFG.SECTIONS[sectionKey]?.label || sectionKey;
                 const count = it.count || 0;
 
                 html += `
@@ -817,7 +948,7 @@
                         <div class="top10-body">
                             <div class="top10-name">${MF.escapeHtml(name)}</div>
                             <div class="top10-meta">
-                                <span><i class="fas fa-folder"></i> ${MF.escapeHtml(sectionLabel || '—')}</span>
+                                <span><i class="fas fa-folder"></i> ${MF.escapeHtml(sectionLabel)}</span>
                             </div>
                         </div>
                         <div class="top10-badge">
@@ -835,9 +966,13 @@
                     openTop10Item(sk, fn);
                 });
             });
+
+            _top10FirstLoadDone = true;
         } catch (e) {
-            console.warn('top10:', e);
-            section.style.display = 'none';
+            console.warn('[top10]', e);
+            grid.innerHTML = '<div class="top10-empty">Не удалось загрузить топ-10. Попробуйте позже.</div>';
+        } finally {
+            if (refreshBtn) refreshBtn.disabled = false;
         }
     }
 
@@ -849,8 +984,6 @@
         switchTab(sectionKey);
 
         // Ждём, пока раздел загрузится, потом ставим фильтр по названию
-        // (если раздел ещё не загружен — loadSectionIfNeeded стартует fetch,
-        //  подождём немного и попробуем ещё раз)
         const tryApply = (attempt) => {
             const container = document.getElementById(meta.container);
             const state = tableStates[meta.container];
@@ -870,6 +1003,17 @@
             MF.scrollToContainer(container, 120);
         };
         setTimeout(() => tryApply(0), 300);
+    }
+
+    // ─── Кнопка «Обновить» в разделе топ-10 ───
+    const _top10RefreshBtn = document.getElementById('top10RefreshBtn');
+    if (_top10RefreshBtn) {
+        _top10RefreshBtn.addEventListener('click', () => {
+            _top10SectionCache = null;
+            _top10SectionCacheTs = 0;
+            _top10FirstLoadDone = false;
+            loadTop10(true);
+        });
     }
 
     // ============================================================
@@ -1351,7 +1495,6 @@
         const startIdx = (state.currentPage - 1) * state.pageSize;
         const pageItems = allFiltered.slice(startIdx, startIdx + state.pageSize);
 
-        // Текущий раздел (используется при инкременте счётчиков)
         const currentSectionKey = state.sectionKey || '';
 
         let thead = '<tr>';
@@ -1403,7 +1546,7 @@
                             const mime = getAudioMimeType(item.download_link);
                             const mimeAttr = mime ? ` type="${mime}"` : '';
                             const ftitle = item.title || 'Трек';
-                            const fid = MF.slugify(ftitle);
+                            const fid = item.file_id || MF.slugify(ftitle);
                             const isLogged = !!currentUser;
                             const dlClass = isLogged ? 'audio-download' : 'audio-download disabled';
                             const audioId = `audio-player-${audioIdx++}`;
@@ -1439,7 +1582,7 @@
                         if (!item.download_link) tbody += `<td class="col-center">—</td>`;
                         else {
                             const isLogged = !!currentUser;
-                            const fid = MF.slugify(item.title || '');
+                            const fid = item.file_id || MF.slugify(item.title || '');
                             const ftitle = item.title || 'Без названия';
                             const btnClass = isLogged ? 'btn-download-sm' : 'btn-download-sm disabled';
                             tbody += `<td class="col-center">
@@ -1455,7 +1598,7 @@
                     } else if (col.type === 'count') {
                         if (!item.download_link) tbody += `<td class="col-num">—</td>`;
                         else {
-                            const fid = MF.slugify(item.title || '');
+                            const fid = item.file_id || MF.slugify(item.title || '');
                             const c = downloadCounts[fid] || 0;
                             tbody += `<td class="col-num" data-count-file-id="${MF.escapeAttr(fid)}">${c}</td>`;
                         }
@@ -1616,7 +1759,17 @@
             if (link.dataset.tab === tabId) link.classList.add('active');
         });
         localStorage.setItem('activeTab', tabId);
-        loadSectionIfNeeded(tabId);
+
+        // ─── Ленивая загрузка данных раздела ───
+        if (tabId === 'top10') {
+            // Топ-10 загружаем только при переключении на раздел
+            // (или при принудительном обновлении кнопкой)
+            if (!_top10FirstLoadDone) {
+                loadTop10(false);
+            }
+        } else {
+            loadSectionIfNeeded(tabId);
+        }
     }
 
     function bindNav() {
@@ -1644,7 +1797,8 @@
         await trackVisit();
         await loadDownloadCounts();
         loadStats();
-        loadTop10();
+        // loadTop10() НЕ вызывается здесь — данные загружаются
+        // только при переключении на раздел «Топ-10»
         const saved = localStorage.getItem('activeTab');
         if (saved && document.getElementById(saved)) switchTab(saved);
         else switchTab('home');
