@@ -35,7 +35,11 @@ yandex_disk_sync.py
   • ensure_headers полностью перезаписывает первую строку до максимальной
     ширины листа — устраняет «хвосты» старых колонок и дубликаты
     заголовков.
-  • По завершении отправляет итоговый отчёт в Telegram (через notify.py).
+  • ORPHANS_ALERT_THRESHOLD — если осиротевших строк в разделе больше
+    порога, отправляется отдельный Telegram-алерт.
+  • По завершении отправляет в Telegram итоговый отчёт: сводку, список
+    добавленных и обновлённых файлов (топ-30 каждого), список
+    осиротевших (топ-10).
 """
 
 import os
@@ -68,7 +72,6 @@ try:
 except ImportError:
     supa_create_client = None
 
-# ─── Уведомления в Telegram (опционально) ───
 try:
     from notify import notify_telegram, notify_result
 except ImportError:
@@ -89,7 +92,6 @@ SUPABASE_URL = "https://rmoonebbvpmvthvpcmpt.supabase.co"
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 COVERS_BUCKET = "covers"
 
-# Общие списки расширений
 ALLOWED_EXTS  = {".fb2", ".epub", ".pdf", ".djvu", ".mobi", ".txt",
                  ".doc", ".docx", ".rtf"}
 PROGRAM_EXTS  = {".rar", ".zip", ".7z", ".xlsm", ".xlsx", ".xls",
@@ -99,7 +101,6 @@ MUSIC_EXTS    = {".mp3", ".flac", ".wav", ".ogg", ".m4a", ".aac",
                  ".wma", ".opus", ".ape", ".aiff", ".alac"}
 PARSEABLE_EXTS = {".fb2", ".txt"}
 
-# Внешние источники обогащения
 GOOGLE_BOOKS_API = "https://www.googleapis.com/books/v1/volumes"
 FANTLAB_SEARCH   = "https://api.fantlab.ru/search-works"
 FANTLAB_WORK     = "https://api.fantlab.ru/work/{id}/extended"
@@ -163,6 +164,9 @@ SYNC_SECTIONS_FILTER = [
 
 SKIP_ENRICHMENT = os.environ.get("SKIP_ENRICHMENT", "0") == "1"
 
+# Порог отправки отдельного алерта об осиротевших строках
+ORPHANS_ALERT_THRESHOLD = int(os.environ.get("ORPHANS_ALERT_THRESHOLD", "50"))
+
 SYNC_ORPHANS_TABLE  = "sync_orphans"
 
 ALWAYS_UPDATE_HEADERS = {
@@ -195,6 +199,11 @@ class Diag:
         self.unchanged_rows  = 0
         self.orphans_found   = 0
         self.backup_name     = ""
+
+        # Списки для подробного отчёта в Telegram
+        self.added_titles   = []
+        self.updated_titles = []
+        self.orphan_titles  = []
 
     def report(self):
         print("\n  ── ДИАГНОСТИКА ──")
@@ -434,13 +443,6 @@ def _strip_disk_prefix(path):
 
 
 def is_public_root_link(public_url, start_path):
-    """
-    Проверяет, лежит ли папка start_path В КОРНЕ публичной ссылки.
-    Используется только в режиме strip_prefix_mode='auto'.
-
-    True  → ссылка ведёт в родительскую папку (префикс отрезать НЕ надо).
-    False → ссылка ведёт внутрь start_path (префикс надо отрезать).
-    """
     api = "https://cloud-api.yandex.net/v1/disk/public/resources"
     start_name = (start_path or "").strip("/")
     if not start_name:
@@ -1201,6 +1203,25 @@ def save_orphans_to_supabase(section_key, section_label,
         print(f"    [!] Не удалось сохранить orphans в Supabase: {e}")
 
 
+def _send_orphans_alert(section_label, section_key, orphans_count, sheet_name):
+    """
+    Отправляет в Telegram отдельный алерт, если число осиротевших
+    строк превысило ORPHANS_ALERT_THRESHOLD.
+    """
+    if orphans_count < ORPHANS_ALERT_THRESHOLD:
+        return
+    try:
+        notify_telegram(
+            f"⚠️ Много осиротевших строк: {orphans_count}\n"
+            f"Раздел: {section_label} ({section_key})\n"
+            f"Лист: {sheet_name}\n"
+            f"Порог: {ORPHANS_ALERT_THRESHOLD}\n"
+            f"Проверьте админ-панель → Осиротевшие."
+        )
+    except Exception as e:
+        print(f"    [!] Не удалось отправить алерт об осиротевших: {e}")
+
+
 # ============================================================
 # GOOGLE SHEETS
 # ============================================================
@@ -1710,17 +1731,47 @@ def find_orphan_rows(existing_index, rows, headers, link_idx):
 
 
 # ============================================================
+# ХЕЛПЕР: собрать названия для отчёта
+# ============================================================
+
+def _collect_titles(rows, headers, limit=None):
+    """
+    Из списка строк (уже в порядке headers) вытащить title-значения.
+    :param limit: ограничить количество (для отчёта).
+    :return: список непустых title (уникальных, в порядке появления).
+    """
+    title_idx = None
+    for cand in TITLE_HEADER_CANDIDATES:
+        if cand in headers:
+            title_idx = headers.index(cand)
+            break
+    if title_idx is None:
+        return []
+
+    seen = set()
+    out = []
+    for row in rows:
+        if title_idx >= len(row):
+            continue
+        t = str(row[title_idx]).strip()
+        if not t or t in seen:
+            continue
+        seen.add(t)
+        out.append(t)
+        if limit and len(out) >= limit:
+            break
+    return out
+
+
+# ============================================================
 # СИНХРОНИЗАЦИЯ РАЗДЕЛА
 # ============================================================
 
 def sync_section(section, gs_client, cache):
     """
     Синхронизирует один раздел.
-    Возвращает dict со статистикой {added, updated, orphans} или None,
-    если раздел не содержит Яндекс-ссылок.
-
-    Поддерживает несколько URL в yandex_url (разделители \n и ;).
-    Обрабатываются только Яндекс-ссылки; TeraBox-ссылки игнорируются.
+    Возвращает dict со статистикой, включая списки добавленных и
+    обновлённых названий (для подробного Telegram-отчёта).
     """
     label = section.get("label") or section.get("key")
     section_key = section.get("key")
@@ -1747,7 +1798,7 @@ def sync_section(section, gs_client, cache):
     print(f"manual_override: {manual_override}")
     print(f"strip_prefix:    {strip_mode}")
 
-    # ─── Разбиваем yandex_url на ссылки и оставляем только Яндекс ───
+    # ─── Разбиваем yandex_url и оставляем только Яндекс ───
     all_urls = split_urls(yandex_url_raw)
     yandex_urls = [u for u in all_urls if is_yandex_link(u)]
     ignored = [u for u in all_urls if u not in yandex_urls]
@@ -1773,7 +1824,6 @@ def sync_section(section, gs_client, cache):
 
     sp = (start_path or "").strip("/")
 
-    # ─── Открываем spreadsheet один раз ───
     try:
         sh = open_spreadsheet(gs_client)
     except Exception as e:
@@ -1789,7 +1839,6 @@ def sync_section(section, gs_client, cache):
     all_rows = []
     total_files = 0
 
-    # ─── Проходим по каждой Яндекс-ссылке ───
     with yadisk.Client(token=token) as client:
         try:
             if not client.check_token():
@@ -1809,7 +1858,6 @@ def sync_section(section, gs_client, cache):
                 print(f"    [!] Ошибка парсинга URL: {e}")
                 continue
 
-            # ─── Определение режима отрезания префикса ───
             if not sp:
                 strip_prefix = False
                 is_root = False
@@ -1860,7 +1908,6 @@ def sync_section(section, gs_client, cache):
     print(f"\n  Итого файлов: {total_files}, "
           f"сгенерировано строк: {len(all_rows)}")
 
-    # ─── Загружаем снимок листа ───
     all_values, existing = load_sheet_snapshot(sheet)
     print(f"  Существующих строк: {len(existing)}")
 
@@ -1877,6 +1924,8 @@ def sync_section(section, gs_client, cache):
               f"(файлы исчезли с Диска)")
         save_orphans_to_supabase(section_key, label, sheet_name,
                                  orphans, headers)
+        # Отдельный алерт при превышении порога
+        _send_orphans_alert(label, section_key, len(orphans), sheet_name)
     else:
         save_orphans_to_supabase(section_key, label, sheet_name,
                                  [], headers)
@@ -1886,6 +1935,12 @@ def sync_section(section, gs_client, cache):
     to_add = []
     preserved_rows = 0
     unchanged_rows = 0
+
+    title_idx = None
+    for cand in TITLE_HEADER_CANDIDATES:
+        if cand in headers:
+            title_idx = headers.index(cand)
+            break
 
     for row in all_rows:
         link = str(row[link_idx]).strip() if link_idx < len(row) else ""
@@ -1924,6 +1979,14 @@ def sync_section(section, gs_client, cache):
         rng = f"A{row_num}:{end_col_letter}{row_num}"
         updates.append({"range": rng, "values": [merged]})
 
+    # Списки названий для отчёта
+    diag.added_titles   = _collect_titles(to_add, headers)
+    diag.updated_titles = _collect_titles(
+        [u["values"][0] for u in updates] if updates else [],
+        headers,
+    )
+    diag.orphan_titles  = [o.get("title", "") for o in orphans if o.get("title")]
+
     print(f"\n    К обновлению:      {len(updates)}")
     print(f"    К добавлению:      {len(to_add)}")
     if preserved_rows:
@@ -1957,7 +2020,68 @@ def sync_section(section, gs_client, cache):
         "added":   diag.added,
         "updated": diag.updated,
         "orphans": diag.orphans_found,
+        "added_titles":   diag.added_titles,
+        "updated_titles": diag.updated_titles,
+        "orphan_titles":  diag.orphan_titles,
     }
+
+
+# ============================================================
+# ФОРМИРОВАНИЕ TELEGRAM-ОТЧЁТА
+# ============================================================
+
+def _fmt_titles_list(titles, max_show=20):
+    """
+    Форматирует список названий в одну строку:
+      "A, B, C, ... (+N ещё)"
+    """
+    if not titles:
+        return ""
+    shown = titles[:max_show]
+    tail = len(titles) - len(shown)
+    s = ", ".join(shown)
+    if tail > 0:
+        s += f" … (+{tail} ещё)"
+    return s
+
+
+def _build_telegram_extra_lines(total_stats, max_per_list=20):
+    """
+    Собирает extra_lines для notify_result:
+      • сводки по разделам
+      • список добавленных файлов (топ-N)
+      • список обновлённых файлов (топ-N)
+      • список осиротевших файлов (топ-N)
+    """
+    lines = []
+
+    # Список разделов со статистикой
+    if total_stats["sections"]:
+        for sec_line in total_stats["sections"]:
+            lines.append(sec_line)
+
+    # Добавленные
+    added = total_stats.get("added_titles", [])
+    if added:
+        lines.append("")
+        lines.append(f"➕ Добавлено ({len(added)}):")
+        lines.append(_fmt_titles_list(added, max_per_list))
+
+    # Обновлённые
+    updated = total_stats.get("updated_titles", [])
+    if updated:
+        lines.append("")
+        lines.append(f"🔄 Обновлено ({len(updated)}):")
+        lines.append(_fmt_titles_list(updated, max_per_list))
+
+    # Осиротевшие (короткий список)
+    orphans = total_stats.get("orphan_titles", [])
+    if orphans:
+        lines.append("")
+        lines.append(f"⚠️ Осиротевшие ({len(orphans)}):")
+        lines.append(_fmt_titles_list(orphans, 10))
+
+    return lines
 
 
 # ============================================================
@@ -1973,6 +2097,7 @@ def main():
           f"(keep last {BACKUP_KEEP_COUNT})")
     print(f"STRIP_PREFIX_DEFAULT = {STRIP_PREFIX_MODE_DEFAULT}")
     print(f"SKIP_ENRICHMENT      = {SKIP_ENRICHMENT}")
+    print(f"ORPHANS_ALERT_THRESHOLD = {ORPHANS_ALERT_THRESHOLD}")
     if SYNC_SECTIONS_FILTER:
         print(f"SYNC_SECTIONS_FILTER = {SYNC_SECTIONS_FILTER}")
     else:
@@ -2042,6 +2167,9 @@ def main():
         "orphans":  0,
         "errors":   0,
         "sections": [],
+        "added_titles":   [],
+        "updated_titles": [],
+        "orphan_titles":  [],
     }
 
     cache = {}
@@ -2052,9 +2180,22 @@ def main():
                 total_stats["added"]   += stats.get("added", 0)
                 total_stats["updated"] += stats.get("updated", 0)
                 total_stats["orphans"] += stats.get("orphans", 0)
+
+                label = section.get("label") or section.get("key")
                 total_stats["sections"].append(
-                    f"{section.get('label')}: +{stats.get('added', 0)} / "
+                    f"• {label}: +{stats.get('added', 0)} / "
                     f"~{stats.get('updated', 0)}"
+                )
+
+                # Аккумулируем списки названий
+                total_stats["added_titles"].extend(
+                    stats.get("added_titles", [])
+                )
+                total_stats["updated_titles"].extend(
+                    stats.get("updated_titles", [])
+                )
+                total_stats["orphan_titles"].extend(
+                    stats.get("orphan_titles", [])
                 )
         except Exception as e:
             total_stats["errors"] += 1
@@ -2080,11 +2221,13 @@ def main():
     if total_stats["errors"]:
         details += f" • Ошибок: {total_stats['errors']}"
 
+    extra_lines = _build_telegram_extra_lines(total_stats, max_per_list=20)
+
     notify_result(
         title="Sync Yandex.Disk",
         status=status,
         details=details,
-        extra_lines=total_stats["sections"] or None,
+        extra_lines=extra_lines or None,
         run_url=run_url,
     )
 
