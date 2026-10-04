@@ -111,7 +111,6 @@
         .welcome-hint { margin-top: 20px; padding: 14px 18px; background: #f8fafc; border-left: 4px solid #8b5cf6; border-radius: 10px; font-size: 14px; color: #475569; display: flex; gap: 10px; align-items: flex-start; }
         .welcome-hint i { color: #8b5cf6; font-size: 18px; margin-top: 2px; }
 
-        /* ─── Топ-10 (отдельный раздел) ─── */
         .top10-section { background: white; border: 2px solid #fee2e2; border-radius: 20px; padding: 24px 26px; }
         .top10-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
         .top10-title { font-size: 22px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
@@ -445,11 +444,16 @@
     let extraFolders = {};
 
     // ─── Топ-10: кэш и состояние ───
-    let _top10SectionCache = null;       // { section_key: { ids: Set, titles: Set } }
+    // _top10SectionCache: { section_key: { ids, titles, bySlug, byNormTitle } }
+    //   ids:         Set<slug>              — для точного и нормализованного поиска
+    //   titles:      Set<normalizedTitle>   — для поиска по названию
+    //   bySlug:      Map<slug, {title, file_id}>
+    //   byNormTitle: Map<normalizedTitle, {title, file_id}>
+    let _top10SectionCache = null;
     let _top10SectionCacheTs = 0;
     const TOP10_CACHE_TTL_MS = 5 * 60 * 1000;
     let _top10FirstLoadDone = false;
-    let _top10Debug = true;              // Логирование в консоль
+    let _top10Debug = true;
 
     function _top10log(...args) {
         if (_top10Debug) console.log('[top10]', ...args);
@@ -500,9 +504,6 @@
     // ============================================================
     // НОРМАЛИЗАЦИЯ НАЗВАНИЙ ДЛЯ ФИЛЬТРА ТОП-10
     // ============================================================
-    // Убирает регистр, ё/е, пунктуацию. Позволяет сопоставить
-    // 'CertificateParser — распознавание сертификатов' с
-    // 'certificateparser распознавание сертификатов'.
     function _normalizeTitleForMatch(s) {
         if (!s) return '';
         return String(s)
@@ -513,7 +514,6 @@
             .trim();
     }
 
-    // То же для slug: убирает ё и приводит к одному виду
     function _normalizeSlugForMatch(s) {
         if (!s) return '';
         return String(s)
@@ -632,10 +632,18 @@
     }
 
     // ============================================================
-    // ТОП-10 — ИСПРАВЛЕННАЯ ВЕРСИЯ
+    // ТОП-10 — ФИНАЛЬНАЯ ВЕРСИЯ
+    //
+    // Ключевые фичи:
+    //   1. Ленивая загрузка — данные тянутся только при переключении.
+    //   2. Фильтр «файл существует в JSON» — дропаем удалённые.
+    //   3. Подтягивание актуального названия из JSON.
+    //      Если файл переименован в Sheets, карточка покажет новое имя,
+    //      а счётчик скачиваний сохранится.
+    //   4. Кэш JSON-индекса на 5 минут.
+    //   5. Логирование в консоль: resolved / dropped.
     // ============================================================
 
-    // Публичная функция сброса кэша (используется админкой)
     window.resetTop10SectionCache = function () {
         _top10SectionCache = null;
         _top10SectionCacheTs = 0;
@@ -643,16 +651,6 @@
         _top10log('cache reset by external call');
     };
 
-    /**
-     * Загружает индексы file_id/title по разделам, которые нужны для фильтра.
-     *
-     * Возвращает: { section_key: { ids: Set<string>, titles: Set<string> } }
-     *
-     * Три поведенческих случая:
-     *   force=true         — перезагрузить всё с нуля
-     *   TTL истёк          — перезагрузить всё с нуля
-     *   TTL свежий         — вернуть кэш как есть
-     */
     async function _loadTop10SectionIndex(force, onlySections) {
         const now = Date.now();
         const isFresh = _top10SectionCache
@@ -667,8 +665,6 @@
         _top10log('section index: fetching fresh from server',
             force ? '(force)' : '(TTL expired)');
 
-        // Полностью новый кэш — не копия старого.
-        // Это исправляет баг «TTL истёк, но данные не перезагружаются».
         const cache = {};
 
         const targetKeys = onlySections && onlySections.size
@@ -688,21 +684,36 @@
                     const items = await resp.json();
                     const ids = new Set();
                     const titles = new Set();
+                    const bySlug = new Map();
+                    const byNormTitle = new Map();
 
                     (items || []).forEach(item => {
                         if (!item.title) return;
-                        // file_id: сначала пробуем поле из JSON, потом slugify
                         const fid = item.file_id || MF.slugify(item.title);
+                        const normFid = _normalizeSlugForMatch(fid);
+                        const normTitle = _normalizeTitleForMatch(item.title);
+
                         if (fid) {
                             ids.add(fid);
-                            ids.add(_normalizeSlugForMatch(fid));
+                            if (!bySlug.has(fid)) {
+                                bySlug.set(fid, { title: item.title, file_id: fid });
+                            }
                         }
-                        // Название — для сравнения с downloads.file_name
-                        const nt = _normalizeTitleForMatch(item.title);
-                        if (nt) titles.add(nt);
+                        if (normFid && normFid !== fid) {
+                            ids.add(normFid);
+                            if (!bySlug.has(normFid)) {
+                                bySlug.set(normFid, { title: item.title, file_id: fid });
+                            }
+                        }
+                        if (normTitle) {
+                            titles.add(normTitle);
+                            if (!byNormTitle.has(normTitle)) {
+                                byNormTitle.set(normTitle, { title: item.title, file_id: fid });
+                            }
+                        }
                     });
 
-                    cache[sectionKey] = { ids, titles };
+                    cache[sectionKey] = { ids, titles, bySlug, byNormTitle };
                     _top10log('section', sectionKey, '→',
                         'ids:', ids.size, 'titles:', titles.size);
                 } catch (e) {
@@ -717,31 +728,35 @@
     }
 
     /**
-     * Проверяет, существует ли файл из downloads в актуальном JSON.
+     * Ищет файл из downloads в актуальном JSON.
+     * Возвращает объект { file_id, title } из JSON или null.
      */
-    function _top10ItemExists(it, sectionIndex) {
+    function _top10Resolve(it, sectionIndex) {
         const sk = it.section_key;
-        if (!sk || !CFG.SECTIONS[sk]) return false;
+        if (!sk || !CFG.SECTIONS[sk]) return null;
         const idx = sectionIndex[sk];
-        if (!idx) return false;
+        if (!idx) return null;
 
-        // 1. По file_id из RPC
+        // 1. По file_id из RPC (точное)
         const fidFromRpc = it.file_id || '';
-        if (fidFromRpc && idx.ids.has(fidFromRpc)) return true;
-
-        // 2. По нормализованному slug от file_id (без ё/дефисов)
+        if (fidFromRpc && idx.bySlug.has(fidFromRpc)) {
+            return idx.bySlug.get(fidFromRpc);
+        }
+        // 2. По нормализованному slug (без ё, без крайних дефисов)
         if (fidFromRpc) {
             const normFid = _normalizeSlugForMatch(fidFromRpc);
-            if (normFid && idx.ids.has(normFid)) return true;
+            if (normFid && idx.bySlug.has(normFid)) {
+                return idx.bySlug.get(normFid);
+            }
         }
-
-        // 3. По file_name — нормализуем и ищем в titles
+        // 3. По file_name → нормализованное название
         if (it.file_name) {
             const normName = _normalizeTitleForMatch(it.file_name);
-            if (normName && idx.titles.has(normName)) return true;
+            if (normName && idx.byNormTitle.has(normName)) {
+                return idx.byNormTitle.get(normName);
+            }
         }
-
-        return false;
+        return null;
     }
 
     async function loadTop10(force) {
@@ -757,7 +772,6 @@
         if (refreshBtn) refreshBtn.disabled = true;
 
         try {
-            // 1. RPC — берём с запасом
             const { data, error } = await supabaseClient.rpc('get_top_downloads', {
                 p_limit: 30,
             });
@@ -771,7 +785,6 @@
                 return;
             }
 
-            // 2. Нужные разделы
             const neededSections = new Set(
                 rawItems
                     .map(it => it.section_key)
@@ -779,15 +792,24 @@
             );
             _top10log('needed sections:', Array.from(neededSections));
 
-            // 3. Индекс JSON
             const sectionIndex = await _loadTop10SectionIndex(force, neededSections);
 
-            // 4. Фильтрация + подробное логирование
-            const filtered = [];
+            // Резолвим: находим актуальное название в JSON
+            const resolved = [];
             const dropped = [];
             rawItems.forEach(it => {
-                if (_top10ItemExists(it, sectionIndex)) {
-                    filtered.push(it);
+                const found = _top10Resolve(it, sectionIndex);
+                if (found) {
+                    resolved.push({
+                        file_id:      it.file_id,
+                        file_name:    it.file_name,        // старое имя из downloads
+                        section_key:  it.section_key,
+                        count:        it.count,
+                        // Поля из JSON:
+                        actual_title: found.title,
+                        actual_fid:   found.file_id,
+                        renamed:      found.title !== it.file_name,
+                    });
                 } else {
                     dropped.push({
                         file_id: it.file_id,
@@ -797,13 +819,25 @@
                     });
                 }
             });
+
+            // Логируем переименования
+            const renamed = resolved.filter(r => r.renamed);
+            if (renamed.length) {
+                _top10log('renamed', renamed.length, 'items — показываем актуальное название:');
+                renamed.forEach(r => {
+                    _top10log('   ',
+                        `file_id="${r.file_id}"`,
+                        `было: "${r.file_name}"`,
+                        `→ стало: "${r.actual_title}"`);
+                });
+            }
             if (dropped.length) {
-                _top10log('dropped', dropped.length, 'items:');
+                _top10log('dropped', dropped.length, 'items (нет в JSON):');
                 console.table(dropped);
             }
 
-            const items = filtered.slice(0, 10);
-            _top10log('kept:', items.length, 'shown: 10 (or fewer)');
+            const items = resolved.slice(0, 10);
+            _top10log('kept:', items.length, 'shown:', items.length);
 
             if (items.length === 0) {
                 grid.innerHTML = '<div class="top10-empty">Пока нет доступных материалов</div>';
@@ -811,11 +845,10 @@
                 return;
             }
 
-            // 5. Рендер
             let html = '';
             items.forEach((it, idx) => {
                 const rank = idx + 1;
-                const name = it.file_name || it.file_id || 'Без названия';
+                const displayName = it.actual_title || it.file_name || it.file_id || 'Без названия';
                 const sectionKey = it.section_key || '';
                 const sectionLabel = CFG.SECTIONS[sectionKey]?.label || sectionKey;
                 const count = it.count || 0;
@@ -823,11 +856,12 @@
                 html += `
                     <div class="top10-item"
                          data-section-key="${MF.escapeAttr(sectionKey)}"
-                         data-file-name="${MF.escapeAttr(name)}"
+                         data-file-name="${MF.escapeAttr(displayName)}"
+                         data-file-id="${MF.escapeAttr(it.actual_fid || it.file_id || '')}"
                          title="Открыть в разделе «${MF.escapeAttr(sectionLabel)}»">
                         <div class="top10-rank">${rank}</div>
                         <div class="top10-body">
-                            <div class="top10-name">${MF.escapeHtml(name)}</div>
+                            <div class="top10-name">${MF.escapeHtml(displayName)}</div>
                             <div class="top10-meta">
                                 <span><i class="fas fa-folder"></i> ${MF.escapeHtml(sectionLabel)}</span>
                             </div>
@@ -884,7 +918,6 @@
         setTimeout(() => tryApply(0), 300);
     }
 
-    // ─── Кнопка «Обновить» в разделе топ-10 ───
     const _top10RefreshBtn = document.getElementById('top10RefreshBtn');
     if (_top10RefreshBtn) {
         _top10RefreshBtn.addEventListener('click', () => {
@@ -1638,10 +1671,6 @@
         localStorage.setItem('activeTab', tabId);
 
         if (tabId === 'top10') {
-            // При каждом заходе на топ-10 — если кэш устарел (>5 мин) или
-            // данные ещё не загружались в этой сессии — грузим.
-            // Это гарантирует, что удалённый файл не будет показан
-            // после обновления JSON.
             if (!_top10FirstLoadDone) {
                 loadTop10(false);
             } else {
@@ -1682,7 +1711,6 @@
         await trackVisit();
         await loadDownloadCounts();
         loadStats();
-        // Топ-10 не грузим при загрузке главной — только при клике
         const saved = localStorage.getItem('activeTab');
         if (saved && document.getElementById(saved)) switchTab(saved);
         else switchTab('home');
