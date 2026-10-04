@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Админ-панель — MyFiles</title>
+    <title>Админ-панель — MyFiles</title>
     <meta name="robots" content="noindex, nofollow, noarchive">
     <meta name="referrer" content="no-referrer">
 
@@ -804,6 +804,10 @@
                 <i class="fas fa-bug"></i> Ошибки JS
                 <span class="badge-count" id="errorsBadge" style="display:none;">0</span>
             </button>
+            <button class="nav-link" data-tab="actions">
+                <i class="fas fa-clipboard-list"></i> Журнал
+                <span class="badge-count" id="actionsBadge" style="display:none;">0</span>
+            </button>
             <button class="nav-link" data-tab="downloads">
                 <i class="fas fa-download"></i> Скачивания
             </button>
@@ -840,7 +844,7 @@
     </div>
 </div>
 
-<!-- Универсальная модалка (пользователи, разделы, orphans, детали ошибок) -->
+<!-- Универсальная модалка (пользователи, разделы, orphans, детали ошибок, детали журнала) -->
 <div class="modal-overlay" id="userEditModal">
     <div class="modal-box"></div>
 </div>
