@@ -203,6 +203,120 @@
         }
         .welcome-hint i { color: #8b5cf6; font-size: 18px; margin-top: 2px; }
 
+        /* ─── Топ-10 популярных файлов ─── */
+        .top10-section {
+            margin-top: 24px;
+            background: white;
+            border: 2px solid #fee2e2;
+            border-radius: 20px;
+            padding: 24px 26px;
+        }
+        .top10-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 2px dashed #fecaca;
+        }
+        .top10-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .top10-title i { color: #dc2626; font-size: 22px; }
+        .top10-subtitle {
+            color: #64748b;
+            font-size: 13px;
+        }
+        .top10-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        .top10-item {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            cursor: pointer;
+            transition: 0.2s;
+            text-decoration: none;
+            color: inherit;
+            min-width: 0;
+        }
+        .top10-item:hover {
+            background: #fee2e2;
+            border-color: #dc2626;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(220,38,38,0.12);
+        }
+        .top10-rank {
+            flex-shrink: 0;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #dc2626;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 15px;
+        }
+        .top10-item:nth-child(1) .top10-rank { background: #f59e0b; }
+        .top10-item:nth-child(2) .top10-rank { background: #94a3b8; }
+        .top10-item:nth-child(3) .top10-rank { background: #b45309; }
+        .top10-body {
+            flex: 1;
+            min-width: 0;
+        }
+        .top10-name {
+            font-weight: 700;
+            font-size: 14px;
+            color: #0f172a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .top10-meta {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 3px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .top10-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #fef2f2;
+            color: #991b1b;
+            font-weight: 700;
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            flex-shrink: 0;
+        }
+        .top10-loading,
+        .top10-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14px;
+            padding: 20px 0;
+            font-style: italic;
+        }
+
         .programs-notice { background: #eff6ff; border-left: 5px solid #2563eb; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; font-size: 14px; line-height: 1.65; color: #1e3a8a; }
         .programs-notice .notice-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: #1e40af; margin-bottom: 8px; }
         .programs-notice .notice-title i { color: #2563eb; font-size: 18px; }
@@ -346,6 +460,8 @@
             .welcome-grid { grid-template-columns: 1fr; }
             .welcome-hero { padding: 22px 18px; }
             .welcome-hero h1 { font-size: 22px; }
+            .top10-grid { grid-template-columns: 1fr; }
+            .top10-section { padding: 20px 18px; }
             .pagination-bar { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 12px; font-size: 12px; }
             .pagination-controls { justify-content: center; gap: 6px; flex-wrap: wrap; }
             .modal-box { padding: 20px; }
@@ -439,6 +555,24 @@
                             Выберите раздел в меню слева — например, «Программы» или «Книги».
                             Внутри раздела можно перейти в подпапку или воспользоваться поиском.
                             Для скачивания любого файла нужна регистрация, для прослушивания музыки — нет.
+                        </div>
+                    </div>
+
+                    <!-- ─── Топ-10 популярных файлов ─── -->
+                    <div class="top10-section" id="top10Section" style="display:none;">
+                        <div class="top10-header">
+                            <div class="top10-title">
+                                <i class="fas fa-fire"></i>
+                                Топ-10 по скачиваниям
+                            </div>
+                            <div class="top10-subtitle">
+                                Самые популярные материалы за всё время
+                            </div>
+                        </div>
+                        <div class="top10-grid" id="top10Grid">
+                            <div class="top10-loading">
+                                <i class="fas fa-spinner fa-spin"></i> Загрузка...
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -642,6 +776,100 @@
             refreshBtn.style.display = isAdmin ? 'inline-flex' : 'none';
             refreshBtn.onclick = isAdmin ? openRefreshModal : null;
         }
+    }
+
+    // ============================================================
+    // ТОП-10 ПОПУЛЯРНЫХ ФАЙЛОВ
+    // ============================================================
+    async function loadTop10() {
+        const section = document.getElementById('top10Section');
+        const grid = document.getElementById('top10Grid');
+        if (!section || !grid) return;
+
+        try {
+            const { data, error } = await supabaseClient.rpc('get_top_downloads', {
+                p_limit: 10,
+            });
+            if (error) throw error;
+
+            const items = Array.isArray(data) ? data : [];
+            if (items.length === 0) {
+                // Скрываем блок целиком, если данных нет
+                section.style.display = 'none';
+                return;
+            }
+
+            section.style.display = 'block';
+            let html = '';
+            items.forEach((it, idx) => {
+                const rank = idx + 1;
+                const name = it.file_name || it.file_id || 'Без названия';
+                const sectionKey = it.section_key || '';
+                const sectionLabel = (CFG.SECTIONS[sectionKey]?.label) || sectionKey;
+                const count = it.count || 0;
+
+                html += `
+                    <div class="top10-item"
+                         data-section-key="${MF.escapeAttr(sectionKey)}"
+                         data-file-name="${MF.escapeAttr(name)}"
+                         title="Открыть в разделе «${MF.escapeAttr(sectionLabel)}»">
+                        <div class="top10-rank">${rank}</div>
+                        <div class="top10-body">
+                            <div class="top10-name">${MF.escapeHtml(name)}</div>
+                            <div class="top10-meta">
+                                <span><i class="fas fa-folder"></i> ${MF.escapeHtml(sectionLabel || '—')}</span>
+                            </div>
+                        </div>
+                        <div class="top10-badge">
+                            <i class="fas fa-download"></i> ${count}
+                        </div>
+                    </div>`;
+            });
+            grid.innerHTML = html;
+
+            grid.querySelectorAll('.top10-item').forEach(el => {
+                el.addEventListener('click', () => {
+                    const sk = el.dataset.sectionKey;
+                    const fn = el.dataset.fileName;
+                    if (!sk || !CFG.SECTIONS[sk]) return;
+                    openTop10Item(sk, fn);
+                });
+            });
+        } catch (e) {
+            console.warn('top10:', e);
+            section.style.display = 'none';
+        }
+    }
+
+    function openTop10Item(sectionKey, fileName) {
+        const meta = CFG.SECTIONS[sectionKey];
+        if (!meta) return;
+
+        // Переключаемся на раздел
+        switchTab(sectionKey);
+
+        // Ждём, пока раздел загрузится, потом ставим фильтр по названию
+        // (если раздел ещё не загружен — loadSectionIfNeeded стартует fetch,
+        //  подождём немного и попробуем ещё раз)
+        const tryApply = (attempt) => {
+            const container = document.getElementById(meta.container);
+            const state = tableStates[meta.container];
+            if (!state || !container) {
+                if (attempt < 15) {
+                    setTimeout(() => tryApply(attempt + 1), 200);
+                }
+                return;
+            }
+            state.viewMode = 'table';
+            state.folderFilter = null;
+            state.sortKey = null;
+            state.sortDir = 'asc';
+            state.currentPage = 1;
+            state.searches = { title: fileName || '' };
+            renderSection(meta.container, container, sectionRenderers[meta.container]);
+            MF.scrollToContainer(container, 120);
+        };
+        setTimeout(() => tryApply(0), 300);
     }
 
     // ============================================================
@@ -884,17 +1112,26 @@
             el.textContent = downloadCounts[el.dataset.countFileId] || 0;
         });
     }
-    async function incrementDownload(fileId, downloadUrl, fileName) {
+
+    async function incrementDownload(fileId, sectionKey, downloadUrl, fileName) {
         if (!currentUser) { alert('Для скачивания необходимо зарегистрироваться.'); return; }
         try {
-            const { data } = await supabaseClient.rpc('increment_download', { p_file_id: fileId });
+            const { data } = await supabaseClient.rpc('increment_download', {
+                p_file_id:     fileId,
+                p_file_name:   fileName || null,
+                p_section_key: sectionKey || null,
+            });
             downloadCounts[fileId] = data;
             updateDownloadCountsDisplay();
+
             await supabaseClient.from('download_logs').insert([{
-                file_id: fileId, file_name: fileName || null,
-                user_id: currentUser.id,
-                username: currentProfile?.username || currentUser.email
+                file_id:     fileId,
+                file_name:   fileName || null,
+                section_key: sectionKey || null,
+                user_id:     currentUser.id,
+                username:    currentProfile?.username || currentUser.email,
             }]);
+
             if (downloadUrl && downloadUrl !== '#') {
                 MF.triggerDownload(buildProxyUrl(downloadUrl, fileName), fileName);
             }
@@ -1114,6 +1351,9 @@
         const startIdx = (state.currentPage - 1) * state.pageSize;
         const pageItems = allFiltered.slice(startIdx, startIdx + state.pageSize);
 
+        // Текущий раздел (используется при инкременте счётчиков)
+        const currentSectionKey = state.sectionKey || '';
+
         let thead = '<tr>';
         cols.forEach(col => {
             let cls = '';
@@ -1185,7 +1425,11 @@
                                             10 <i class="fas fa-forward"></i>
                                         </button>
                                     </div>
-                                    <a href="#" class="${dlClass}" data-file-id="${MF.escapeAttr(fid)}" data-download-url="${MF.escapeAttr(item.download_link)}" data-file-name="${MF.escapeAttr(ftitle)}">
+                                    <a href="#" class="${dlClass}"
+                                       data-file-id="${MF.escapeAttr(fid)}"
+                                       data-section-key="${MF.escapeAttr(currentSectionKey)}"
+                                       data-download-url="${MF.escapeAttr(item.download_link)}"
+                                       data-file-name="${MF.escapeAttr(ftitle)}">
                                         <i class="fas fa-download"></i> Скачать
                                     </a>
                                 </div>
@@ -1199,7 +1443,11 @@
                             const ftitle = item.title || 'Без названия';
                             const btnClass = isLogged ? 'btn-download-sm' : 'btn-download-sm disabled';
                             tbody += `<td class="col-center">
-                                <a href="#" class="${btnClass}" data-file-id="${MF.escapeAttr(fid)}" data-download-url="${MF.escapeAttr(item.download_link)}" data-file-name="${MF.escapeAttr(ftitle)}">
+                                <a href="#" class="${btnClass}"
+                                   data-file-id="${MF.escapeAttr(fid)}"
+                                   data-section-key="${MF.escapeAttr(currentSectionKey)}"
+                                   data-download-url="${MF.escapeAttr(item.download_link)}"
+                                   data-file-name="${MF.escapeAttr(ftitle)}">
                                     <i class="fas fa-download"></i> Скачать
                                 </a>
                             </td>`;
@@ -1300,7 +1548,12 @@
                     alert('Для скачивания необходимо зарегистрироваться.');
                     return;
                 }
-                incrementDownload(this.dataset.fileId, this.dataset.downloadUrl, this.dataset.fileName);
+                incrementDownload(
+                    this.dataset.fileId,
+                    this.dataset.sectionKey,
+                    this.dataset.downloadUrl,
+                    this.dataset.fileName
+                );
             });
         });
 
@@ -1391,6 +1644,7 @@
         await trackVisit();
         await loadDownloadCounts();
         loadStats();
+        loadTop10();
         const saved = localStorage.getItem('activeTab');
         if (saved && document.getElementById(saved)) switchTab(saved);
         else switchTab('home');
