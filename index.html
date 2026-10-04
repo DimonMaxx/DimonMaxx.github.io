@@ -15,7 +15,7 @@
 
     <!-- Google Search Console -->
     <meta name="google-site-verification" content="yZDD0MN69SMf80A-y_FsVWvNC_kjmMcg8F2na7-Yr9g" />
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="apple-touch-icon" href="favicon.svg">
@@ -530,50 +530,15 @@
         }, 4500);
     }
 
-    // --- Прокси ---
-    function buildProxyUrl(downloadUrl, fileName) {
-        if (!downloadUrl) return '';
-        try {
-            const parsed = new URL(downloadUrl);
-            const host = parsed.hostname.toLowerCase();
+    // ============================================================
+    // ПРОКСИ-ССЫЛКА (единый источник — MF.buildProxyUrl)
+    // ============================================================
+    const buildProxyUrl = MF.buildProxyUrl;
+    const getAudioMimeType = MF.getAudioMimeType;
 
-            if (host.includes('terabox')
-                || host.includes('1024tera')
-                || host.includes('4funbox')
-                || host.includes('teraboxapp')) {
-                let fname = fileName && String(fileName).trim();
-                if (!fname) {
-                    const fromPath = parsed.searchParams.get('path');
-                    fname = fromPath
-                        ? decodeURIComponent(fromPath).split('/').pop()
-                        : 'file.bin';
-                }
-                if (!/\.[a-z0-9]{1,6}$/i.test(fname)) fname += '.bin';
-                return `${SUPABASE_URL}/functions/v1/terabox-download`
-                     + `?url=${encodeURIComponent(downloadUrl)}`
-                     + `&name=${encodeURIComponent(fname)}`;
-            }
-
-            const folder = `${parsed.origin}${parsed.pathname}`;
-            const path = parsed.searchParams.get('path');
-            if (!folder || !path) return downloadUrl;
-            return `${SUPABASE_URL}/functions/v1/yandex-download`
-                 + `?folder=${encodeURIComponent(folder)}`
-                 + `&path=${encodeURIComponent(path)}`;
-        } catch (e) { return downloadUrl; }
-    }
-
-    function getAudioMimeType(url) {
-        if (!url) return '';
-        const m = url.match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
-        const ext = m ? m[1].toLowerCase() : '';
-        const map = { mp3:'audio/mpeg', flac:'audio/flac', wav:'audio/wav',
-                      ogg:'audio/ogg', m4a:'audio/mp4', aac:'audio/aac',
-                      wma:'audio/x-ms-wma', opus:'audio/opus',
-                      ape:'audio/x-ape', aiff:'audio/aiff', alac:'audio/mp4' };
-        return map[ext] || '';
-    }
-
+    // ============================================================
+    // СБОРКА РЕНДЕРЕРОВ ДЛЯ КОЛОНОК
+    // ============================================================
     function buildRenderers() {
         sectionRenderers = {};
         Object.entries(CFG.SECTIONS).forEach(([key, meta]) => {
@@ -765,7 +730,6 @@
             renderSourceBlock('yandex', 'Яндекс.Диск', 'fa-cloud', yandexList) +
             renderSourceBlock('terabox', 'TeraBox', 'fa-cloud-upload-alt', teraboxList);
 
-        // ─── Обработчики ───
         sourcesEl.querySelectorAll('.source-cb').forEach(cb => {
             cb.addEventListener('change', function () {
                 const src = this.dataset.source;
@@ -861,7 +825,6 @@
             } catch (e) {
                 failed.push(`${t.label}: ${e.message}`);
             }
-            // Небольшая пауза между вызовами
             if (tasks.indexOf(t) < tasks.length - 1) {
                 await new Promise(r => setTimeout(r, 1500));
             }
