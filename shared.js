@@ -224,6 +224,77 @@
     }
 
     // ============================================================
+    // Прокси-ссылки для скачивания
+    // ============================================================
+    // Единый источник правды: определяет источник по домену URL и
+    // формирует ссылку на соответствующую Edge Function.
+    //   TeraBox  → /functions/v1/terabox-download?url=...&name=...
+    //   Яндекс   → /functions/v1/yandex-download?folder=...&path=...
+    // Прочие   → исходный URL без изменений
+    // ============================================================
+    function buildProxyUrl(downloadUrl, fileName) {
+        if (!downloadUrl) return '';
+        try {
+            const cfg = window.APP_CONFIG;
+            const SUPABASE_URL = cfg && cfg.SUPABASE_URL
+                ? cfg.SUPABASE_URL
+                : '';
+
+            const parsed = new URL(downloadUrl);
+            const host = parsed.hostname.toLowerCase();
+
+            // ─── TeraBox ───
+            if (host.includes('terabox')
+                || host.includes('1024tera')
+                || host.includes('4funbox')
+                || host.includes('teraboxapp')) {
+                let fname = fileName && String(fileName).trim();
+                if (!fname) {
+                    const fromPath = parsed.searchParams.get('path');
+                    fname = fromPath
+                        ? decodeURIComponent(fromPath).split('/').pop()
+                        : 'file.bin';
+                }
+                if (!/\.[a-z0-9]{1,6}$/i.test(fname)) fname += '.bin';
+                return `${SUPABASE_URL}/functions/v1/terabox-download`
+                     + `?url=${encodeURIComponent(downloadUrl)}`
+                     + `&name=${encodeURIComponent(fname)}`;
+            }
+
+            // ─── Яндекс.Диск ───
+            const folder = `${parsed.origin}${parsed.pathname}`;
+            const path = parsed.searchParams.get('path');
+            if (!folder || !path) return downloadUrl;
+            return `${SUPABASE_URL}/functions/v1/yandex-download`
+                 + `?folder=${encodeURIComponent(folder)}`
+                 + `&path=${encodeURIComponent(path)}`;
+        } catch (e) { return downloadUrl; }
+    }
+
+    // ============================================================
+    // Определение MIME-типа аудио по расширению
+    // ============================================================
+    function getAudioMimeType(url) {
+        if (!url) return '';
+        const m = String(url).match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+        const ext = m ? m[1].toLowerCase() : '';
+        const map = {
+            mp3:  'audio/mpeg',
+            flac: 'audio/flac',
+            wav:  'audio/wav',
+            ogg:  'audio/ogg',
+            m4a:  'audio/mp4',
+            aac:  'audio/aac',
+            wma:  'audio/x-ms-wma',
+            opus: 'audio/opus',
+            ape:  'audio/x-ape',
+            aiff: 'audio/aiff',
+            alac: 'audio/mp4'
+        };
+        return map[ext] || '';
+    }
+
+    // ============================================================
     // Supabase client (singleton)
     // ============================================================
     let _supabaseClient = null;
@@ -282,12 +353,10 @@
         try {
             client = getSupabaseClient();
         } catch (_) {
-            // Supabase не готов — тихо выходим
             _errorSendInFlight = false;
             return;
         }
 
-        // Пытаемся получить user_id (может быть null)
         client.auth.getUser().then(({ data }) => {
             const userId = data?.user?.id || null;
             const rows = batch.map(item => ({
@@ -309,18 +378,16 @@
     }
 
     function _pushError(payload) {
-        // Защита от лавины
         const now = Date.now();
         if (now - _errorWindowStart > ERR_WINDOW_MS) {
             _errorWindowStart = now;
             _errorQueue = [];
         }
         if (_errorQueue.length >= ERR_MAX_PER_WINDOW) {
-            return; // слишком много — пропускаем
+            return;
         }
 
         _errorQueue.push(payload);
-        // Дебаунс: отправляем батчем через 500 мс
         setTimeout(_sendQueuedErrors, 500);
     }
 
@@ -328,11 +395,8 @@
         if (_errorHandlerInstalled) return;
         _errorHandlerInstalled = true;
 
-        // 1. Синхронные ошибки
         window.addEventListener('error', function (e) {
             try {
-                // Игнорируем ошибки от сторонних скриптов (без e.error)
-                // и ошибки загрузки ресурсов (target, а не message)
                 if (!e.message && !e.error) return;
 
                 const message = e.message || String(e.error && e.error.message) || 'Unknown error';
@@ -346,9 +410,8 @@
                     meta:       extraMeta || null,
                 });
             } catch (_) { /* сам хендлер не должен падать */ }
-        }, true); // capture: true — ловит и на этапе capturing
+        }, true);
 
-        // 2. Необработанные отклонения промисов
         window.addEventListener('unhandledrejection', function (e) {
             try {
                 const reason = e.reason;
@@ -478,6 +541,7 @@
         renderPagination, attachPaginationHandlers,
         scrollToContainer,
         toggleDesc, triggerDownload, formatDateRu,
+        buildProxyUrl, getAudioMimeType,
         getSupabaseClient, loadSections,
         installErrorHandler,
     });
@@ -485,12 +549,9 @@
     window.toggleDesc = toggleDesc;
 
     // ─── Автоматически подключаем перехват ошибок, если есть конфиг ───
-    // Небольшая задержка: даём config.js и supabase-js прогрузиться.
     if (window.APP_CONFIG) {
-        // Уже загружен — сразу
         installErrorHandler();
     } else {
-        // Ещё нет — ждём DOMContentLoaded
         document.addEventListener('DOMContentLoaded', function () {
             if (window.APP_CONFIG) {
                 installErrorHandler();
