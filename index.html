@@ -10,18 +10,13 @@
     <meta name="language" content="ru">
     <meta name="author" content="MyFiles">
 
-    <!-- Яндекс.Вебмастер -->
     <meta name="yandex-verification" content="c3fb1578dfe13952" />
-
-    <!-- Google Search Console -->
     <meta name="google-site-verification" content="yZDD0MN69SMf80A-y_FsVWvNC_kjmMcg8F2na7-Yr9g" />
 
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="apple-touch-icon" href="favicon.svg">
     <link rel="mask-icon" href="favicon.svg" color="#2563eb">
 
-    <!-- Open Graph -->
     <meta property="og:url" content="https://dimonmaxx.github.io/">
     <meta property="og:image" content="https://dimonmaxx.github.io/og-cover.png">
     <meta property="og:image:width" content="1200">
@@ -29,7 +24,6 @@
     <meta property="og:image:alt" content="MyFiles — библиотека бесплатных файлов">
     <meta property="og:locale" content="ru_RU">
 
-    <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="MyFiles — бесплатные программы, книги, музыка, игры и фильмы">
     <meta name="twitter:description" content="Крупная библиотека бесплатных материалов. Прямой доступ к файлам в облаке.">
@@ -88,103 +82,25 @@
         .section-title { font-size: 26px; font-weight: 700; margin: 0 0 20px 0; padding-bottom: 10px; border-bottom: 3px solid #e2e8f0; display: flex; align-items: center; gap: 12px; }
         .section-title i { color: #2563eb; }
 
-        .welcome-hero {
-            background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%);
-            border-radius: 20px;
-            padding: 32px 28px;
-            margin-bottom: 24px;
-            border: 1px solid #dbeafe;
-        }
-        .welcome-hero h1 {
-            font-size: 30px;
-            font-weight: 800;
-            color: #0f172a;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
+        .welcome-hero { background: linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%); border-radius: 20px; padding: 32px 28px; margin-bottom: 24px; border: 1px solid #dbeafe; }
+        .welcome-hero h1 { font-size: 30px; font-weight: 800; color: #0f172a; margin-bottom: 10px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
         .welcome-hero h1 i { color: #2563eb; }
-        .welcome-hero .hero-subtitle {
-            font-size: 16px;
-            color: #475569;
-            margin-bottom: 22px;
-            line-height: 1.6;
-        }
-        .welcome-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            margin-bottom: 6px;
-        }
-        .welcome-card {
-            background: white;
-            border-radius: 16px;
-            padding: 22px 20px;
-            border: 2px solid #e2e8f0;
-            transition: 0.2s;
-        }
-        .welcome-card:hover {
-            border-color: #2563eb;
-            transform: translateY(-3px);
-            box-shadow: 0 10px 24px rgba(37,99,235,0.12);
-        }
+        .welcome-hero .hero-subtitle { font-size: 16px; color: #475569; margin-bottom: 22px; line-height: 1.6; }
+        .welcome-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 6px; }
+        .welcome-card { background: white; border-radius: 16px; padding: 22px 20px; border: 2px solid #e2e8f0; transition: 0.2s; }
+        .welcome-card:hover { border-color: #2563eb; transform: translateY(-3px); box-shadow: 0 10px 24px rgba(37,99,235,0.12); }
         .welcome-card.guest { border-left: 5px solid #10b981; }
         .welcome-card.user  { border-left: 5px solid #2563eb; }
-        .welcome-card .card-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            margin-bottom: 12px;
-            color: white;
-        }
+        .welcome-card .card-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 12px; color: white; }
         .welcome-card.guest .card-icon { background: #10b981; }
         .welcome-card.user  .card-icon { background: #2563eb; }
-        .welcome-card h3 {
-            font-size: 17px;
-            font-weight: 700;
-            color: #0f172a;
-            margin-bottom: 12px;
-        }
+        .welcome-card h3 { font-size: 17px; font-weight: 700; color: #0f172a; margin-bottom: 12px; }
         .welcome-card ul { list-style: none; padding: 0; margin: 0; }
-        .welcome-card li {
-            display: flex;
-            align-items: flex-start;
-            gap: 10px;
-            padding: 6px 0;
-            font-size: 14px;
-            color: #334155;
-            line-height: 1.5;
-        }
-        .welcome-card li i {
-            color: #10b981;
-            font-size: 14px;
-            margin-top: 3px;
-            flex-shrink: 0;
-        }
+        .welcome-card li { display: flex; align-items: flex-start; gap: 10px; padding: 6px 0; font-size: 14px; color: #334155; line-height: 1.5; }
+        .welcome-card li i { color: #10b981; font-size: 14px; margin-top: 3px; flex-shrink: 0; }
         .welcome-card.user li i { color: #2563eb; }
-        .welcome-actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-        }
-        .welcome-actions a {
-            padding: 10px 22px;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 14px;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            transition: 0.2s;
-        }
+        .welcome-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 20px; }
+        .welcome-actions a { padding: 10px 22px; border-radius: 40px; font-weight: 700; font-size: 14px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .welcome-actions .btn-login { background: #2563eb; color: white; box-shadow: 0 4px 14px rgba(37,99,235,0.3); }
         .welcome-actions .btn-login:hover { background: #1d4ed8; transform: translateY(-2px); }
         .welcome-actions .btn-register { background: #f59e0b; color: #1e293b; box-shadow: 0 4px 14px rgba(245,158,11,0.3); }
@@ -192,150 +108,30 @@
         .welcome-actions .btn-submit { background: white; color: #2563eb; border: 2px solid #2563eb; }
         .welcome-actions .btn-submit:hover { background: #eff6ff; }
 
-        .welcome-hint {
-            margin-top: 20px;
-            padding: 14px 18px;
-            background: #f8fafc;
-            border-left: 4px solid #8b5cf6;
-            border-radius: 10px;
-            font-size: 14px;
-            color: #475569;
-            display: flex;
-            gap: 10px;
-            align-items: flex-start;
-        }
+        .welcome-hint { margin-top: 20px; padding: 14px 18px; background: #f8fafc; border-left: 4px solid #8b5cf6; border-radius: 10px; font-size: 14px; color: #475569; display: flex; gap: 10px; align-items: flex-start; }
         .welcome-hint i { color: #8b5cf6; font-size: 18px; margin-top: 2px; }
 
-        /* ─── Топ-10 популярных файлов (отдельный раздел) ─── */
-        .top10-section {
-            background: white;
-            border: 2px solid #fee2e2;
-            border-radius: 20px;
-            padding: 24px 26px;
-        }
-        .top10-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-        .top10-title {
-            font-size: 22px;
-            font-weight: 800;
-            color: #0f172a;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+        /* ─── Топ-10 (отдельный раздел) ─── */
+        .top10-section { background: white; border: 2px solid #fee2e2; border-radius: 20px; padding: 24px 26px; }
+        .top10-header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 8px; }
+        .top10-title { font-size: 22px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 10px; }
         .top10-title i { color: #dc2626; font-size: 24px; }
-        .top10-refresh-btn {
-            padding: 8px 16px;
-            border-radius: 30px;
-            border: none;
-            background: #64748b;
-            color: white;
-            font-family: 'Inter', sans-serif;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: 0.2s;
-        }
+        .top10-refresh-btn { padding: 8px 16px; border-radius: 30px; border: none; background: #64748b; color: white; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; }
         .top10-refresh-btn:hover { background: #475569; }
         .top10-refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .top10-subtitle {
-            color: #64748b;
-            font-size: 14px;
-            margin-bottom: 18px;
-            padding-bottom: 14px;
-            border-bottom: 2px dashed #fecaca;
-        }
-        .top10-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-        .top10-item {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 12px 14px;
-            border-radius: 14px;
-            background: #fef2f2;
-            border: 1px solid #fecaca;
-            cursor: pointer;
-            transition: 0.2s;
-            text-decoration: none;
-            color: inherit;
-            min-width: 0;
-        }
-        .top10-item:hover {
-            background: #fee2e2;
-            border-color: #dc2626;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 18px rgba(220,38,38,0.12);
-        }
-        .top10-rank {
-            flex-shrink: 0;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #dc2626;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 15px;
-        }
+        .top10-subtitle { color: #64748b; font-size: 14px; margin-bottom: 18px; padding-bottom: 14px; border-bottom: 2px dashed #fecaca; }
+        .top10-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .top10-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: 14px; background: #fef2f2; border: 1px solid #fecaca; cursor: pointer; transition: 0.2s; text-decoration: none; color: inherit; min-width: 0; }
+        .top10-item:hover { background: #fee2e2; border-color: #dc2626; transform: translateY(-2px); box-shadow: 0 8px 18px rgba(220,38,38,0.12); }
+        .top10-rank { flex-shrink: 0; width: 36px; height: 36px; border-radius: 50%; background: #dc2626; color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; }
         .top10-item:nth-child(1) .top10-rank { background: #f59e0b; }
         .top10-item:nth-child(2) .top10-rank { background: #94a3b8; }
         .top10-item:nth-child(3) .top10-rank { background: #b45309; }
-        .top10-body {
-            flex: 1;
-            min-width: 0;
-        }
-        .top10-name {
-            font-weight: 700;
-            font-size: 14px;
-            color: #0f172a;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .top10-meta {
-            font-size: 12px;
-            color: #64748b;
-            margin-top: 3px;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .top10-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            background: #fef2f2;
-            color: #991b1b;
-            font-weight: 700;
-            font-size: 12px;
-            padding: 2px 10px;
-            border-radius: 20px;
-            flex-shrink: 0;
-        }
-        .top10-loading,
-        .top10-empty {
-            grid-column: 1 / -1;
-            text-align: center;
-            color: #94a3b8;
-            font-size: 14px;
-            padding: 40px 0;
-            font-style: italic;
-        }
+        .top10-body { flex: 1; min-width: 0; }
+        .top10-name { font-weight: 700; font-size: 14px; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .top10-meta { font-size: 12px; color: #64748b; margin-top: 3px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .top10-badge { display: inline-flex; align-items: center; gap: 4px; background: #fef2f2; color: #991b1b; font-weight: 700; font-size: 12px; padding: 2px 10px; border-radius: 20px; flex-shrink: 0; }
+        .top10-loading, .top10-empty { grid-column: 1 / -1; text-align: center; color: #94a3b8; font-size: 14px; padding: 40px 0; font-style: italic; }
 
         .programs-notice { background: #eff6ff; border-left: 5px solid #2563eb; border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; font-size: 14px; line-height: 1.65; color: #1e3a8a; }
         .programs-notice .notice-title { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 15px; color: #1e40af; margin-bottom: 8px; }
@@ -421,7 +217,6 @@
         .page-jump-input { width: 60px; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; text-align: center; }
         .page-jump-btn { padding: 6px 12px; border-radius: 8px; border: none; background: #2563eb; color: white; font-weight: 600; cursor: pointer; }
 
-        /* ─── Модалка обновления контента ─── */
         .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; z-index: 9999; padding: 15px; }
         .modal-overlay.active { display: flex; }
         .modal-box { background: white; border-radius: 20px; padding: 30px; max-width: 720px; width: 100%; box-shadow: 0 20px 60px rgba(0,20,80,0.15); max-height: 90vh; overflow-y: auto; }
@@ -448,7 +243,6 @@
         .refresh-loading { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 14px; }
         .refresh-hint { color: #64748b; font-size: 13px; margin-bottom: 6px; line-height: 1.5; }
 
-        /* ─── Тост-уведомление ─── */
         .toast { position: fixed; top: 20px; right: 20px; background: white; padding: 14px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,20,80,0.18); display: flex; align-items: flex-start; gap: 10px; font-weight: 600; font-size: 14px; z-index: 10001; transform: translateX(120%); transition: transform 0.3s ease; max-width: 420px; }
         .toast.show { transform: translateX(0); }
         .toast i { font-size: 20px; margin-top: 1px; flex-shrink: 0; }
@@ -581,11 +375,8 @@
                             А чтобы увидеть самое популярное — загляните в раздел «Топ-10».
                         </div>
                     </div>
-
-                    <!-- ─── Топ-10 перенесён в отдельный раздел ─── -->
                 </div>
 
-                <!-- ─── Отдельный раздел «Топ-10 по скачиваниям» ─── -->
                 <div id="top10" class="tab-content">
                     <div class="top10-section">
                         <div class="top10-header">
@@ -617,7 +408,6 @@
     </footer>
 </div>
 
-<!-- ─── Модалка обновления контента ─── -->
 <div class="modal-overlay" id="refreshModal">
     <div class="modal-box" style="max-width: 620px;">
         <h3><i class="fas fa-sync-alt"></i> Обновление контента</h3>
@@ -655,10 +445,15 @@
     let extraFolders = {};
 
     // ─── Топ-10: кэш и состояние ───
-    let _top10SectionCache = null;       // { section_key: Set(file_id) }
+    let _top10SectionCache = null;       // { section_key: { ids: Set, titles: Set } }
     let _top10SectionCacheTs = 0;
-    const TOP10_CACHE_TTL_MS = 5 * 60 * 1000;   // 5 минут
-    let _top10FirstLoadDone = false;             // загружали ли уже в этой сессии
+    const TOP10_CACHE_TTL_MS = 5 * 60 * 1000;
+    let _top10FirstLoadDone = false;
+    let _top10Debug = true;              // Логирование в консоль
+
+    function _top10log(...args) {
+        if (_top10Debug) console.log('[top10]', ...args);
+    }
 
     // ─── ГЛОБАЛЬНАЯ ЗАЩИТА ОТ КОНТЕКСТНОГО МЕНЮ НА АУДИО ───
     document.addEventListener('contextmenu', function (e) {
@@ -679,9 +474,6 @@
         }
     }, true);
 
-    // ============================================================
-    // ТОСТ-УВЕДОМЛЕНИЯ
-    // ============================================================
     function showToast(message, type) {
         type = type || 'success';
         const iconMap = {
@@ -702,15 +494,36 @@
         }, 4500);
     }
 
-    // ============================================================
-    // ПРОКСИ-ССЫЛКА (единый источник — MF.buildProxyUrl)
-    // ============================================================
     const buildProxyUrl = MF.buildProxyUrl;
     const getAudioMimeType = MF.getAudioMimeType;
 
     // ============================================================
-    // СБОРКА РЕНДЕРЕРОВ ДЛЯ КОЛОНОК
+    // НОРМАЛИЗАЦИЯ НАЗВАНИЙ ДЛЯ ФИЛЬТРА ТОП-10
     // ============================================================
+    // Убирает регистр, ё/е, пунктуацию. Позволяет сопоставить
+    // 'CertificateParser — распознавание сертификатов' с
+    // 'certificateparser распознавание сертификатов'.
+    function _normalizeTitleForMatch(s) {
+        if (!s) return '';
+        return String(s)
+            .toLowerCase()
+            .replace(/ё/g, 'е')
+            .replace(/[^a-z0-9а-я\s]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+    }
+
+    // То же для slug: убирает ё и приводит к одному виду
+    function _normalizeSlugForMatch(s) {
+        if (!s) return '';
+        return String(s)
+            .toLowerCase()
+            .replace(/ё/g, 'е')
+            .replace(/[^a-z0-9а-я\-]/g, '')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+    }
+
     function buildRenderers() {
         sectionRenderers = {};
         Object.entries(CFG.SECTIONS).forEach(([key, meta]) => {
@@ -733,7 +546,6 @@
     function buildSidebarAndTabs() {
         const navInner = document.getElementById('sidebarNavInner');
         const tabsWrapper = document.getElementById('tabsWrapper');
-        // Удаляем только разделы (не home и не top10)
         navInner.querySelectorAll('.nav-link:not([data-tab="home"]):not([data-tab="top10"])')
             .forEach(el => el.remove());
         tabsWrapper.querySelectorAll('.tab-content:not(#home):not(#top10)')
@@ -820,26 +632,45 @@
     }
 
     // ============================================================
-    // ТОП-10 ПОПУЛЯРНЫХ ФАЙЛОВ
-    // Ленивая загрузка: данные тянутся только при переключении на раздел.
-    // Фильтрация: показываем только те файлы, которые реально есть в JSON.
+    // ТОП-10 — ИСПРАВЛЕННАЯ ВЕРСИЯ
     // ============================================================
 
-    // Загружает индексы file_id по всем (или указанным) разделам
+    // Публичная функция сброса кэша (используется админкой)
+    window.resetTop10SectionCache = function () {
+        _top10SectionCache = null;
+        _top10SectionCacheTs = 0;
+        _top10FirstLoadDone = false;
+        _top10log('cache reset by external call');
+    };
+
+    /**
+     * Загружает индексы file_id/title по разделам, которые нужны для фильтра.
+     *
+     * Возвращает: { section_key: { ids: Set<string>, titles: Set<string> } }
+     *
+     * Три поведенческих случая:
+     *   force=true         — перезагрузить всё с нуля
+     *   TTL истёк          — перезагрузить всё с нуля
+     *   TTL свежий         — вернуть кэш как есть
+     */
     async function _loadTop10SectionIndex(force, onlySections) {
         const now = Date.now();
-        if (!force
-            && _top10SectionCache
-            && (now - _top10SectionCacheTs) < TOP10_CACHE_TTL_MS) {
+        const isFresh = _top10SectionCache
+            && (now - _top10SectionCacheTs) < TOP10_CACHE_TTL_MS;
+
+        if (!force && isFresh) {
+            _top10log('section index: using cached version (age:',
+                Math.round((now - _top10SectionCacheTs) / 1000) + 's)');
             return _top10SectionCache;
         }
 
-        // Если кэш есть, но не протух, а мы хотим только дополнить — используем его
-        const cache = (_top10SectionCache && !force)
-            ? Object.assign({}, _top10SectionCache)
-            : {};
+        _top10log('section index: fetching fresh from server',
+            force ? '(force)' : '(TTL expired)');
 
-        // Список разделов, которые нужно загрузить
+        // Полностью новый кэш — не копия старого.
+        // Это исправляет баг «TTL истёк, но данные не перезагружаются».
+        const cache = {};
+
         const targetKeys = onlySections && onlySections.size
             ? Array.from(onlySections)
             : Object.keys(CFG.SECTIONS);
@@ -848,21 +679,34 @@
             targetKeys.map(async (sectionKey) => {
                 const meta = CFG.SECTIONS[sectionKey];
                 if (!meta || !meta.json) return;
-                if (!force && cache[sectionKey]) return;   // уже загружен
-
                 try {
                     const resp = await fetch(meta.json + '?t=' + Date.now());
-                    if (!resp.ok) return;
+                    if (!resp.ok) {
+                        _top10log('fetch failed for', sectionKey, 'HTTP', resp.status);
+                        return;
+                    }
                     const items = await resp.json();
                     const ids = new Set();
+                    const titles = new Set();
+
                     (items || []).forEach(item => {
                         if (!item.title) return;
+                        // file_id: сначала пробуем поле из JSON, потом slugify
                         const fid = item.file_id || MF.slugify(item.title);
-                        if (fid) ids.add(fid);
+                        if (fid) {
+                            ids.add(fid);
+                            ids.add(_normalizeSlugForMatch(fid));
+                        }
+                        // Название — для сравнения с downloads.file_name
+                        const nt = _normalizeTitleForMatch(item.title);
+                        if (nt) titles.add(nt);
                     });
-                    cache[sectionKey] = ids;
+
+                    cache[sectionKey] = { ids, titles };
+                    _top10log('section', sectionKey, '→',
+                        'ids:', ids.size, 'titles:', titles.size);
                 } catch (e) {
-                    console.warn('[top10] fetch section failed', sectionKey, e);
+                    _top10log('fetch error for', sectionKey, e);
                 }
             })
         );
@@ -872,12 +716,39 @@
         return cache;
     }
 
+    /**
+     * Проверяет, существует ли файл из downloads в актуальном JSON.
+     */
+    function _top10ItemExists(it, sectionIndex) {
+        const sk = it.section_key;
+        if (!sk || !CFG.SECTIONS[sk]) return false;
+        const idx = sectionIndex[sk];
+        if (!idx) return false;
+
+        // 1. По file_id из RPC
+        const fidFromRpc = it.file_id || '';
+        if (fidFromRpc && idx.ids.has(fidFromRpc)) return true;
+
+        // 2. По нормализованному slug от file_id (без ё/дефисов)
+        if (fidFromRpc) {
+            const normFid = _normalizeSlugForMatch(fidFromRpc);
+            if (normFid && idx.ids.has(normFid)) return true;
+        }
+
+        // 3. По file_name — нормализуем и ищем в titles
+        if (it.file_name) {
+            const normName = _normalizeTitleForMatch(it.file_name);
+            if (normName && idx.titles.has(normName)) return true;
+        }
+
+        return false;
+    }
+
     async function loadTop10(force) {
         const section = document.getElementById('top10');
         const grid = document.getElementById('top10Grid');
         if (!section || !grid) return;
 
-        // Показываем спиннер при принудительной перезагрузке
         if (force) {
             grid.innerHTML = '<div class="top10-loading"><i class="fas fa-spinner fa-spin"></i> Загрузка...</div>';
         }
@@ -886,43 +757,53 @@
         if (refreshBtn) refreshBtn.disabled = true;
 
         try {
-            // 1. Берём топ с запасом (30), после фильтрации оставим 10
+            // 1. RPC — берём с запасом
             const { data, error } = await supabaseClient.rpc('get_top_downloads', {
                 p_limit: 30,
             });
             if (error) throw error;
 
             const rawItems = Array.isArray(data) ? data : [];
+            _top10log('RPC returned', rawItems.length, 'items');
             if (rawItems.length === 0) {
                 grid.innerHTML = '<div class="top10-empty">Пока нет данных о скачиваниях</div>';
                 _top10FirstLoadDone = true;
                 return;
             }
 
-            // 2. Определяем, какие разделы нужны — их JSON и подгружаем
+            // 2. Нужные разделы
             const neededSections = new Set(
                 rawItems
                     .map(it => it.section_key)
                     .filter(sk => sk && CFG.SECTIONS[sk])
             );
+            _top10log('needed sections:', Array.from(neededSections));
 
+            // 3. Индекс JSON
             const sectionIndex = await _loadTop10SectionIndex(force, neededSections);
 
-            // 3. Фильтруем: оставляем только те, что реально есть в JSON
-            const items = rawItems.filter(it => {
-                const sk = it.section_key;
-                if (!sk) return false;
-                if (!CFG.SECTIONS[sk]) return false;
-                const ids = sectionIndex[sk];
-                if (!ids) return false;
+            // 4. Фильтрация + подробное логирование
+            const filtered = [];
+            const dropped = [];
+            rawItems.forEach(it => {
+                if (_top10ItemExists(it, sectionIndex)) {
+                    filtered.push(it);
+                } else {
+                    dropped.push({
+                        file_id: it.file_id,
+                        file_name: it.file_name,
+                        section_key: it.section_key,
+                        count: it.count,
+                    });
+                }
+            });
+            if (dropped.length) {
+                _top10log('dropped', dropped.length, 'items:');
+                console.table(dropped);
+            }
 
-                const fidFromRpc  = it.file_id || '';
-                const fidFromName = it.file_name ? MF.slugify(it.file_name) : '';
-
-                if (fidFromRpc && ids.has(fidFromRpc)) return true;
-                if (fidFromName && ids.has(fidFromName)) return true;
-                return false;
-            }).slice(0, 10);
+            const items = filtered.slice(0, 10);
+            _top10log('kept:', items.length, 'shown: 10 (or fewer)');
 
             if (items.length === 0) {
                 grid.innerHTML = '<div class="top10-empty">Пока нет доступных материалов</div>';
@@ -930,7 +811,7 @@
                 return;
             }
 
-            // 4. Рендер
+            // 5. Рендер
             let html = '';
             items.forEach((it, idx) => {
                 const rank = idx + 1;
@@ -980,10 +861,8 @@
         const meta = CFG.SECTIONS[sectionKey];
         if (!meta) return;
 
-        // Переключаемся на раздел
         switchTab(sectionKey);
 
-        // Ждём, пока раздел загрузится, потом ставим фильтр по названию
         const tryApply = (attempt) => {
             const container = document.getElementById(meta.container);
             const state = tableStates[meta.container];
@@ -1009,9 +888,7 @@
     const _top10RefreshBtn = document.getElementById('top10RefreshBtn');
     if (_top10RefreshBtn) {
         _top10RefreshBtn.addEventListener('click', () => {
-            _top10SectionCache = null;
-            _top10SectionCacheTs = 0;
-            _top10FirstLoadDone = false;
+            window.resetTop10SectionCache();
             loadTop10(true);
         });
     }
@@ -1760,12 +1637,20 @@
         });
         localStorage.setItem('activeTab', tabId);
 
-        // ─── Ленивая загрузка данных раздела ───
         if (tabId === 'top10') {
-            // Топ-10 загружаем только при переключении на раздел
-            // (или при принудительном обновлении кнопкой)
+            // При каждом заходе на топ-10 — если кэш устарел (>5 мин) или
+            // данные ещё не загружались в этой сессии — грузим.
+            // Это гарантирует, что удалённый файл не будет показан
+            // после обновления JSON.
             if (!_top10FirstLoadDone) {
                 loadTop10(false);
+            } else {
+                const age = Date.now() - _top10SectionCacheTs;
+                if (age > TOP10_CACHE_TTL_MS) {
+                    _top10log('switchTab: cache stale, refreshing');
+                    window.resetTop10SectionCache();
+                    loadTop10(true);
+                }
             }
         } else {
             loadSectionIfNeeded(tabId);
@@ -1797,8 +1682,7 @@
         await trackVisit();
         await loadDownloadCounts();
         loadStats();
-        // loadTop10() НЕ вызывается здесь — данные загружаются
-        // только при переключении на раздел «Топ-10»
+        // Топ-10 не грузим при загрузке главной — только при клике
         const saved = localStorage.getItem('activeTab');
         if (saved && document.getElementById(saved)) switchTab(saved);
         else switchTab('home');
