@@ -5,7 +5,8 @@
    Содержит: buildRenderers, buildSidebarAndTabs, loadExtraFolders,
              loadCollection, loadSectionIfNeeded, renderSection,
              renderFolderGrid, renderTableWithState,
-             incrementDownload, инициализацию init().
+             incrementDownload, renderBreadcrumbs, goToSection,
+             инициализацию init().
    ============================================================ */
 (function () {
     'use strict';
@@ -31,11 +32,163 @@
     const getAudioMimeType = MF.getAudioMimeType;
 
     // ─── Проверяем все поля state на месте ───
-    if (!state.loadedSections) state.loadedSections = new Set();
-    if (!state.tableStates)    state.tableStates = {};
+    if (!state.loadedSections)   state.loadedSections = new Set();
+    if (!state.tableStates)      state.tableStates = {};
     if (!state.sectionRenderers) state.sectionRenderers = {};
-    if (!state.extraFolders)   state.extraFolders = {};
-    if (!state.downloadCounts) state.downloadCounts = {};
+    if (!state.extraFolders)     state.extraFolders = {};
+    if (!state.downloadCounts)   state.downloadCounts = {};
+
+    // ============================================================
+    // ХЛЕБНЫЕ КРОШКИ
+    // ============================================================
+    // Правила:
+    //   home             → скрыть
+    //   top10            → Главная › Топ-10
+    //   раздел без папки → Главная › Программы
+    //   раздел в папке   → Главная › Программы › Converter
+    //
+    // Клик по «Главная» → switchTab('home')
+    // Клик по названию раздела → goToSection(sectionKey) (сброс фильтра)
+    // Текущая папка — не кликабельна (это текущее положение).
+    // ============================================================
+
+    function renderBreadcrumbs() {
+        const el = document.getElementById('breadcrumbs');
+        if (!el) return;
+
+        const tab = state.currentTab || 'home';
+
+        // ─── Главная: скрываем крошки ───
+        if (tab === 'home') {
+            el.classList.remove('breadcrumbs--active');
+            el.innerHTML = '';
+            return;
+        }
+
+        // ─── Топ-10 ───
+        if (tab === 'top10') {
+            el.innerHTML = `
+                <button type="button" class="breadcrumbs__link" data-bc-action="home">
+                    <i class="fas fa-home"></i> Главная
+                </button>
+                <span class="breadcrumbs__sep">›</span>
+                <span class="breadcrumbs__current">
+                    <i class="fas fa-fire"></i> Топ-10
+                </span>`;
+            el.classList.add('breadcrumbs--active');
+            bindBreadcrumbHandlers(el);
+            return;
+        }
+
+        // ─── Раздел ───
+        const meta = CFG.SECTIONS[tab];
+        if (!meta) {
+            el.classList.remove('breadcrumbs--active');
+            el.innerHTML = '';
+            return;
+        }
+
+        const st = state.tableStates[meta.container];
+        const folderFilter = st?.folderFilter || null;
+
+        // Раздел показан «текущим» (не кликабельным), если:
+        //   • нет фильтра папки
+        //   • и режим отображения — сетка папок (мы на верхнем уровне раздела)
+        const sectionIsCurrent = !folderFilter
+            && (st?.viewMode !== 'table');
+
+        let html = `
+            <button type="button" class="breadcrumbs__link" data-bc-action="home">
+                <i class="fas fa-home"></i> Главная
+            </button>
+            <span class="breadcrumbs__sep">›</span>`;
+
+        if (sectionIsCurrent) {
+            html += `
+                <span class="breadcrumbs__current">
+                    <i class="fas ${meta.icon}"></i> ${MF.escapeHtml(meta.label)}
+                </span>`;
+        } else {
+            html += `
+                <button type="button" class="breadcrumbs__link"
+                        data-bc-action="section"
+                        data-bc-section="${MF.escapeAttr(tab)}">
+                    <i class="fas ${meta.icon}"></i> ${MF.escapeHtml(meta.label)}
+                </button>`;
+
+            if (folderFilter) {
+                const folderLabel = (folderFilter === '__NOFOLDER__')
+                    ? 'Без папки'
+                    : folderFilter;
+                html += `
+                    <span class="breadcrumbs__sep">›</span>
+                    <span class="breadcrumbs__current">
+                        <i class="fas fa-folder-open"></i> ${MF.escapeHtml(folderLabel)}
+                    </span>`;
+            }
+        }
+
+        el.innerHTML = html;
+        el.classList.add('breadcrumbs--active');
+        bindBreadcrumbHandlers(el);
+    }
+
+    function bindBreadcrumbHandlers(el) {
+        el.querySelectorAll('[data-bc-action]').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const action = this.dataset.bcAction;
+                if (action === 'home') {
+                    App.switchTab('home');
+                } else if (action === 'section') {
+                    goToSection(this.dataset.bcSection);
+                }
+            });
+        });
+    }
+
+    /**
+     * Возврат в раздел на верхний уровень:
+     *  - сбрасывает фильтр папки и поиск
+     *  - если раздел folderable — возвращает в режим сетки папок
+     *  - если нет — оставляет таблицу
+     *  - если это не текущий таб, переключается на него
+     */
+    function goToSection(sectionKey) {
+        const meta = CFG.SECTIONS[sectionKey];
+        if (!meta) return;
+
+        const st = state.tableStates[meta.container];
+        if (st) {
+            st.folderFilter = null;
+            st.searches = {};
+            st.sortKey = null;
+            st.sortDir = 'asc';
+            st.currentPage = 1;
+
+            // Раздел folderable — вернуть к сетке папок, если она возможна
+            const hasFolders = st.data.some(i => i.folder && String(i.folder).trim());
+            const extra = state.extraFolders[sectionKey] || [];
+            if (meta.folderable && (hasFolders || extra.length > 0)) {
+                st.viewMode = 'grid';
+            } else {
+                st.viewMode = 'table';
+            }
+        }
+
+        if (state.currentTab !== sectionKey) {
+            // Переключаемся на раздел — там сработает switchTab → renderBreadcrumbs
+            App.switchTab(sectionKey);
+        } else {
+            // Уже в разделе — просто перерисовываем
+            const container = document.getElementById(meta.container);
+            if (container && st) {
+                const renderFn = state.sectionRenderers[meta.container];
+                if (renderFn) {
+                    renderSection(meta.container, container, renderFn);
+                }
+            }
+        }
+    }
 
     // ============================================================
     // ПОСТРОЕНИЕ КОЛОНОК ПО КОНФИГУ (один раз при init)
@@ -325,6 +478,9 @@
                 MF.scrollToContainer(container, 120);
             });
         });
+
+        // Обновляем хлебные крошки (путь: Главная › Раздел)
+        renderBreadcrumbs();
     }
 
     // ============================================================
@@ -718,6 +874,9 @@
         );
 
         updateDownloadCountsDisplay();
+
+        // Обновляем хлебные крошки (путь: Главная › Раздел [› Папка])
+        renderBreadcrumbs();
     }
 
     // ============================================================
@@ -749,6 +908,11 @@
     // ДОБАВЛЯЕМ В MFApp ФУНКЦИИ ЭТОГО МОДУЛЯ
     // ============================================================
     Object.assign(App, {
+        // Хлебные крошки
+        renderBreadcrumbs,
+        goToSection,
+
+        // Рендеры разделов и таблиц
         buildRenderers,
         buildSidebarAndTabs,
         loadExtraFolders,
@@ -763,6 +927,8 @@
         buildProgramsNotice,
         getFilteredSorted,
         renderTableWithState,
+
+        // Инициализация
         init,
     });
 
