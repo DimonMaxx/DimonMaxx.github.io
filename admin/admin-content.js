@@ -1,4 +1,8 @@
-/* admin-content.js — модуль контента разделов для админ-панели MyFiles */
+/* admin-content.js — модуль контента разделов для админ-панели MyFiles
+   Содержит: таблицы разделов, поиск/сортировку/пагинацию,
+             скрытие/восстановление/удаление записей,
+             валидацию описаний (п. 1.6) — чекбокс-фильтр + значок ⚠️.
+*/
 (function () {
     'use strict';
 
@@ -14,6 +18,25 @@
     const SUPABASE_URL   = CFG.SUPABASE_URL;
 
     const state = window.AdminState;
+
+    // ─── Валидация описаний (п. 1.6) ───
+    const MIN_DESCRIPTION_LENGTH = 20;
+
+    // Инициализация состояния фильтра коротких описаний
+    if (!state.shortDescFilter) state.shortDescFilter = {};
+
+    // ============================================================
+    // ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ДЛЯ ВАЛИДАЦИИ ОПИСАНИЙ
+    // ============================================================
+
+    function getItemDescriptionLength(item) {
+        const desc = item?.description || item?.body || item?.text || '';
+        return String(desc).trim().length;
+    }
+
+    function isShortDescription(item) {
+        return getItemDescriptionLength(item) < MIN_DESCRIPTION_LENGTH;
+    }
 
     // ============================================================
     // СБОРКА КОЛОНОК ДЛЯ АДМИН-ТАБЛИЦЫ
@@ -33,6 +56,83 @@
             }
         });
         return out;
+    }
+
+    // ============================================================
+    // ЧЕКБОКС «ТОЛЬКО С КОРОТКИМ ОПИСАНИЕМ» В ТУЛБАРЕ
+    // ============================================================
+
+    /**
+     * Создаёт чекбокс в тулбаре один раз.
+     * Возвращает ссылку на input.
+     */
+    function ensureShortDescCheckbox() {
+        let existing = document.getElementById('shortDescFilter');
+        if (existing) return existing;
+
+        const toolbar = document.getElementById('toolbar');
+        if (!toolbar) return null;
+
+        const wrapper = document.createElement('label');
+        wrapper.id = 'shortDescFilterWrapper';
+        wrapper.className = 'toolbar-checkbox';
+        wrapper.style.cssText =
+            'display:none; align-items:center; gap:6px; ' +
+            'font-size:13px; font-weight:600; color:#92400e; ' +
+            'padding:6px 12px; background:#fef3c7; border-radius:20px; ' +
+            'cursor:pointer; user-select:none; white-space:nowrap;';
+
+        wrapper.innerHTML = `
+            <input type="checkbox" id="shortDescFilter"
+                   style="width:16px;height:16px;accent-color:#f59e0b;cursor:pointer;">
+            <i class="fas fa-exclamation-triangle" style="color:#d97706;font-size:12px;"></i>
+            <span>Только с коротким описанием</span>
+        `;
+
+        // Вставляем перед кнопками управления (после selectedInfo, если он есть)
+        const selectedInfo = document.getElementById('selectedInfo');
+        if (selectedInfo && selectedInfo.parentNode === toolbar) {
+            toolbar.insertBefore(wrapper, selectedInfo);
+        } else {
+            toolbar.appendChild(wrapper);
+        }
+
+        return wrapper.querySelector('#shortDescFilter');
+    }
+
+    /**
+     * Синхронизирует состояние чекбокса с state.shortDescFilter[section].
+     * Вызывается при каждом открытии таблицы раздела.
+     */
+    function syncShortDescCheckbox(section) {
+        const wrapper = document.getElementById('shortDescFilterWrapper');
+        const cb = document.getElementById('shortDescFilter');
+        if (!wrapper || !cb) return;
+
+        // Снимаем предыдущий обработчик через клонирование
+        const newCb = cb.cloneNode(true);
+        cb.parentNode.replaceChild(newCb, cb);
+
+        // Устанавливаем состояние из state
+        const isOn = !!state.shortDescFilter[section];
+        newCb.checked = isOn;
+
+        // Показываем чекбокс
+        wrapper.style.display = 'inline-flex';
+
+        // Обработчик
+        newCb.addEventListener('change', function () {
+            state.shortDescFilter[section] = this.checked;
+            if (state.tableStates[section]) {
+                state.tableStates[section].currentPage = 1;
+            }
+            renderContentTable(section);
+        });
+    }
+
+    function hideShortDescCheckbox() {
+        const wrapper = document.getElementById('shortDescFilterWrapper');
+        if (wrapper) wrapper.style.display = 'none';
     }
 
     // ============================================================
@@ -66,6 +166,9 @@
                 totalItems: 0,
             };
         }
+
+        // Убеждаемся, что чекбокс существует
+        ensureShortDescCheckbox();
 
         const data = state.sectionData[section] || [];
         const hasFolders = data.some(it => (it.folder || '').trim());
@@ -172,6 +275,9 @@
         document.getElementById('unhideSelectedBtn').style.display = 'none';
         document.getElementById('deleteSelectedBtn').style.display = 'none';
 
+        // В режиме сетки папок фильтр по коротким описаниям не нужен
+        hideShortDescCheckbox();
+
         document.querySelectorAll('.admin-folder-card').forEach(card => {
             card.addEventListener('click', () => {
                 const folder = card.dataset.folder;
@@ -228,7 +334,6 @@
             return;
         }
 
-        // Логирование
         Admin.logAdminAction(
             'unhide_all_items',
             section,
@@ -254,6 +359,11 @@
             } else {
                 filtered = filtered.filter(it => (it.folder || '').trim() === folderFilter);
             }
+        }
+
+        // ─── Фильтр «Только с коротким описанием» (п. 1.6) ───
+        if (state.shortDescFilter[section]) {
+            filtered = filtered.filter(it => isShortDescription(it));
         }
 
         Object.keys(stateTbl.searches).forEach(key => {
@@ -295,6 +405,9 @@
         if (stateTbl.currentPage < 1) stateTbl.currentPage = 1;
         const startIdx = (stateTbl.currentPage - 1) * stateTbl.pageSize;
         const pageItems = filtered.slice(startIdx, startIdx + stateTbl.pageSize);
+
+        // Синхронизируем чекбокс коротких описаний
+        syncShortDescCheckbox(section);
 
         let backBar = '';
         if (info.folderable) {
@@ -338,7 +451,10 @@
 
         let tbodyHtml = '';
         if (pageItems.length === 0) {
-            tbodyHtml = `<tr><td colspan="${cols.length + 1}" class="empty-block">Ничего не найдено</td></tr>`;
+            const emptyMsg = state.shortDescFilter[section]
+                ? 'Нет записей с коротким описанием ✓'
+                : 'Ничего не найдено';
+            tbodyHtml = `<tr><td colspan="${cols.length + 1}" class="empty-block">${emptyMsg}</td></tr>`;
         } else {
             pageItems.forEach(item => {
                 const rowIdx = data.indexOf(item);
@@ -360,9 +476,26 @@
                             ? `<td class="col-cover"><img src="${MF.escapeAttr(val)}" alt=""></td>`
                             : `<td class="col-cover"><div class="no-cover"><i class="fas fa-book"></i></div></td>`;
                     } else if (col.type === 'description') {
+                        // ─── Валидация описания (п. 1.6) ───
                         const s = val ? String(val) : '';
                         const shortVal = s.length > 120 ? s.slice(0, 120) + '...' : s;
-                        tbodyHtml += `<td title="${MF.escapeAttr(val || '')}">${MF.escapeHtml(shortVal)}</td>`;
+                        const isShort = s.trim().length < MIN_DESCRIPTION_LENGTH;
+
+                        if (isShort) {
+                            const badgeText = s.trim().length === 0
+                                ? 'пусто'
+                                : `${s.trim().length} симв.`;
+                            tbodyHtml += `<td class="short-desc-cell"
+                                              title="${MF.escapeAttr(val || '')} — короткое описание">
+                                <span class="short-desc-badge">
+                                    <i class="fas fa-exclamation-triangle"></i>
+                                    ${MF.escapeHtml(badgeText)}
+                                </span>
+                                ${MF.escapeHtml(shortVal)}
+                            </td>`;
+                        } else {
+                            tbodyHtml += `<td title="${MF.escapeAttr(val || '')}">${MF.escapeHtml(shortVal)}</td>`;
+                        }
                     } else if (col.type === 'download') {
                         if (val) {
                             const proxied = Admin.buildProxyUrl(val, titleVal);
@@ -586,7 +719,6 @@
             return;
         }
 
-        // Логирование
         Admin.logAdminAction(
             'hide_items',
             section,
@@ -656,7 +788,6 @@
             return;
         }
 
-        // Логирование
         Admin.logAdminAction(
             'unhide_items',
             section,
@@ -765,7 +896,6 @@
 
         const ok = await _dispatchDeleteOrphans(items);
         if (ok) {
-            // Логирование
             Admin.logAdminAction(
                 'delete_items',
                 section,
@@ -800,5 +930,10 @@
 
         deleteSelected,
         _dispatchDeleteOrphans,
+
+        // Утилиты валидации (могут пригодиться в других модулях)
+        getItemDescriptionLength,
+        isShortDescription,
+        MIN_DESCRIPTION_LENGTH,
     });
 })();
