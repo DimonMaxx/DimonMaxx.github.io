@@ -1,6 +1,7 @@
 /* ============================================================
    app.css — стили главной страницы MyFiles
    Вынесены из index.html для удобства поддержки.
+   Раздел «Хлебные крошки» добавлен в конце файла.
    ============================================================ */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1298,6 +1299,85 @@ header {
 .toast-info { border-left: 4px solid #2563eb; }
 .toast-info i { color: #2563eb; }
 
+/* ============================================================
+   ХЛЕБНЫЕ КРОШКИ
+   ------------------------------------------------------------
+   Скрыты по умолчанию. Появляются, когда renderBreadcrumbs()
+   добавит класс breadcrumbs--active.
+   ============================================================ */
+.breadcrumbs {
+    display: none;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 16px;
+    padding: 8px 14px;
+    background: #f8fafc;
+    border-radius: 30px;
+    font-size: 13px;
+    color: #64748b;
+    border: 1px solid #e2e8f0;
+    line-height: 1.4;
+    min-height: 36px;
+}
+
+.breadcrumbs--active {
+    display: flex;
+}
+
+.breadcrumbs__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border: none;
+    background: transparent;
+    color: #2563eb;
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 20px;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.breadcrumbs__link:hover {
+    background: #eef2ff;
+    color: #1d4ed8;
+}
+
+.breadcrumbs__link i {
+    font-size: 12px;
+}
+
+.breadcrumbs__sep {
+    color: #cbd5e1;
+    font-size: 14px;
+    font-weight: 400;
+    padding: 0 2px;
+    user-select: none;
+}
+
+.breadcrumbs__current {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    color: #0f172a;
+    font-weight: 600;
+    font-size: 13px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 320px;
+}
+
+.breadcrumbs__current i {
+    color: #64748b;
+    font-size: 12px;
+}
+
 /* ─── Мобильная адаптация ─── */
 @media (max-width: 900px) {
     body { padding: 8px; }
@@ -1375,4 +1455,22 @@ header {
     .modal-box { padding: 20px; }
 
     .toast { left: 20px; right: 20px; max-width: none; }
+
+    /* Компактные крошки на мобильных */
+    .breadcrumbs {
+        padding: 6px 10px;
+        font-size: 12px;
+        margin-bottom: 12px;
+        border-radius: 22px;
+        gap: 2px;
+    }
+    .breadcrumbs__link,
+    .breadcrumbs__current {
+        padding: 3px 8px;
+        font-size: 12px;
+        max-width: 180px;
+    }
+    .breadcrumbs__link i,
+    .breadcrumbs__current i { font-size: 11px; }
+    .breadcrumbs__sep { font-size: 12px; }
 }
