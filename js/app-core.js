@@ -4,6 +4,11 @@
              топ-10 (с ленивой загрузкой и фильтром удалённых),
              модалку обновления контента, switchTab, bindNav.
    Рендеры разделов/папок/таблиц живут в app-content.js.
+
+   Обновление хлебных крошек:
+   - state.currentTab всегда содержит активный таб.
+   - При каждом switchTab() вызывается MFApp.renderBreadcrumbs().
+   - Сама функция renderBreadcrumbs() живёт в app-content.js.
    ============================================================ */
 (function () {
     'use strict';
@@ -20,6 +25,7 @@
     const state = {
         currentUser:    null,
         currentProfile: null,
+        currentTab:     'home',      // 'home' | 'top10' | ключ раздела
         loadedSections: new Set(),   // какие разделы уже загружены
         tableStates:    {},          // состояние таблиц по containerId
         sectionRenderers: {},        // buildRenderers заполняет
@@ -676,8 +682,14 @@
 
     // ============================================================
     // НАВИГАЦИЯ ПО ТАБАМ
+    //
+    // После установки активного таба вызываем renderBreadcrumbs(),
+    // определённый в app-content.js. Используем optional chaining,
+    // чтобы не упасть, если content-модуль ещё не загрузился.
     // ============================================================
     function switchTab(tabId) {
+        state.currentTab = tabId;
+
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         const target = document.getElementById(tabId);
         if (target) target.classList.add('active');
@@ -698,10 +710,13 @@
                     loadTop10(true);
                 }
             }
-        } else {
+        } else if (tabId !== 'home') {
             // Уходит в app-content.js
-            window.MFApp.loadSectionIfNeeded(tabId);
+            window.MFApp?.loadSectionIfNeeded?.(tabId);
         }
+
+        // Обновляем хлебные крошки под текущий таб
+        window.MFApp?.renderBreadcrumbs?.();
     }
 
     function bindNav() {
@@ -767,10 +782,10 @@
         bindRefreshModal,
 
         // Заглушки, которые заполнит app-content.js:
-        // loadSectionIfNeeded, renderSection, buildRenderers,
-        // buildSidebarAndTabs, loadExtraFolders, loadDownloadCounts,
-        // loadCollection, renderFolderGrid, renderTableWithState,
-        // incrementDownload, initTableState, getFilteredSorted,
-        // buildProgramsNotice, init.
+        // loadSectionIfNeeded, renderSection, renderBreadcrumbs,
+        // buildRenderers, buildSidebarAndTabs, loadExtraFolders,
+        // loadDownloadCounts, loadCollection, renderFolderGrid,
+        // renderTableWithState, incrementDownload, initTableState,
+        // getFilteredSorted, buildProgramsNotice, init.
     };
 })();
