@@ -5,6 +5,7 @@ on:
     branches: [ main ]
     paths:
       - 'supabase/functions/**'
+      - 'supabase/config.toml'
       - '.github/workflows/deploy-functions.yml'
   workflow_dispatch:
     inputs:
@@ -44,26 +45,12 @@ jobs:
         run: |
           echo "=== Структура репозитория (корень) ==="
           ls -la
-
           echo ""
-          echo "=== Папка supabase/ ==="
-          if [ -d "supabase" ]; then
-            ls -la supabase/ || true
-          else
-            echo "  [!] Папки supabase/ нет в корне"
-          fi
-
+          echo "=== supabase/ ==="
+          ls -la supabase/ || true
           echo ""
-          echo "=== Папка supabase/functions/ ==="
-          if [ -d "supabase/functions" ]; then
-            ls -la supabase/functions/ || true
-          else
-            echo "  [!] Папки supabase/functions/ нет"
-            echo "  Подсказка: возможно, функции лежат в другой папке (functions/, edge-functions/ и т.п.)"
-            echo ""
-            echo "  Поиск index.ts по всему репозиторию:"
-            find . -name "index.ts" -not -path "./node_modules/*" -not -path "./.git/*" || true
-          fi
+          echo "=== supabase/functions/ ==="
+          ls -la supabase/functions/ || true
 
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
@@ -79,58 +66,37 @@ jobs:
         id: list_functions
         run: |
           set -e
-
           if [ ! -d "supabase/functions" ]; then
             echo "::error::Папка supabase/functions/ не найдена в репозитории."
-            echo "::error::Убедитесь, что функции закоммичены в git в правильную папку."
             exit 1
           fi
-
           echo "=== Найденные Edge Functions ==="
           FUNCS=""
           ANY_DIR=0
-
           for dir in supabase/functions/*/; do
-            # Если glob не сработал — dir = "supabase/functions/*/"
-            if [ ! -d "$dir" ]; then
-              continue
-            fi
+            if [ ! -d "$dir" ]; then continue; fi
             ANY_DIR=1
-
             name=$(basename "$dir")
             if [ "$name" = "_shared" ]; then
               echo "  [skip] $name (служебная)"
               continue
             fi
-
             if [ -f "${dir}index.ts" ]; then
               echo "  [ok]   $name"
               FUNCS="$FUNCS $name"
             else
               echo "  [skip] $name (нет index.ts)"
-              echo "         Содержимое папки:"
-              ls -la "$dir" || true
             fi
           done
-
           if [ "$ANY_DIR" = "0" ]; then
-            echo "::error::Папка supabase/functions/ существует, но в ней нет подпапок."
-            echo "::error::Ожидается структура: supabase/functions/<имя>/index.ts"
-            echo ""
-            echo "Содержимое supabase/functions/:"
-            ls -la supabase/functions/ || true
+            echo "::error::Папка supabase/functions/ пуста"
             exit 1
           fi
-
           FUNCS=$(echo "$FUNCS" | xargs)
-
           if [ -z "$FUNCS" ]; then
             echo "::error::Не найдено ни одной функции с index.ts"
             exit 1
           fi
-
-          echo ""
-          echo "Итоговый список: $FUNCS"
           echo "functions=$FUNCS" >> "$GITHUB_OUTPUT"
 
       - name: Link Supabase project
@@ -152,14 +118,12 @@ jobs:
           set -e
           FUNCS="${{ steps.list_functions.outputs.functions }}"
           ONE="${{ github.event.inputs.function_name }}"
-
           if [ -n "$ONE" ]; then
             FUNCS="$ONE"
             echo "=== Деплой только одной функции: $ONE ==="
           else
             echo "=== Деплой всех функций ==="
           fi
-
           DEPLOYED=0
           FAILED=0
           for fn in $FUNCS; do
@@ -174,15 +138,14 @@ jobs:
               FAILED=$((FAILED + 1))
             fi
           done
-
           echo ""
           echo "════════════════════════════════════════"
           echo "  Задеплоено: $DEPLOYED"
           echo "  Ошибок:     $FAILED"
           echo "════════════════════════════════════════"
-
+          echo "deployed=$DEPLOYED" >> "$GITHUB_OUTPUT"
+          echo "failed=$FAILED"     >> "$GITHUB_OUTPUT"
           if [ "$FAILED" -gt 0 ]; then
-            echo "::error::$FAILED функций не задеплоились"
             exit 1
           fi
 
@@ -194,6 +157,7 @@ jobs:
             echo ""
             echo "- Project ref: \`${SUPABASE_PROJECT_REF}\`"
             echo "- Функции: ${{ steps.list_functions.outputs.functions }}"
+            echo "- Триггер: \`${{ github.event_name }}\`"
             echo ""
             if [ "${{ job.status }}" = "success" ]; then
               echo "**Статус:** ✅ успех"
@@ -202,19 +166,55 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Notify Telegram on failure
-        if: failure() || cancelled()
+      - name: Notify Telegram
+        if: always()
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
+          # ─── Проверка наличия секретов ───
+          if [ -z "${TELEGRAM_BOT_TOKEN}" ]; then
+            echo "::warning::Секрет TELEGRAM_BOT_TOKEN не задан — уведомление не отправлено."
+            exit 0
+          fi
+          if [ -z "${TELEGRAM_CHAT_ID}" ]; then
+            echo "::warning::Секрет TELEGRAM_CHAT_ID не задан — уведомление не отправлено."
+            exit 0
+          fi
+
           STATUS="${{ job.status }}"
-          EMOJI=$([ "$STATUS" = "cancelled" ] && echo "⚠️" || echo "❌")
-          TEXT="$EMOJI Deploy Supabase Functions — $STATUS
-          Запуск: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -s -X POST \
+          TRIGGER="${{ github.event_name }}"
+          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          case "$STATUS" in
+            success)   EMOJI="✅" ;;
+            cancelled) EMOJI="⚠️" ;;
+            *)         EMOJI="❌" ;;
+          esac
+
+          TEXT="${EMOJI} Deploy Supabase Functions — ${STATUS}
+          Триггер: ${TRIGGER}
+          Запуск: ${RUN_URL}"
+
+          echo "=== Отправка в Telegram ==="
+          echo "chat_id: ${TELEGRAM_CHAT_ID}"
+          echo "text:"
+          echo "${TEXT}"
+          echo ""
+
+          # ─── Отправляем и печатаем ответ ───
+          RESPONSE=$(curl -s -X POST \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d disable_web_page_preview=true \
-            > /dev/null || true
+            -d "chat_id=${TELEGRAM_CHAT_ID}" \
+            -d "text=${TEXT}" \
+            -d "disable_web_page_preview=true")
+
+          echo "Ответ Telegram API:"
+          echo "${RESPONSE}"
+
+          # Если в ответе нет "ok":true — считаем это предупреждением
+          if echo "${RESPONSE}" | grep -q '"ok":true'; then
+            echo "✓ Сообщение отправлено."
+          else
+            echo "::warning::Telegram API ответил ошибкой — смотри вывод выше."
+          fi
