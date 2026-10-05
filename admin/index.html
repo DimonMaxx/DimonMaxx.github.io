@@ -753,6 +753,75 @@
         }
     </style>
 </head>
+
+        /* ============================================================
+           ВАЛИДАЦИЯ ОПИСАНИЙ (п. 1.6)
+           ------------------------------------------------------------
+           Применяется к таблице контента в админке.
+           Добавлено admin-content.js: чекбокс «Только с коротким
+           описанием» + бейдж ⚠️ у ячеек с описанием < 20 символов.
+           ============================================================ */
+
+        /* Чекбокс в тулбаре — обёртка (дополняет inline-стили из JS) */
+        .toolbar-checkbox {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #92400e;
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .toolbar-checkbox:hover {
+            background: #fde68a;
+            border-color: #f59e0b;
+        }
+        .toolbar-checkbox input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #f59e0b;
+            cursor: pointer;
+        }
+        .toolbar-checkbox i {
+            color: #d97706;
+            font-size: 12px;
+        }
+
+        /* Ячейка таблицы с коротким описанием — жёлтая подсветка */
+        .content-table td.short-desc-cell {
+            background: #fffbeb;
+            border-left: 3px solid #f59e0b;
+            position: relative;
+            color: #78350f;
+        }
+
+        /* Бейдж «⚠ N симв.» рядом с коротким описанием */
+        .short-desc-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            margin-right: 6px;
+            background: #fee2e2;
+            color: #991b1b;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 12px;
+            white-space: nowrap;
+            vertical-align: middle;
+        }
+        .short-desc-badge i {
+            font-size: 10px;
+            color: #dc2626;
+        }    
+    
 <body>
 <div class="container">
     <header>
