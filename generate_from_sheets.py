@@ -18,7 +18,14 @@
 # Стабильный file_id:
 #   В каждый item добавляется поле file_id = slugify(title).
 #   Оно фиксируется в JSON и больше не пересчитывается на фронте.
-#   Это устраняет дубликаты в downloads при смене title в Sheets.
+#
+# Валидация описаний (п. 1.6):
+#   Записи с description короче MIN_DESCRIPTION_LENGTH символов
+#   НЕ отбрасываются, но собираются в отчёт:
+#     - в stdout
+#     - в $GITHUB_STEP_SUMMARY (если задан)
+#   Порог задаётся через env MIN_DESCRIPTION_LENGTH (по умолчанию 20).
+#   Отключить проверку: MIN_DESCRIPTION_LENGTH=0
 
 import os
 import re
@@ -52,8 +59,6 @@ SUPABASE_URL = os.environ.get(
 )
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 
-# Базовый URL сайта — используется для sitemap.xml.
-# Если сайт переедет на другой домен — достаточно изменить переменную окружения.
 SITE_BASE_URL = os.environ.get(
     "SITE_BASE_URL",
     "https://dimonmaxx.github.io",
@@ -63,6 +68,17 @@ _raw_sync_sections = os.environ.get("SYNC_SECTIONS", "").strip()
 SYNC_SECTIONS_FILTER = [
     s.strip() for s in _raw_sync_sections.split(",") if s.strip()
 ] if _raw_sync_sections else []
+
+# Порог длины описания для предупреждения (символов).
+# 0 = отключить проверку.
+try:
+    MIN_DESCRIPTION_LENGTH = int(os.environ.get("MIN_DESCRIPTION_LENGTH", "20"))
+except ValueError:
+    MIN_DESCRIPTION_LENGTH = 20
+if MIN_DESCRIPTION_LENGTH < 0:
+    MIN_DESCRIPTION_LENGTH = 0
+
+GITHUB_STEP_SUMMARY = os.environ.get("GITHUB_STEP_SUMMARY", "")
 
 
 # ============================================================
@@ -98,13 +114,6 @@ EN_TO_RU.setdefault("body", []).extend(EN_TO_RU.get("text", []))
 # ============================================================
 
 def slugify(text):
-    """
-    Преобразует заголовок в стабильный file_id.
-    Логика один-в-один с MF.slugify в shared.js:
-      1. убрать всё, кроме букв/цифр/пробелов/дефисов (латиница + кириллица)
-      2. привести к нижнему регистру
-      3. пробелы и группы дефисов → одиночный дефис
-    """
     if not text:
         return ""
     s = str(text)
@@ -153,12 +162,6 @@ def load_active_sections():
 
 
 def load_hidden_items(section_key):
-    """
-    Возвращает set кортежей (folder.lower().strip(), title.lower().strip())
-    для скрытых записей указанного раздела.
-    Если supabase недоступен или таблицы нет — возвращает пустой set
-    (генерация пойдёт без фильтрации — безопасный fallback).
-    """
     client = _get_supabase_client()
     if client is None:
         return set()
@@ -199,15 +202,6 @@ def _is_empty(value):
 
 
 def _read_records_safe(worksheet, headers):
-    """
-    Читает лист построчно БЕЗ get_all_records().
-    Возвращает список dict {RU-заголовок: значение}.
-
-    Устойчив к:
-      • дубликатам заголовков;
-      • «хвостам» старых колонок;
-      • пустым заголовкам.
-    """
     try:
         all_values = worksheet.get_all_values()
     except Exception as e:
@@ -219,18 +213,14 @@ def _read_records_safe(worksheet, headers):
 
     raw_header = all_values[0]
 
-    # Сопоставляем ожидаемые заголовки с позициями в листе.
-    # При дубликатах берём ПЕРВОЕ совпадение.
     positions = {}
     for want_idx, want in enumerate(headers):
         want_clean = want.strip()
         pos = None
-        # 1. Точное совпадение (регистронезависимо, без пробелов)
         for i, h in enumerate(raw_header):
             if (h or "").strip().lower() == want_clean.lower():
                 pos = i
                 break
-        # 2. Частичное совпадение (например, «Размер» vs «Размер (МБ)»)
         if pos is None:
             for i, h in enumerate(raw_header):
                 if want_clean.lower() in (h or "").strip().lower():
@@ -253,13 +243,7 @@ def _read_records_safe(worksheet, headers):
 def row_to_item(row, columns=None):
     """
     Преобразует строку Sheets (RU-заголовки) в JSON-объект (EN-ключи).
-    Дополнительно добавляет стабильный file_id = slugify(title),
-    чтобы избежать дубликатов в downloads при смене title.
-
-    ВАЖНО: file_id фиксируется в JSON в момент генерации.
-    Фронтенд берёт его из item.file_id и НЕ пересчитывает slugify(title).
-    Это устраняет проблему, когда изменение title в Sheets
-    приводило к появлению новой записи в downloads вместо обновления старой.
+    Добавляет стабильный file_id = slugify(title).
     """
     item = {}
     target_keys = [k for k in (columns or []) if k]
@@ -281,11 +265,26 @@ def row_to_item(row, columns=None):
         else:
             item[en_key] = str(value).strip()
 
-    # Стабильный file_id — фиксируется в JSON и больше не пересчитывается
     if item.get("title"):
         item["file_id"] = slugify(item["title"])
 
     return item
+
+
+# ============================================================
+# ВАЛИДАЦИЯ ОПИСАНИЙ
+# ============================================================
+
+def _check_description_length(item):
+    """
+    Возвращает длину описания (символов, без учёта крайних пробелов).
+    Если description отсутствует — 0.
+    """
+    desc = item.get("description")
+    if not desc:
+        # Проверяем также body и text (в редких разделах используется body)
+        desc = item.get("body") or item.get("text") or ""
+    return len(str(desc).strip())
 
 
 # ============================================================
@@ -295,12 +294,15 @@ def row_to_item(row, columns=None):
 def generate_json_for_section(worksheet, json_path, columns=None,
                               headers=None, hidden_set=None):
     """
-    :param worksheet:  gspread.Worksheet
-    :param json_path:  путь к JSON
-    :param columns:    список EN-ключей из site_sections.columns
-    :param headers:    список RU-заголовков (в порядке columns)
-    :param hidden_set: set кортежей (folder.lower(), title.lower())
-                       — эти записи не попадут в JSON
+    Возвращает dict:
+      {
+        "count": <int>,                # сколько записей записано
+        "short_descs": [               # записи с коротким описанием
+            {"title": "...", "length": 8, "file_id": "..."},
+            ...
+        ],
+      }
+    или None при критической ошибке.
     """
     if hidden_set is None:
         hidden_set = set()
@@ -326,7 +328,7 @@ def generate_json_for_section(worksheet, json_path, columns=None,
 
     records = _read_records_safe(worksheet, headers)
     if records is None:
-        return -1
+        return None
     if not records:
         print("  Лист пуст → записываем []")
         try:
@@ -334,12 +336,13 @@ def generate_json_for_section(worksheet, json_path, columns=None,
                 json.dump([], f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"  ОШИБКА записи JSON: {e}")
-            return -1
-        return 0
+            return None
+        return {"count": 0, "short_descs": []}
 
     json_data = []
     skipped_no_title = 0
     skipped_hidden = 0
+    short_descs = []
 
     for row in records:
         item = row_to_item(row, columns)
@@ -347,13 +350,22 @@ def generate_json_for_section(worksheet, json_path, columns=None,
             skipped_no_title += 1
             continue
 
-        # Фильтрация скрытых
         if hidden_set:
             folder_val = (item.get("folder") or "").strip().lower()
             title_val  = (item.get("title")  or "").strip().lower()
             if (folder_val, title_val) in hidden_set:
                 skipped_hidden += 1
                 continue
+
+        # ─── Валидация описания ───
+        if MIN_DESCRIPTION_LENGTH > 0:
+            desc_len = _check_description_length(item)
+            if desc_len < MIN_DESCRIPTION_LENGTH:
+                short_descs.append({
+                    "title":   item.get("title", ""),
+                    "length":  desc_len,
+                    "file_id": item.get("file_id", ""),
+                })
 
         json_data.append(item)
 
@@ -362,7 +374,7 @@ def generate_json_for_section(worksheet, json_path, columns=None,
             json.dump(json_data, f, ensure_ascii=False, indent=2)
     except Exception as e:
         print(f"  ОШИБКА записи JSON: {e}")
-        return -1
+        return None
 
     msg = f"  ✓ Записано: {len(json_data)} записей"
     extras = []
@@ -370,6 +382,8 @@ def generate_json_for_section(worksheet, json_path, columns=None,
         extras.append(f"без title: {skipped_no_title}")
     if skipped_hidden:
         extras.append(f"скрытых: {skipped_hidden}")
+    if short_descs:
+        extras.append(f"коротких описаний: {len(short_descs)}")
     if extras:
         msg += " (пропущено — " + ", ".join(extras) + ")"
     print(msg)
@@ -380,12 +394,8 @@ def generate_json_for_section(worksheet, json_path, columns=None,
         if len(sample_keys) > 8:
             preview += ", ..."
         print(f"    Ключи: {preview}")
-        # Показать пример file_id, если он есть
-        sample_fid = json_data[0].get("file_id")
-        if sample_fid:
-            print(f"    file_id (пример): {sample_fid}")
 
-    return len(json_data)
+    return {"count": len(json_data), "short_descs": short_descs}
 
 
 # ============================================================
@@ -393,19 +403,11 @@ def generate_json_for_section(worksheet, json_path, columns=None,
 # ============================================================
 
 def generate_sitemap(sections):
-    """
-    Создаёт sitemap.xml в корне репозитория.
-    Включает главную страницу + каждый активный раздел.
-
-    :param sections: список разделов из Supabase (используются key/label)
-    """
-    # Основные статические страницы (относительные пути от корня сайта)
     static_pages = [
         {"loc": "/index.html", "changefreq": "daily",  "priority": "1.0"},
         {"loc": "/forum.html", "changefreq": "weekly", "priority": "0.7"},
     ]
 
-    # Разделы (hash-роутинг на главной)
     section_pages = []
     for s in sections:
         key = s.get("key")
@@ -445,6 +447,64 @@ def generate_sitemap(sections):
 
 
 # ============================================================
+# ОТЧЁТ О КОРОТКИХ ОПИСАНИЯХ
+# ============================================================
+
+def _append_github_summary(text):
+    """
+    Пишет текст в $GITHUB_STEP_SUMMARY (если задан).
+    Используется для отображения отчёта прямо в GitHub Actions.
+    """
+    if not GITHUB_STEP_SUMMARY:
+        return
+    try:
+        with open(GITHUB_STEP_SUMMARY, "a", encoding="utf-8") as f:
+            f.write(text)
+    except Exception:
+        pass
+
+
+def print_short_desc_report(sections_stats):
+    """
+    :param sections_stats: список dict:
+        {"key": str, "label": str, "short_descs": [{"title", "length", "file_id"}]}
+    """
+    total_short = sum(len(s["short_descs"]) for s in sections_stats)
+    if total_short == 0:
+        return
+
+    print("\n" + "=" * 60)
+    print("=== ВАЛИДАЦИЯ ОПИСАНИЙ ===")
+    print(f"Порог: описание < {MIN_DESCRIPTION_LENGTH} символов")
+    print(f"Найдено записей с коротким описанием: {total_short}")
+    print("=" * 60)
+
+    md_lines = []
+    md_lines.append(f"## Валидация описаний\n")
+    md_lines.append(f"- Порог: **< {MIN_DESCRIPTION_LENGTH} символов**")
+    md_lines.append(f"- Найдено записей: **{total_short}**\n")
+
+    for s in sections_stats:
+        if not s["short_descs"]:
+            continue
+        print(f"\n{s['label']} ({s['key']}):")
+        md_lines.append(f"### {s['label']} (`{s['key']}`)\n")
+        md_lines.append("| Название | Длина | file_id |")
+        md_lines.append("|----------|-------|---------|")
+
+        for item in s["short_descs"]:
+            title  = item["title"] or "(без названия)"
+            length = item["length"]
+            fid    = item["file_id"]
+            print(f"  • {title} — {length} симв.")
+            md_lines.append(f"| {title} | {length} | `{fid}` |")
+
+        md_lines.append("")
+
+    _append_github_summary("\n".join(md_lines) + "\n")
+
+
+# ============================================================
 # MAIN
 # ============================================================
 
@@ -453,6 +513,8 @@ def main():
     print("generate_from_sheets.py — старт")
     print("=" * 60)
     print(f"SITE_BASE_URL = {SITE_BASE_URL}")
+    print(f"MIN_DESCRIPTION_LENGTH = {MIN_DESCRIPTION_LENGTH}"
+          + (" (отключено)" if MIN_DESCRIPTION_LENGTH == 0 else ""))
 
     if SYNC_SECTIONS_FILTER:
         print(f"SYNC_SECTIONS_FILTER = {SYNC_SECTIONS_FILTER}")
@@ -469,7 +531,6 @@ def main():
         print("[!] Нет активных разделов — завершаю.")
         sys.exit(0)
 
-    # ─── Фильтр по SYNC_SECTIONS ───
     sections_for_generation = sections
     if SYNC_SECTIONS_FILTER:
         before = len(sections)
@@ -512,6 +573,7 @@ def main():
     total_ok = 0
     total_records = 0
     failed = []
+    sections_stats = []
 
     for section in sections_for_generation:
         key = section.get("key") or "?"
@@ -527,7 +589,6 @@ def main():
             failed.append((key, "нет json_path"))
             continue
 
-        # Загружаем скрытые записи
         hidden_set = load_hidden_items(key)
 
         try:
@@ -541,24 +602,28 @@ def main():
             failed.append((key, str(e)))
             continue
 
-        count = generate_json_for_section(
+        result = generate_json_for_section(
             worksheet, json_path, columns, hidden_set=hidden_set
         )
-        if count >= 0:
+        if result is not None:
             total_ok += 1
-            total_records += count
+            total_records += result["count"]
+            sections_stats.append({
+                "key":         key,
+                "label":       label,
+                "short_descs": result["short_descs"],
+            })
         else:
             failed.append((key, "ошибка генерации"))
 
-    # ─── Sitemap ───
-    # Генерируем всегда по полному списку активных разделов,
-    # даже если SYNC_SECTIONS отфильтровал часть —
-    # sitemap должен содержать все разделы сайта.
     try:
         generate_sitemap(sections)
     except Exception as e:
         print(f"[!] Ошибка генерации sitemap: {e}")
         traceback.print_exc()
+
+    # ─── Отчёт по коротким описаниям ───
+    print_short_desc_report(sections_stats)
 
     print("\n" + "=" * 60)
     print(f"Обработано разделов:  {total_ok} из {len(sections_for_generation)}")
