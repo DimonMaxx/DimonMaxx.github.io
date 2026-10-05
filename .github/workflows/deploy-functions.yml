@@ -1,14 +1,11 @@
 name: Deploy Supabase Functions
 
 on:
-  # Автозапуск при изменениях в Edge Functions
   push:
     branches: [ main ]
     paths:
       - 'supabase/functions/**'
       - '.github/workflows/deploy-functions.yml'
-
-  # Ручной запуск из интерфейса GitHub
   workflow_dispatch:
     inputs:
       function_name:
@@ -26,7 +23,6 @@ permissions:
   contents: read
 
 concurrency:
-  # Не запускать два деплоя одновременно
   group: deploy-functions
   cancel-in-progress: false
 
@@ -36,8 +32,6 @@ jobs:
     timeout-minutes: 15
 
     env:
-      # Project ref Supabase. Хардкод — на случай, если секрет не задан.
-      # Формат: <20 символов без домена> — часть до ".supabase.co"
       SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF || 'rmoonebbvpmvthvpcmpt' }}
 
     steps:
@@ -46,55 +40,107 @@ jobs:
         with:
           fetch-depth: 1
 
+      - name: Diagnose repository structure
+        run: |
+          echo "=== Структура репозитория (корень) ==="
+          ls -la
+
+          echo ""
+          echo "=== Папка supabase/ ==="
+          if [ -d "supabase" ]; then
+            ls -la supabase/ || true
+          else
+            echo "  [!] Папки supabase/ нет в корне"
+          fi
+
+          echo ""
+          echo "=== Папка supabase/functions/ ==="
+          if [ -d "supabase/functions" ]; then
+            ls -la supabase/functions/ || true
+          else
+            echo "  [!] Папки supabase/functions/ нет"
+            echo "  Подсказка: возможно, функции лежат в другой папке (functions/, edge-functions/ и т.п.)"
+            echo ""
+            echo "  Поиск index.ts по всему репозиторию:"
+            find . -name "index.ts" -not -path "./node_modules/*" -not -path "./.git/*" || true
+          fi
+
       - name: Install Supabase CLI
         uses: supabase/setup-cli@v1
         with:
-          # Стабильная версия, проверенная на совместимость
           version: 1.200.3
 
       - name: Verify Supabase CLI
         run: |
-          echo "Supabase CLI version:"
           supabase --version
           echo "Project ref: ${SUPABASE_PROJECT_REF}"
 
       - name: List Edge Functions in repository
         id: list_functions
         run: |
+          set -e
+
+          if [ ! -d "supabase/functions" ]; then
+            echo "::error::Папка supabase/functions/ не найдена в репозитории."
+            echo "::error::Убедитесь, что функции закоммичены в git в правильную папку."
+            exit 1
+          fi
+
           echo "=== Найденные Edge Functions ==="
           FUNCS=""
+          ANY_DIR=0
+
           for dir in supabase/functions/*/; do
-            # Пропускаем служебную папку _shared
+            # Если glob не сработал — dir = "supabase/functions/*/"
+            if [ ! -d "$dir" ]; then
+              continue
+            fi
+            ANY_DIR=1
+
             name=$(basename "$dir")
             if [ "$name" = "_shared" ]; then
               echo "  [skip] $name (служебная)"
               continue
             fi
-            # Функция — это папка с index.ts
+
             if [ -f "${dir}index.ts" ]; then
               echo "  [ok]   $name"
               FUNCS="$FUNCS $name"
             else
               echo "  [skip] $name (нет index.ts)"
+              echo "         Содержимое папки:"
+              ls -la "$dir" || true
             fi
           done
-          FUNCS=$(echo "$FUNCS" | xargs)  # trim
-          echo "functions=$FUNCS" >> "$GITHUB_OUTPUT"
+
+          if [ "$ANY_DIR" = "0" ]; then
+            echo "::error::Папка supabase/functions/ существует, но в ней нет подпапок."
+            echo "::error::Ожидается структура: supabase/functions/<имя>/index.ts"
+            echo ""
+            echo "Содержимое supabase/functions/:"
+            ls -la supabase/functions/ || true
+            exit 1
+          fi
+
+          FUNCS=$(echo "$FUNCS" | xargs)
+
           if [ -z "$FUNCS" ]; then
             echo "::error::Не найдено ни одной функции с index.ts"
             exit 1
           fi
+
+          echo ""
+          echo "Итоговый список: $FUNCS"
+          echo "functions=$FUNCS" >> "$GITHUB_OUTPUT"
 
       - name: Link Supabase project
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
           if [ -z "${SUPABASE_ACCESS_TOKEN}" ]; then
-            echo "::error::Секрет SUPABASE_ACCESS_TOKEN не задан в настройках репозитория."
-            echo "Инструкция: Settings → Secrets and variables → Actions → New repository secret"
+            echo "::error::Секрет SUPABASE_ACCESS_TOKEN не задан."
             exit 1
           fi
-          # Проверка авторизации и привязка к проекту
           supabase projects list > /dev/null
           echo "✓ Авторизация Supabase CLI прошла успешно."
 
@@ -120,8 +166,7 @@ jobs:
             echo ""
             echo "────────────  Deploy: $fn  ────────────"
             if supabase functions deploy "$fn" \
-                 --project-ref "${SUPABASE_PROJECT_REF}" \
-                 --no-verify-jwt=false 2>&1; then
+                 --project-ref "${SUPABASE_PROJECT_REF}" 2>&1; then
               echo "✓ $fn задеплоена"
               DEPLOYED=$((DEPLOYED + 1))
             else
@@ -148,10 +193,7 @@ jobs:
             echo "## Deploy Supabase Functions"
             echo ""
             echo "- Project ref: \`${SUPABASE_PROJECT_REF}\`"
-            echo "- Функции:"
-            for fn in ${{ steps.list_functions.outputs.functions }}; do
-              echo "  - \`$fn\`"
-            done
+            echo "- Функции: ${{ steps.list_functions.outputs.functions }}"
             echo ""
             if [ "${{ job.status }}" = "success" ]; then
               echo "**Статус:** ✅ успех"
@@ -167,32 +209,9 @@ jobs:
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           STATUS="${{ job.status }}"
-          if [ "$STATUS" = "cancelled" ]; then
-            EMOJI="⚠️"
-          else
-            EMOJI="❌"
-          fi
-
-          TEXT="$EMOJI Deploy Supabase Functions — $STATUS"
-          TEXT="$TEXT
+          EMOJI=$([ "$STATUS" = "cancelled" ] && echo "⚠️" || echo "❌")
+          TEXT="$EMOJI Deploy Supabase Functions — $STATUS
           Запуск: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
-          curl -s -X POST \
-            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
-            -d chat_id="${TELEGRAM_CHAT_ID}" \
-            -d text="$TEXT" \
-            -d disable_web_page_preview=true \
-            > /dev/null || true
-
-      - name: Notify Telegram on success
-        if: success() && github.event_name == 'workflow_dispatch'
-        env:
-          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
-        run: |
-          TEXT="✅ Deploy Supabase Functions — успех
-          Запуск: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
           curl -s -X POST \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
