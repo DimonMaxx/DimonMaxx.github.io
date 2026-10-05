@@ -1,14 +1,18 @@
 /* ============================================================
    app-core.js — ядро главной страницы MyFiles
    Содержит: состояние, утилиты, авторизацию, статистику,
-             топ-10 (с ленивой загрузкой и фильтром удалённых),
-             модалку обновления контента, switchTab, bindNav.
+             топ-10 с фильтром удалённых и подтягиванием
+             актуальных названий, модалку обновления контента,
+             hash-роутинг (deep-link на раздел/папку/файл),
+             копирование ссылки в буфер, switchTab, bindNav.
    Рендеры разделов/папок/таблиц живут в app-content.js.
 
-   Обновление хлебных крошек:
-   - state.currentTab всегда содержит активный таб.
-   - При каждом switchTab() вызывается MFApp.renderBreadcrumbs().
-   - Сама функция renderBreadcrumbs() живёт в app-content.js.
+   Hash-роутинг:
+   - #home / ''            → главная
+   - #top10                → топ-10
+   - #programs             → раздел, сетка папок
+   - #programs/Converter   → раздел, папка Converter
+   - #programs/file-slug   → раздел, фильтр по файлу + скролл к строке
    ============================================================ */
 (function () {
     'use strict';
@@ -25,15 +29,17 @@
     const state = {
         currentUser:    null,
         currentProfile: null,
-        currentTab:     'home',      // 'home' | 'top10' | ключ раздела
-        loadedSections: new Set(),   // какие разделы уже загружены
-        tableStates:    {},          // состояние таблиц по containerId
-        sectionRenderers: {},        // buildRenderers заполняет
-        extraFolders:   {},          // section_folders по разделам
-        downloadCounts: {},          // file_id → count
+        currentTab:     'home',
+        loadedSections: new Set(),
+        tableStates:    {},
+        sectionRenderers: {},
+        extraFolders:   {},
+        downloadCounts: {},
     };
 
-    // Топ-10: кэш JSON-индекса и флаги
+    // ============================================================
+    // ТОП-10: КЭШ JSON-ИНДЕКСА
+    // ============================================================
     let _top10SectionCache = null;
     let _top10SectionCacheTs = 0;
     const TOP10_CACHE_TTL_MS = 5 * 60 * 1000;
@@ -43,6 +49,245 @@
     function _top10log(...args) {
         if (_top10Debug) console.log('[top10]', ...args);
     }
+
+    // ============================================================
+    // HASH-РОУТИНГ: ФЛАГИ И УТИЛИТЫ
+    // ============================================================
+    let _suppressHashchange = false;       // не реагировать на hashchange
+    let _applyHashRouteInProgress = false; // защита от параллельных вызовов
+
+    /**
+     * Разбирает location.hash в объект.
+     * Возвращает { tab, segment } | null.
+     *   ''                        → null
+     *   '#home'                   → { tab: 'home', segment: null }
+     *   '#top10'                  → { tab: 'top10', segment: null }
+     *   '#programs'               → { tab: 'programs', segment: null }
+     *   '#programs/Converter'     → { tab: 'programs', segment: 'Converter' }
+     *   '#programs/some-file-id'  → { tab: 'programs', segment: 'some-file-id' }
+     */
+    function parseHash() {
+        let raw = location.hash || '';
+        if (raw.startsWith('#')) raw = raw.slice(1);
+        if (!raw) return null;
+
+        const parts = raw.split('/').filter(Boolean);
+        if (!parts.length) return null;
+
+        const tab = parts[0];
+        let segment = null;
+        if (parts.length >= 2) {
+            // Папка или file_id могут содержать пробелы/кириллицу —
+            // декодируем каждый сегмент.
+            try { segment = decodeURIComponent(parts.slice(1).join('/')); }
+            catch (_) { segment = parts.slice(1).join('/'); }
+        }
+        return { tab, segment };
+    }
+
+    /**
+     * Устанавливает location.hash.
+     *   setHash('home')                → URL без хэша
+     *   setHash('top10')               → #top10
+     *   setHash('programs')            → #programs
+     *   setHash('programs', 'Converter') → #programs/Converter
+     *
+     * Пока hash меняется, поднимаем флаг _suppressHashchange,
+     * чтобы не запустить applyHashRoute повторно.
+     */
+    function setHash(tab, segment) {
+        let newHash = '';
+        if (tab && tab !== 'home') {
+            newHash = '#' + tab;
+            if (segment) {
+                newHash += '/' + encodeURIComponent(segment);
+            }
+        }
+        if (location.hash === newHash) return;
+
+        _suppressHashchange = true;
+        if (newHash) {
+            location.hash = newHash;
+        } else {
+            // Убираем хэш полностью (без перезагрузки страницы)
+            history.replaceState(
+                null, '',
+                location.pathname + location.search
+            );
+        }
+        // Снимаем флаг асинхронно — hashchange уже не сработает
+        setTimeout(() => { _suppressHashchange = false; }, 80);
+    }
+
+    /**
+     * Ждёт, пока раздел загрузит JSON (или пока не истечёт таймаут).
+     */
+    async function _waitForSectionLoaded(tabId) {
+        const meta = CFG.SECTIONS[tabId];
+        if (!meta) return;
+        const maxAttempts = 60; // 60 × 100 мс = 6 секунд
+        for (let i = 0; i < maxAttempts; i++) {
+            const st = state.tableStates[meta.container];
+            if (st && Array.isArray(st.data)) return;
+            await new Promise(r => setTimeout(r, 100));
+        }
+    }
+
+    /**
+     * Применяет текущий location.hash.
+     * Логика:
+     *   1. Парсим хэш.
+     *   2. Если tab невалидный → переключаемся на home.
+     *   3. switchTab(tab, { skipHash: true }).
+     *   4. Если есть segment — ждём загрузки раздела и решаем,
+     *      это папка или file_id, применяем фильтр и скролл.
+     */
+    async function applyHashRoute() {
+        if (_applyHashRouteInProgress) return;
+        _applyHashRouteInProgress = true;
+
+        try {
+            const route = parseHash();
+            if (!route) {
+                // Пустой хэш → главная
+                switchTab('home', { skipHash: true });
+                return;
+            }
+
+            const { tab, segment } = route;
+
+            if (tab === 'home' || (!CFG.SECTIONS[tab] && tab !== 'top10')) {
+                switchTab('home', { skipHash: true });
+                return;
+            }
+
+            if (tab === 'top10') {
+                switchTab('top10', { skipHash: true });
+                return;
+            }
+
+            // ─── Раздел ───
+            switchTab(tab, { skipHash: true });
+
+            if (!segment) return;
+
+            // Ждём загрузку данных
+            await _waitForSectionLoaded(tab);
+
+            const meta = CFG.SECTIONS[tab];
+            if (!meta) return;
+            const st = state.tableStates[meta.container];
+            if (!st || !Array.isArray(st.data) || st.data.length === 0) return;
+
+            const container = document.getElementById(meta.container);
+            const renderFn  = state.sectionRenderers[meta.container];
+            if (!container || !renderFn) return;
+
+            // ─── Это файл? ───
+            const segmentLower = String(segment).toLowerCase();
+            const fileItem = st.data.find(item => {
+                const fid = (item.file_id || MF.slugify(item.title || '')).toLowerCase();
+                return fid === segmentLower;
+            });
+
+            if (fileItem) {
+                _top10log('applyHashRoute: file found', fileItem.file_id || fileItem.title);
+                st.viewMode = 'table';
+                st.folderFilter = null;
+                st.sortKey = null;
+                st.sortDir = 'asc';
+                st.currentPage = 1;
+                st.searches = { title: fileItem.title || '' };
+
+                window.MFApp.renderSection(meta.container, container, renderFn);
+
+                // Скроллим и подсвечиваем строку
+                setTimeout(() => {
+                    window.MFApp.highlightFileRow?.(
+                        fileItem.file_id || MF.slugify(fileItem.title || '')
+                    );
+                }, 300);
+                return;
+            }
+
+            // ─── Это папка? ───
+            const hasFolderInData = st.data.some(
+                i => String(i.folder || '').trim().toLowerCase() === segmentLower
+            );
+            const extraFolders = state.extraFolders[tab] || [];
+            const hasFolderInExtra = extraFolders.some(
+                f => String(f).trim().toLowerCase() === segmentLower
+            );
+
+            if (hasFolderInData || hasFolderInExtra) {
+                // Восстанавливаем оригинальное имя папки из данных (с учётом регистра)
+                let realName = segment;
+                const found = st.data.find(
+                    i => String(i.folder || '').trim().toLowerCase() === segmentLower
+                );
+                if (found) realName = String(found.folder).trim();
+                else {
+                    const foundExtra = extraFolders.find(
+                        f => String(f).trim().toLowerCase() === segmentLower
+                    );
+                    if (foundExtra) realName = String(foundExtra).trim();
+                }
+
+                _top10log('applyHashRoute: folder found', realName);
+                st.viewMode = 'table';
+                st.folderFilter = realName;
+                st.searches = {};
+                st.sortKey = null;
+                st.sortDir = 'asc';
+                st.currentPage = 1;
+
+                window.MFApp.renderSection(meta.container, container, renderFn);
+                return;
+            }
+
+            // Ни файл, ни папка — просто остаёмся в разделе.
+            _top10log('applyHashRoute: segment not found, showing section', tab);
+        } finally {
+            _applyHashRouteInProgress = false;
+        }
+    }
+
+    /**
+     * Копирует deep-link на файл в буфер обмена.
+     * Возвращает Promise<boolean>.
+     */
+    async function copyFileLink(sectionKey, fileId) {
+        if (!sectionKey || !fileId) return false;
+        const origin = location.origin + location.pathname;
+        const url = `${origin}#${sectionKey}/${encodeURIComponent(fileId)}`;
+
+        try {
+            await navigator.clipboard.writeText(url);
+            return true;
+        } catch (_) {
+            // Fallback через невидимый textarea
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = url;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                ta.style.pointerEvents = 'none';
+                document.body.appendChild(ta);
+                ta.select();
+                const ok = document.execCommand('copy');
+                document.body.removeChild(ta);
+                return !!ok;
+            } catch (_) {
+                return false;
+            }
+        }
+    }
+
+    // Подписка на изменение хэша (кнопки Назад/Вперёд, ручной ввод)
+    window.addEventListener('hashchange', function () {
+        if (_suppressHashchange) return;
+        applyHashRoute();
+    });
 
     // ============================================================
     // ЗАЩИТА ОТ КОНТЕКСТНОГО МЕНЮ И DRAG НА АУДИО
@@ -183,7 +428,7 @@
     }
 
     // ============================================================
-    // ТОП-10 — ЛЕНИВАЯ ЗАГРУЗКА + ФИЛЬТР УДАЛЁННЫХ/ПЕРЕИМЕНОВАННЫХ
+    // ТОП-10
     // ============================================================
 
     // Публичный сброс кэша (для кнопки «Обновить» и ручного вызова)
@@ -378,6 +623,9 @@
                 return;
             }
 
+            // ─── Карточки теперь нативные <a> ───
+            // href указывает на #section/file_id → срабатывает hashchange → applyHashRoute.
+            // Ctrl+клик открывает в новой вкладке.
             let html = '';
             items.forEach((it, idx) => {
                 const rank = idx + 1;
@@ -385,13 +633,15 @@
                 const sectionKey = it.section_key || '';
                 const sectionLabel = CFG.SECTIONS[sectionKey]?.label || sectionKey;
                 const count = it.count || 0;
+                const fileId = it.actual_fid || it.file_id || '';
+                const href = sectionKey && fileId
+                    ? `#${sectionKey}/${encodeURIComponent(fileId)}`
+                    : `#${sectionKey}`;
 
                 html += `
-                    <div class="top10-item"
-                         data-section-key="${MF.escapeAttr(sectionKey)}"
-                         data-file-name="${MF.escapeAttr(displayName)}"
-                         data-file-id="${MF.escapeAttr(it.actual_fid || it.file_id || '')}"
-                         title="Открыть в разделе «${MF.escapeAttr(sectionLabel)}»">
+                    <a class="top10-item"
+                       href="${MF.escapeAttr(href)}"
+                       title="Открыть: ${MF.escapeAttr(displayName)}">
                         <div class="top10-rank">${rank}</div>
                         <div class="top10-body">
                             <div class="top10-name">${MF.escapeHtml(displayName)}</div>
@@ -402,18 +652,9 @@
                         <div class="top10-badge">
                             <i class="fas fa-download"></i> ${count}
                         </div>
-                    </div>`;
+                    </a>`;
             });
             grid.innerHTML = html;
-
-            grid.querySelectorAll('.top10-item').forEach(el => {
-                el.addEventListener('click', () => {
-                    const sk = el.dataset.sectionKey;
-                    const fn = el.dataset.fileName;
-                    if (!sk || !CFG.SECTIONS[sk]) return;
-                    openTop10Item(sk, fn);
-                });
-            });
 
             _top10FirstLoadDone = true;
         } catch (e) {
@@ -424,6 +665,7 @@
         }
     }
 
+    // Fallback: программный переход (не используется в UI, но полезен)
     function openTop10Item(sectionKey, fileName) {
         const meta = CFG.SECTIONS[sectionKey];
         if (!meta) return;
@@ -683,11 +925,11 @@
     // ============================================================
     // НАВИГАЦИЯ ПО ТАБАМ
     //
-    // После установки активного таба вызываем renderBreadcrumbs(),
-    // определённый в app-content.js. Используем optional chaining,
-    // чтобы не упасть, если content-модуль ещё не загрузился.
+    // switchTab(tabId, opts):
+    //   opts.skipHash = true → не писать URL (используется из applyHashRoute / init)
     // ============================================================
-    function switchTab(tabId) {
+    function switchTab(tabId, opts) {
+        opts = opts || {};
         state.currentTab = tabId;
 
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -698,6 +940,11 @@
             if (link.dataset.tab === tabId) link.classList.add('active');
         });
         localStorage.setItem('activeTab', tabId);
+
+        // Обновляем URL (если не просят обратного)
+        if (!opts.skipHash) {
+            setHash(tabId);
+        }
 
         if (tabId === 'top10') {
             if (!_top10FirstLoadDone) {
@@ -711,7 +958,6 @@
                 }
             }
         } else if (tabId !== 'home') {
-            // Уходит в app-content.js
             window.MFApp?.loadSectionIfNeeded?.(tabId);
         }
 
@@ -721,7 +967,9 @@
 
     function bindNav() {
         document.querySelectorAll('.sidebar .nav-link').forEach(link => {
-            link.addEventListener('click', function () { switchTab(this.dataset.tab); });
+            link.addEventListener('click', function () {
+                switchTab(this.dataset.tab);
+            });
         });
     }
 
@@ -747,7 +995,7 @@
     // ============================================================
     window.MFState = state;
     window.MFApp = {
-        // Ссылки (чтобы content-модуль не тянул их заново)
+        // Ссылки
         CFG, MF, supabaseClient, SUPABASE_URL,
 
         // Утилиты
@@ -774,6 +1022,12 @@
         switchTab,
         bindNav,
 
+        // Hash-роутинг
+        parseHash,
+        setHash,
+        applyHashRoute,
+        copyFileLink,
+
         // Трек визита
         trackVisit,
 
@@ -783,9 +1037,9 @@
 
         // Заглушки, которые заполнит app-content.js:
         // loadSectionIfNeeded, renderSection, renderBreadcrumbs,
-        // buildRenderers, buildSidebarAndTabs, loadExtraFolders,
-        // loadDownloadCounts, loadCollection, renderFolderGrid,
-        // renderTableWithState, incrementDownload, initTableState,
-        // getFilteredSorted, buildProgramsNotice, init.
+        // highlightFileRow, buildRenderers, buildSidebarAndTabs,
+        // loadExtraFolders, loadDownloadCounts, loadCollection,
+        // renderFolderGrid, renderTableWithState, incrementDownload,
+        // initTableState, getFilteredSorted, buildProgramsNotice, init.
     };
 })();
