@@ -1,7 +1,7 @@
 /* ============================================================
    app.css — стили главной страницы MyFiles
    Вынесены из index.html для удобства поддержки.
-   Раздел «Хлебные крошки» добавлен в конце файла.
+   Разделы «Хлебные крошки» и «Кнопка Поделиться» — в конце файла.
    ============================================================ */
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -525,6 +525,8 @@ header {
     gap: 12px;
 }
 
+/* Карточка топ-10 — теперь нативная ссылка <a>.
+   text-decoration: none снимает подчёркивание. */
 .top10-item {
     display: flex;
     align-items: center;
@@ -1301,9 +1303,6 @@ header {
 
 /* ============================================================
    ХЛЕБНЫЕ КРОШКИ
-   ------------------------------------------------------------
-   Скрыты по умолчанию. Появляются, когда renderBreadcrumbs()
-   добавит класс breadcrumbs--active.
    ============================================================ */
 .breadcrumbs {
     display: none;
@@ -1347,9 +1346,7 @@ header {
     color: #1d4ed8;
 }
 
-.breadcrumbs__link i {
-    font-size: 12px;
-}
+.breadcrumbs__link i { font-size: 12px; }
 
 .breadcrumbs__sep {
     color: #cbd5e1;
@@ -1376,6 +1373,73 @@ header {
 .breadcrumbs__current i {
     color: #64748b;
     font-size: 12px;
+}
+
+/* ============================================================
+   КНОПКА «ПОДЕЛИТЬСЯ» В СТРОКЕ ТАБЛИЦЫ
+   ------------------------------------------------------------
+   Маленькая круглая иконка 🔗 рядом с названием файла.
+   При клике копирует ссылку в буфер. На 1.5 сек превращается
+   в зелёную галочку (класс .share-btn--copied).
+   ============================================================ */
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid #cbd5e1;
+    background: white;
+    color: #64748b;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.1s;
+    margin-left: 6px;
+    vertical-align: middle;
+    flex-shrink: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+}
+
+.share-btn:hover {
+    background: #eef2ff;
+    color: #2563eb;
+    border-color: #2563eb;
+    transform: scale(1.05);
+}
+
+.share-btn:active {
+    transform: scale(0.95);
+}
+
+.share-btn--copied {
+    background: #dcfce7;
+    color: #16a34a;
+    border-color: #16a34a;
+}
+
+.share-btn--copied:hover {
+    background: #dcfce7;
+    color: #16a34a;
+    border-color: #16a34a;
+    transform: none;
+}
+
+/* ============================================================
+   ПОДСВЕТКА СТРОКИ, НА КОТОРУЮ ВЕДЁТ DEEP-LINK
+   ------------------------------------------------------------
+   Класс .row-highlight навешивается на <tr> при переходе по
+   хэшу #section/file_id. Через 3 секунды снимается.
+   ============================================================ */
+.content-table tbody tr.row-highlight {
+    animation: rowHighlight 3s ease-out 1;
+}
+
+@keyframes rowHighlight {
+    0%   { background: #fef3c7; box-shadow: inset 0 0 0 2px #f59e0b; }
+    60%  { background: #fef3c7; box-shadow: inset 0 0 0 2px #f59e0b; }
+    100% { background: transparent; box-shadow: none; }
 }
 
 /* ─── Мобильная адаптация ─── */
@@ -1473,4 +1537,12 @@ header {
     .breadcrumbs__link i,
     .breadcrumbs__current i { font-size: 11px; }
     .breadcrumbs__sep { font-size: 12px; }
+
+    /* Компактная кнопка «Поделиться» на мобильных */
+    .share-btn {
+        width: 26px;
+        height: 26px;
+        font-size: 11px;
+        margin-left: 4px;
+    }
 }
