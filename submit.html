@@ -81,6 +81,13 @@
             color: #1e293b;
         }
         .form-group label .required { color: #dc2626; }
+        .form-group label .label-hint {
+            display: inline-block;
+            font-weight: 500;
+            font-size: 12px;
+            color: #94a3b8;
+            margin-left: 6px;
+        }
         .form-group input,
         .form-group select,
         .form-group textarea {
@@ -91,7 +98,7 @@
             font-size: 15px;
             font-family: 'Inter', sans-serif;
             background: #f8fafc;
-            transition: border 0.2s, box-shadow 0.2s;
+            transition: border 0.2s, box-shadow 0.2s, background 0.2s;
         }
         .form-group input:focus,
         .form-group select:focus,
@@ -110,6 +117,60 @@
             color: #94a3b8;
             margin-top: 6px;
         }
+
+        /* ─── Валидация описания (п. 1.6) ─── */
+        .form-group.has-error input,
+        .form-group.has-error textarea,
+        .form-group.has-error select {
+            border-color: #dc2626;
+            background: #fef2f2;
+        }
+        .form-group.has-error input:focus,
+        .form-group.has-error textarea:focus,
+        .form-group.has-error select:focus {
+            box-shadow: 0 0 0 3px rgba(220,38,38,0.15);
+        }
+        .field-error-text {
+            display: none;
+            color: #dc2626;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 6px;
+        }
+        .form-group.has-error .field-error-text {
+            display: block;
+        }
+
+        /* Счётчик символов описания */
+        .desc-counter {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            transition: color 0.2s;
+        }
+        .desc-counter__value {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .desc-counter__value i {
+            font-size: 12px;
+        }
+        .desc-counter--warning {
+            color: #d97706;
+        }
+        .desc-counter--ok {
+            color: #16a34a;
+        }
+        .desc-counter__min {
+            color: #94a3b8;
+            font-weight: 500;
+        }
+
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -153,7 +214,6 @@
             line-height: 1.6;
         }
 
-        /* ─── Карточки вариантов ─── */
         .send-options {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -457,20 +517,22 @@
         <div class="field-group-title">Контактные данные</div>
 
         <div class="form-row">
-            <div class="form-group">
+            <div class="form-group" id="fg-name">
                 <label for="name">Ваше имя <span class="required">*</span></label>
                 <input type="text" id="name" name="name" placeholder="Например: Иван Петров" required>
+                <div class="field-error-text">Укажите ваше имя.</div>
             </div>
-            <div class="form-group">
+            <div class="form-group" id="fg-email">
                 <label for="email">Ваш Email <span class="required">*</span></label>
                 <input type="email" id="email" name="email" placeholder="ivan@example.com" required>
                 <div class="hint">На этот адрес придёт уведомление о решении.</div>
+                <div class="field-error-text">Введите корректный email.</div>
             </div>
         </div>
 
         <div class="field-group-title">Материал</div>
 
-        <div class="form-group">
+        <div class="form-group" id="fg-category">
             <label for="category">Категория <span class="required">*</span></label>
             <select id="category" name="category" required>
                 <option value="">Выберите категорию</option>
@@ -481,22 +543,42 @@
                 <option value="movies">🎬 Фильмы</option>
                 <option value="misc">📦 Разное</option>
             </select>
+            <div class="field-error-text">Выберите категорию материала.</div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="fg-title">
             <label for="title">Название материала <span class="required">*</span></label>
             <input type="text" id="title" name="title" placeholder="Например: Супер-программа v2.0" required>
+            <div class="field-error-text">Укажите название материала.</div>
         </div>
 
-        <div class="form-group">
-            <label for="description">Краткое описание <span class="required">*</span></label>
-            <textarea id="description" name="description" placeholder="Что это за материал и чем он полезен..." required></textarea>
+        <div class="form-group" id="fg-description">
+            <label for="description">
+                Краткое описание <span class="required">*</span>
+                <span class="label-hint">(минимум 30 символов)</span>
+            </label>
+            <textarea id="description"
+                      name="description"
+                      placeholder="Что это за материал и чем он полезен..."
+                      required
+                      minlength="30"></textarea>
+            <div class="desc-counter" id="descCounter">
+                <span class="desc-counter__value">
+                    <i class="fas fa-pen"></i>
+                    <span id="descCounterValue">0 / 30</span>
+                </span>
+                <span class="desc-counter__min" id="descCounterHint">минимум 30 символов</span>
+            </div>
+            <div class="field-error-text" id="descErrorText">
+                Описание должно быть не менее 30 символов.
+            </div>
         </div>
 
-        <div class="form-group">
+        <div class="form-group" id="fg-download_link">
             <label for="download_link">Ссылка для скачивания <span class="required">*</span></label>
             <input type="url" id="download_link" name="download_link" placeholder="https://disk.yandex.ru/d/..." required>
             <div class="hint">Ссылка на файл в облаке (Яндекс.Диск, Google Drive и т.п.).</div>
+            <div class="field-error-text">Ссылка должна начинаться с http:// или https://</div>
         </div>
 
         <div class="section-fields" id="fields-books" style="display:none;">
@@ -587,7 +669,6 @@
         </div>
 
         <div class="send-options">
-            <!-- Вариант 1: скачать + mailto -->
             <div class="send-card v1">
                 <div class="send-card-header">
                     <div class="send-card-icon"><i class="fas fa-file-download"></i></div>
@@ -604,7 +685,6 @@
                 <div class="send-card-note">Работает во всех браузерах и на всех устройствах</div>
             </div>
 
-            <!-- Вариант 2: Web Share API -->
             <div class="send-card v2 recommended">
                 <div class="send-card-header">
                     <div class="send-card-icon"><i class="fas fa-share-nodes"></i></div>
@@ -624,7 +704,6 @@
             </div>
         </div>
 
-        <!-- Сообщения об ошибке / успехе / предупреждении -->
         <div class="error-message" id="errorMessage">
             <i class="fas fa-exclamation-triangle"></i><span id="errorText"></span>
         </div>
@@ -635,7 +714,6 @@
             <i class="fas fa-info-circle"></i><span id="warnText"></span>
         </div>
 
-        <!-- Инструкция для варианта 1 -->
         <div class="instructions" id="instructionsV1">
             <h4><i class="fas fa-list-ol"></i> Как отправить заявку вручную</h4>
             <ol class="howto-steps">
@@ -676,6 +754,10 @@
 </div>
 
 <script>
+    // ─── Константы валидации ───
+    const MIN_DESCRIPTION_LENGTH = 30;
+    const WARN_DESCRIPTION_LENGTH = 20; // с какого момента показывать оранжевый
+
     // ─── Показ полей в зависимости от выбранной категории ───
     const categorySelect = document.getElementById('category');
     const allSections = document.querySelectorAll('.section-fields');
@@ -687,6 +769,8 @@
             const target = document.getElementById('fields-' + val);
             if (target) target.style.display = 'block';
         }
+        // Убираем подсветку ошибки при выборе
+        clearFieldError('fg-category');
     });
 
     // ─── Справочники ───
@@ -734,6 +818,93 @@
     const warnText         = document.getElementById('warnText');
     const instructionsV1   = document.getElementById('instructionsV1');
     const copyBtn          = document.getElementById('copyEmailBtn');
+    const descTextarea     = document.getElementById('description');
+    const descCounter      = document.getElementById('descCounter');
+    const descCounterValue = document.getElementById('descCounterValue');
+    const descCounterHint  = document.getElementById('descCounterHint');
+
+    // ============================================================
+    // ВАЛИДАЦИЯ: ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+    // ============================================================
+
+    function showFieldError(groupId) {
+        const grp = document.getElementById(groupId);
+        if (grp) grp.classList.add('has-error');
+    }
+
+    function clearFieldError(groupId) {
+        const grp = document.getElementById(groupId);
+        if (grp) grp.classList.remove('has-error');
+    }
+
+    function clearAllFieldErrors() {
+        document.querySelectorAll('.form-group.has-error').forEach(el => {
+            el.classList.remove('has-error');
+        });
+    }
+
+    // ============================================================
+    // СЧЁТЧИК СИМВОЛОВ ОПИСАНИЯ
+    // ============================================================
+
+    function updateDescCounter() {
+        if (!descTextarea || !descCounterValue) return;
+
+        const len = (descTextarea.value || '').trim().length;
+
+        descCounterValue.textContent = `${len} / ${MIN_DESCRIPTION_LENGTH}`;
+
+        // Обновляем классы цвета
+        descCounter.classList.remove('desc-counter--warning', 'desc-counter--ok');
+
+        if (len >= MIN_DESCRIPTION_LENGTH) {
+            descCounter.classList.add('desc-counter--ok');
+            if (descCounterHint) descCounterHint.textContent = '✓';
+        } else if (len >= WARN_DESCRIPTION_LENGTH) {
+            descCounter.classList.add('desc-counter--warning');
+            const left = MIN_DESCRIPTION_LENGTH - len;
+            if (descCounterHint) {
+                descCounterHint.textContent = `ещё минимум ${left} ${_plural(left, 'символ', 'символа', 'символов')}`;
+            }
+        } else {
+            if (descCounterHint) descCounterHint.textContent = `минимум ${MIN_DESCRIPTION_LENGTH} символов`;
+        }
+    }
+
+    function _plural(n, one, few, many) {
+        const mod10 = n % 10;
+        const mod100 = n % 100;
+        if (mod10 === 1 && mod100 !== 11) return one;
+        if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return few;
+        return many;
+    }
+
+    if (descTextarea) {
+        // Инициализация счётчика
+        updateDescCounter();
+
+        // Обновление при вводе
+        descTextarea.addEventListener('input', function() {
+            updateDescCounter();
+            // Если поле было подсвечено ошибкой и теперь описание длинное — снимаем ошибку
+            const len = (this.value || '').trim().length;
+            if (len >= MIN_DESCRIPTION_LENGTH) {
+                clearFieldError('fg-description');
+            }
+        });
+
+        // При потере фокуса — если короче минимума, показать ошибку
+        descTextarea.addEventListener('blur', function() {
+            const len = (this.value || '').trim().length;
+            if (len > 0 && len < MIN_DESCRIPTION_LENGTH) {
+                showFieldError('fg-description');
+            }
+        });
+    }
+
+    // ============================================================
+    // СООБЩЕНИЯ
+    // ============================================================
 
     function showError(msg) {
         successBox.classList.remove('show');
@@ -759,7 +930,10 @@
         warnBox.classList.remove('show');
     }
 
-    // ─── Проверка поддержки Web Share API с файлами ───
+    // ============================================================
+    // ПОДДЕРЖКА WEB SHARE API С ФАЙЛАМИ
+    // ============================================================
+
     function supportsFileShare() {
         try {
             if (!navigator.canShare) return false;
@@ -772,14 +946,16 @@
         }
     }
 
-    // Если API не поддерживается — помечаем вариант 2
     if (!supportsFileShare()) {
         btnV2Note.textContent = 'В вашем браузере вариант недоступен — используйте способ слева';
         btnV2Note.classList.add('warn');
         btnV2.disabled = true;
     }
 
-    // ─── Генерация DOCX ───
+    // ============================================================
+    // ГЕНЕРАЦИЯ DOCX
+    // ============================================================
+
     async function buildDocxBlob(data) {
         const docx = window.docx;
         if (!docx) {
@@ -819,7 +995,6 @@
             spacing: { after: 400 },
         }));
 
-        // Контактные данные
         children.push(new Paragraph({
             children: [new TextRun({
                 text: 'Контактные данные',
@@ -830,7 +1005,6 @@
         children.push(fieldParagraph(data.name, 'Имя отправителя'));
         children.push(fieldParagraph(data.email, 'Email отправителя'));
 
-        // Материал
         children.push(new Paragraph({
             children: [new TextRun({
                 text: 'Материал',
@@ -843,7 +1017,6 @@
         children.push(fieldParagraph(data.description, 'Описание'));
         children.push(fieldParagraph(data.download_link, 'Ссылка на файл'));
 
-        // Дополнительные поля по категории
         const extras = [];
         if (data.author)       extras.push(['Автор', data.author]);
         if (data.format)       extras.push(['Формат', data.format]);
@@ -907,38 +1080,75 @@
             .trim() || 'заявка';
     }
 
-    // ─── Сбор данных формы + валидация ───
+    // ============================================================
+    // СБОР И ВАЛИДАЦИЯ ФОРМЫ
+    // ============================================================
+
     function collectAndValidate() {
+        clearAllFieldErrors();
+
         const formData = new FormData(form);
         const data = {};
         for (const [k, v] of formData.entries()) {
             if (typeof v === 'string') data[k] = v.trim();
         }
 
+        // ─── Обязательные поля ───
         const required = ['name', 'email', 'category', 'title', 'description', 'download_link'];
         const missing = [];
+        const missingGroups = [];
+
         for (const f of required) {
-            if (!data[f]) missing.push(FIELD_LABELS[f] || f);
+            if (!data[f]) {
+                missing.push(FIELD_LABELS[f] || f);
+                missingGroups.push('fg-' + f);
+            }
         }
+
         if (missing.length > 0) {
+            missingGroups.forEach(g => showFieldError(g));
             showError('Заполните обязательные поля: ' + missing.join(', '));
             return null;
         }
+
+        // ─── Email ───
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+            showFieldError('fg-email');
             showError('Введите корректный email (например, ivan@example.com).');
             return null;
         }
+
+        // ─── Ссылка на файл ───
         if (!/^https?:\/\//i.test(data.download_link)) {
+            showFieldError('fg-download_link');
             showError('Ссылка на файл должна начинаться с http:// или https://');
             return null;
         }
+
+        // ─── Длина описания (п. 1.6) ───
+        const descLen = (data.description || '').trim().length;
+        if (descLen < MIN_DESCRIPTION_LENGTH) {
+            showFieldError('fg-description');
+            descTextarea.focus();
+            descTextarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            showError(
+                `Описание слишком короткое: ${descLen} из ${MIN_DESCRIPTION_LENGTH} символов. ` +
+                `Добавьте больше информации о материале — чем полезен, для кого, что внутри.`
+            );
+            return null;
+        }
+
         return data;
     }
 
-    // ─── Тема и тело письма ───
+    // ============================================================
+    // ТЕМА И ТЕЛО ПИСЬМА
+    // ============================================================
+
     function buildEmailSubject(data) {
         return `Заявка на материал: ${data.title || 'без названия'}`;
     }
+
     function buildEmailBody(data) {
         const lines = [
             'Здравствуйте!',
@@ -973,13 +1183,17 @@
         lines.push(data.email || '');
         return lines.join('\n');
     }
+
     function buildMailtoUrl(data) {
         const subject = encodeURIComponent(buildEmailSubject(data));
         const body = encodeURIComponent(buildEmailBody(data));
         return `mailto:${ADMIN_EMAIL}?subject=${subject}&body=${body}`;
     }
 
-    // ─── Копирование email ───
+    // ============================================================
+    // КОПИРОВАНИЕ EMAIL
+    // ============================================================
+
     copyBtn.addEventListener('click', async () => {
         try {
             await navigator.clipboard.writeText(ADMIN_EMAIL);
@@ -1007,7 +1221,10 @@
         }
     });
 
-    // ─── ВАРИАНТ 1: скачать DOCX + открыть mailto ───
+    // ============================================================
+    // ВАРИАНТ 1: скачать DOCX + открыть mailto
+    // ============================================================
+
     btnV1.addEventListener('click', async () => {
         hideAll();
         const data = collectAndValidate();
@@ -1020,7 +1237,6 @@
             const blob = await buildDocxBlob(data);
             const fileName = `Заявка-MyFiles-${safeFileName(data.title)}.docx`;
 
-            // 1. Скачиваем файл
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -1031,11 +1247,9 @@
             document.body.removeChild(a);
             setTimeout(() => URL.revokeObjectURL(url), 4000);
 
-            // 2. Открываем почтовый клиент
             const mailtoUrl = buildMailtoUrl(data);
             window.location.href = mailtoUrl;
 
-            // 3. Показываем инструкцию и успех
             instructionsV1.classList.add('show');
             showSuccess(
                 `<strong>Готово!</strong> Файл <code>${fileName}</code> скачан. ` +
@@ -1051,7 +1265,10 @@
         }
     });
 
-    // ─── ВАРИАНТ 2: Web Share API с прикреплённым файлом ───
+    // ============================================================
+    // ВАРИАНТ 2: Web Share API
+    // ============================================================
+
     btnV2.addEventListener('click', async () => {
         hideAll();
         const data = collectAndValidate();
@@ -1075,7 +1292,6 @@
                 type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
             });
 
-            // Текст, который появится в системном меню
             const shareTitle = buildEmailSubject(data);
             const shareText = buildEmailBody(data);
 
@@ -1087,13 +1303,11 @@
 
             showSuccess(
                 `<strong>Готово!</strong> Системное меню «Поделиться» открыто с прикреплённым файлом ` +
-                `<code>${fileName}</code>. Выберите почтовое приложение (Яндекс.Почта, Mail.ru, Gmail и т.д.), ` +
-                `проверьте письмо и нажмите «Отправить».`
+                `<code>${fileName}</code>. Выберите почтовое приложение, проверьте письмо и нажмите «Отправить».`
             );
         } catch (err) {
-            // Пользователь мог просто закрыть меню «Поделиться» — это не ошибка
             if (err && err.name === 'AbortError') {
-                // Молча выходим, ничего не показываем
+                // Пользователь закрыл меню — молча
             } else {
                 console.error(err);
                 showWarn(
