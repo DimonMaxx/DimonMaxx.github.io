@@ -6,7 +6,7 @@
              loadCollection, loadSectionIfNeeded, renderSection,
              renderFolderGrid, renderTableWithState,
              incrementDownload, renderBreadcrumbs, goToSection,
-             инициализацию init().
+             highlightFileRow, инициализацию init().
    ============================================================ */
 (function () {
     'use strict';
@@ -41,17 +41,6 @@
     // ============================================================
     // ХЛЕБНЫЕ КРОШКИ
     // ============================================================
-    // Правила:
-    //   home             → скрыть
-    //   top10            → Главная › Топ-10
-    //   раздел без папки → Главная › Программы
-    //   раздел в папке   → Главная › Программы › Converter
-    //
-    // Клик по «Главная» → switchTab('home')
-    // Клик по названию раздела → goToSection(sectionKey) (сброс фильтра)
-    // Текущая папка — не кликабельна (это текущее положение).
-    // ============================================================
-
     function renderBreadcrumbs() {
         const el = document.getElementById('breadcrumbs');
         if (!el) return;
@@ -147,11 +136,8 @@
     }
 
     /**
-     * Возврат в раздел на верхний уровень:
-     *  - сбрасывает фильтр папки и поиск
-     *  - если раздел folderable — возвращает в режим сетки папок
-     *  - если нет — оставляет таблицу
-     *  - если это не текущий таб, переключается на него
+     * Возврат в раздел на верхний уровень.
+     * Сбрасывает фильтр папки, поиск, сорт. Обновляет URL и перерисовывает.
      */
     function goToSection(sectionKey) {
         const meta = CFG.SECTIONS[sectionKey];
@@ -165,7 +151,6 @@
             st.sortDir = 'asc';
             st.currentPage = 1;
 
-            // Раздел folderable — вернуть к сетке папок, если она возможна
             const hasFolders = st.data.some(i => i.folder && String(i.folder).trim());
             const extra = state.extraFolders[sectionKey] || [];
             if (meta.folderable && (hasFolders || extra.length > 0)) {
@@ -175,11 +160,12 @@
             }
         }
 
+        // Устанавливаем URL #section (без сегмента)
+        App.setHash(sectionKey);
+
         if (state.currentTab !== sectionKey) {
-            // Переключаемся на раздел — там сработает switchTab → renderBreadcrumbs
-            App.switchTab(sectionKey);
+            App.switchTab(sectionKey, { skipHash: true });
         } else {
-            // Уже в разделе — просто перерисовываем
             const container = document.getElementById(meta.container);
             if (container && st) {
                 const renderFn = state.sectionRenderers[meta.container];
@@ -191,7 +177,7 @@
     }
 
     // ============================================================
-    // ПОСТРОЕНИЕ КОЛОНОК ПО КОНФИГУ (один раз при init)
+    // ПОСТРОЕНИЕ КОЛОНОК ПО КОНФИГУ
     // ============================================================
     function buildRenderers() {
         state.sectionRenderers = {};
@@ -213,13 +199,12 @@
     }
 
     // ============================================================
-    // САЙДБАР И ТАБЫ (динамически из SECTIONS)
+    // САЙДБАР И ТАБЫ
     // ============================================================
     function buildSidebarAndTabs() {
         const navInner    = document.getElementById('sidebarNavInner');
         const tabsWrapper = document.getElementById('tabsWrapper');
 
-        // Удаляем все ранее сгенерированные пункты (кроме home и top10)
         navInner.querySelectorAll('.nav-link:not([data-tab="home"]):not([data-tab="top10"])')
             .forEach(el => el.remove());
         tabsWrapper.querySelectorAll('.tab-content:not(#home):not(#top10)')
@@ -242,7 +227,7 @@
     }
 
     // ============================================================
-    // ЗАГРУЗКА ДОПОЛНИТЕЛЬНЫХ ПАПОК (section_folders)
+    // ЗАГРУЗКА ДОПОЛНИТЕЛЬНЫХ ПАПОК
     // ============================================================
     async function loadExtraFolders() {
         try {
@@ -289,7 +274,7 @@
     }
 
     // ============================================================
-    // ИНКРЕМЕНТ СКАЧИВАНИЯ (RPC + лог + триггер загрузки)
+    // ИНКРЕМЕНТ СКАЧИВАНИЯ
     // ============================================================
     async function incrementDownload(fileId, sectionKey, downloadUrl, fileName) {
         if (!state.currentUser) {
@@ -325,7 +310,7 @@
     }
 
     // ============================================================
-    // СОСТОЯНИЕ ТАБЛИЦЫ (единый инициализатор)
+    // СОСТОЯНИЕ ТАБЛИЦЫ
     // ============================================================
     function initTableState(id, cols) {
         if (!state.tableStates[id]) {
@@ -383,7 +368,7 @@
     }
 
     // ============================================================
-    // ЛЕНИВАЯ ЗАГРУЗКА РАЗДЕЛА (при первом switchTab)
+    // ЛЕНИВАЯ ЗАГРУЗКА РАЗДЕЛА
     // ============================================================
     async function loadSectionIfNeeded(tabId) {
         if (state.loadedSections.has(tabId)) return;
@@ -398,7 +383,7 @@
     }
 
     // ============================================================
-    // РОУТЕР РЕНДЕРА: таблица или сетка папок
+    // РОУТЕР РЕНДЕРА
     // ============================================================
     function renderSection(containerId, container, renderFn) {
         const st = state.tableStates[containerId];
@@ -474,12 +459,21 @@
                 st.sortDir = 'asc';
                 st.currentPage = 1;
 
+                // Обновляем URL: #section/folderName (или просто #section для «Все»)
+                if (folder && folder !== '__ALL__' && folder !== '__NOFOLDER__') {
+                    App.setHash(sectionKey, folder);
+                } else if (folder === '__NOFOLDER__') {
+                    // «Без папки» в URL не пишем — оставляем #section
+                    App.setHash(sectionKey);
+                } else {
+                    App.setHash(sectionKey);
+                }
+
                 renderSection(containerId, container, renderFn);
                 MF.scrollToContainer(container, 120);
             });
         });
 
-        // Обновляем хлебные крошки (путь: Главная › Раздел)
         renderBreadcrumbs();
     }
 
@@ -574,6 +568,34 @@
     }
 
     // ============================================================
+    // ПОДСВЕТКА СТРОКИ ПО DEEP-LINK
+    // ============================================================
+    /**
+     * Находит <tr> с data-file-id = fileId, скроллит к нему и подсвечивает.
+     * Класс row-highlight снимается автоматически через 3 секунды (анимация CSS).
+     */
+    function highlightFileRow(fileId) {
+        if (!fileId) return;
+        const rows = document.querySelectorAll(
+            `tr[data-file-id="${CSS.escape(String(fileId))}"]`
+        );
+        if (!rows.length) return;
+
+        const row = rows[0];
+        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+        // Перезапускаем анимацию: сначала убираем, потом добавляем через RAF
+        row.classList.remove('row-highlight');
+        void row.offsetWidth;  // force reflow
+        row.classList.add('row-highlight');
+
+        // Снимаем класс через 3.2 сек (чуть больше анимации)
+        setTimeout(() => {
+            row.classList.remove('row-highlight');
+        }, 3200);
+    }
+
+    // ============================================================
     // ТАБЛИЦА РАЗДЕЛА
     // ============================================================
     function renderTableWithState(containerId, container, renderFn) {
@@ -623,7 +645,10 @@
             tbody = `<tr><td colspan="${cols.length}" class="empty-block">Ничего не найдено</td></tr>`;
         } else {
             pageItems.forEach(item => {
-                tbody += '<tr>';
+                // file_id этого item — используем и для строки, и для кнопки 🔗
+                const itemFileId = item.file_id || MF.slugify(item.title || '');
+
+                tbody += `<tr data-file-id="${MF.escapeAttr(itemFileId)}">`;
                 cols.forEach(col => {
                     if (col.type === 'cover') {
                         const cover = item[col.key];
@@ -649,7 +674,6 @@
                             const mime     = getAudioMimeType(item.download_link);
                             const mimeAttr = mime ? ` type="${mime}"` : '';
                             const ftitle   = item.title || 'Трек';
-                            const fid      = item.file_id || MF.slugify(ftitle);
                             const isLogged = !!state.currentUser;
                             const dlClass  = isLogged ? 'audio-download' : 'audio-download disabled';
                             const audioId  = `audio-player-${audioIdx++}`;
@@ -672,7 +696,7 @@
                                         </button>
                                     </div>
                                     <a href="#" class="${dlClass}"
-                                       data-file-id="${MF.escapeAttr(fid)}"
+                                       data-file-id="${MF.escapeAttr(itemFileId)}"
                                        data-section-key="${MF.escapeAttr(currentSectionKey)}"
                                        data-download-url="${MF.escapeAttr(item.download_link)}"
                                        data-file-name="${MF.escapeAttr(ftitle)}">
@@ -686,12 +710,11 @@
                             tbody += `<td class="col-center">—</td>`;
                         } else {
                             const isLogged = !!state.currentUser;
-                            const fid      = item.file_id || MF.slugify(item.title || '');
                             const ftitle   = item.title || 'Без названия';
                             const btnClass = isLogged ? 'btn-download-sm' : 'btn-download-sm disabled';
                             tbody += `<td class="col-center">
                                 <a href="#" class="${btnClass}"
-                                   data-file-id="${MF.escapeAttr(fid)}"
+                                   data-file-id="${MF.escapeAttr(itemFileId)}"
                                    data-section-key="${MF.escapeAttr(currentSectionKey)}"
                                    data-download-url="${MF.escapeAttr(item.download_link)}"
                                    data-file-name="${MF.escapeAttr(ftitle)}">
@@ -703,17 +726,25 @@
                         if (!item.download_link) {
                             tbody += `<td class="col-num">—</td>`;
                         } else {
-                            const fid = item.file_id || MF.slugify(item.title || '');
-                            const c = state.downloadCounts[fid] || 0;
-                            tbody += `<td class="col-num" data-count-file-id="${MF.escapeAttr(fid)}">${c}</td>`;
+                            const c = state.downloadCounts[itemFileId] || 0;
+                            tbody += `<td class="col-num" data-count-file-id="${MF.escapeAttr(itemFileId)}">${c}</td>`;
                         }
+                    } else if (col.key === 'title') {
+                        // ─── Столбец «Название»: добавляем кнопку 🔗 «Поделиться» ───
+                        const val = item[col.key] || '';
+                        tbody += `<td class="col-title">
+                            <span class="title-text">${MF.escapeHtml(val)}</span>
+                            <button type="button"
+                                    class="share-btn"
+                                    data-share-section="${MF.escapeAttr(currentSectionKey)}"
+                                    data-share-file-id="${MF.escapeAttr(itemFileId)}"
+                                    title="Скопировать ссылку на этот файл">
+                                <i class="fas fa-link"></i>
+                            </button>
+                        </td>`;
                     } else {
                         const val = item[col.key];
-                        if (col.key === 'title') {
-                            tbody += `<td class="col-title">${MF.escapeHtml(val || '')}</td>`;
-                        } else {
-                            tbody += `<td>${MF.escapeHtml(val || '')}</td>`;
-                        }
+                        tbody += `<td>${MF.escapeHtml(val || '')}</td>`;
                     }
                 });
                 tbody += '</tr>';
@@ -772,11 +803,41 @@
                 st.searches = {};
                 st.sortKey = null;
                 st.sortDir = 'asc';
+
+                // URL → #section (без сегмента)
+                App.setHash(currentSectionKey);
+
                 renderSection(containerId, container, renderFn);
                 MF.scrollToContainer(container, 120);
             });
         }
 
+        // Кнопки 🔗 «Поделиться»
+        container.querySelectorAll('.share-btn[data-share-section]').forEach(btn => {
+            btn.addEventListener('click', async function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+
+                const sectionKey = this.dataset.shareSection;
+                const fileId     = this.dataset.shareFileId;
+
+                const ok = await App.copyFileLink(sectionKey, fileId);
+
+                if (ok) {
+                    this.classList.add('share-btn--copied');
+                    this.innerHTML = '<i class="fas fa-check"></i>';
+                    showToast('Ссылка скопирована в буфер обмена', 'success');
+                    setTimeout(() => {
+                        this.classList.remove('share-btn--copied');
+                        this.innerHTML = '<i class="fas fa-link"></i>';
+                    }, 1500);
+                } else {
+                    showToast('Не удалось скопировать ссылку', 'error');
+                }
+            });
+        });
+
+        // Сортировка
         container.querySelectorAll('.th-label').forEach(el => {
             el.addEventListener('click', function () {
                 const key = this.dataset.sortKey;
@@ -792,6 +853,7 @@
             });
         });
 
+        // Поиск по колонкам
         container.querySelectorAll('.col-search').forEach(input => {
             input.addEventListener('input', function () {
                 const key = this.dataset.searchKey;
@@ -810,6 +872,7 @@
             });
         });
 
+        // Кнопки скачивания
         container.querySelectorAll('.btn-download-sm[data-file-id], .audio-download[data-file-id]').forEach(btn => {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -826,6 +889,7 @@
             });
         });
 
+        // Кнопки ±10 секунд
         container.querySelectorAll('.audio-seek-btn').forEach(btn => {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -851,6 +915,7 @@
             });
         });
 
+        // Блокировка contextmenu на аудио
         container.querySelectorAll('.audio-cell audio').forEach(audio => {
             audio.addEventListener('contextmenu', e => {
                 e.preventDefault();
@@ -875,7 +940,7 @@
 
         updateDownloadCountsDisplay();
 
-        // Обновляем хлебные крошки (путь: Главная › Раздел [› Папка])
+        // Хлебные крошки: путь с папкой, если фильтр активен
         renderBreadcrumbs();
     }
 
@@ -896,11 +961,19 @@
         App.bindTop10Refresh();
         App.bindRefreshModal();
 
-        const saved = localStorage.getItem('activeTab');
-        if (saved && document.getElementById(saved)) {
-            App.switchTab(saved);
+        // ─── Применяем hash-роут (или открываем сохранённый таб) ───
+        const route = App.parseHash?.();
+        if (route) {
+            await App.applyHashRoute();
         } else {
-            App.switchTab('home');
+            const saved = localStorage.getItem('activeTab');
+            if (saved && document.getElementById(saved)) {
+                App.switchTab(saved, { skipHash: true });
+                // После загрузки раздела — обновим URL под сохранённый таб
+                setTimeout(() => App.setHash?.(saved), 500);
+            } else {
+                App.switchTab('home', { skipHash: true });
+            }
         }
     }
 
@@ -908,11 +981,14 @@
     // ДОБАВЛЯЕМ В MFApp ФУНКЦИИ ЭТОГО МОДУЛЯ
     // ============================================================
     Object.assign(App, {
-        // Хлебные крошки
+        // Хлебные крошки и навигация
         renderBreadcrumbs,
         goToSection,
 
-        // Рендеры разделов и таблиц
+        // Подсветка строки при deep-link
+        highlightFileRow,
+
+        // Рендеры
         buildRenderers,
         buildSidebarAndTabs,
         loadExtraFolders,
@@ -933,8 +1009,6 @@
     });
 
     // ─── Автозапуск после загрузки DOM ───
-    // app-core.js загружается первым, этот файл — вторым.
-    // К моменту DOMContentLoaded оба модуля готовы.
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             init().catch(err => {
@@ -942,7 +1016,6 @@
             });
         });
     } else {
-        // DOM уже загружен — запускаем сразу
         init().catch(err => {
             console.error('[init] ошибка:', err);
         });
