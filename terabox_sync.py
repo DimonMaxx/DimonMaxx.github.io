@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-terabox_sync.py (v5)
+terabox_sync.py (v6)
 Синхронизация TeraBox → Google Sheets через Playwright.
 
 Логика:
   1. Читает активные разделы из Supabase (site_sections).
   2. Оставляет только те, чей yandex_url содержит хотя бы одну TeraBox-ссылку.
-  3. Для каждого раздела:
+  3. Перед началом — предполётная проверка Google Sheets (п. 1.12).
+  4. Для каждого раздела:
        • Открывает Chromium, авторизуется cookie 'ndus'.
        • Заходит в рабочую папку (yandex_path или автоматически «Программы»).
        • Скачивает и парсит файлы описаний (1_Software.txt, описание*.txt).
        • Обходит все подпапки, собирая файлы (folder = имя подпапки).
        • Пишет результаты в Google Sheets.
        • Делает backup, находит orphans, сохраняет их в Supabase.
-  4. По завершении отправляет итоговый отчёт в Telegram.
+  5. По завершении отправляет итоговый отчёт в Telegram.
 
 ВАЖНО:
   В TeraBox при каждом прогоне обновляются dlink-ссылки у ВСЕХ файлов
@@ -65,6 +66,13 @@ except ImportError:
     def notify_result(**kw):
         return False
 
+# ─── Общие утилиты проекта, включая проверку здоровья Sheets (п. 1.12) ───
+from common import (
+    check_sheets_health,
+    notify_sheets_health_issue,
+    print_sheets_health,
+)
+
 
 # ============================================================
 # КОНФИГУРАЦИЯ
@@ -89,7 +97,6 @@ SYNC_SECTIONS_FILTER = [
     s.strip() for s in _raw_sync_sections.split(",") if s.strip()
 ] if _raw_sync_sections else []
 
-# Порог отправки отдельного алерта об осиротевших строках
 ORPHANS_ALERT_THRESHOLD = int(os.environ.get("ORPHANS_ALERT_THRESHOLD", "50"))
 
 RU_TO_EN = {
@@ -156,9 +163,6 @@ class Diag:
         self.without_desc      = 0
         self.failed_folders    = []
 
-        # Списки для Telegram-отчёта.
-        # В TeraBox updated_titles НЕ заполняется — обновляются все dlink'и,
-        # это не является реальным изменением контента.
         self.added_titles  = []
         self.orphan_titles = []
 
@@ -195,10 +199,6 @@ class Diag:
 # ============================================================
 
 def _detect_source(link):
-    """
-    Определяет источник по URL.
-    Возвращает: 'terabox' | 'yandex' | 'unknown'.
-    """
     if not link:
         return "unknown"
     s = str(link).lower()
@@ -211,16 +211,10 @@ def _detect_source(link):
 
 
 def is_terabox_link(link):
-    """True, если ссылка ведёт на TeraBox."""
     return _detect_source(link) == "terabox"
 
 
 def split_urls(raw):
-    """
-    Разбивает поле yandex_url на отдельные ссылки.
-    Разделители: перевод строки, точка с запятой.
-    Возвращает список непустых строк без пробелов по краям.
-    """
     if not raw:
         return []
     parts = re.split(r"[\n;]+", str(raw))
@@ -256,7 +250,6 @@ def load_sections_from_supabase():
 
 
 def section_has_terabox(section):
-    """True, если в yandex_url раздела есть хотя бы одна TeraBox-ссылка."""
     urls = split_urls(section.get("yandex_url") or "")
     return any(is_terabox_link(u) for u in urls)
 
@@ -282,10 +275,6 @@ def save_orphans_to_supabase(section_key, section_label,
 
 
 def _send_orphans_alert(section_label, section_key, orphans_count, sheet_name):
-    """
-    Отправляет в Telegram отдельный алерт, если число осиротевших
-    строк превысило ORPHANS_ALERT_THRESHOLD.
-    """
     if orphans_count < ORPHANS_ALERT_THRESHOLD:
         return
     try:
@@ -555,13 +544,6 @@ def _row_from_record(record, headers):
 # ============================================================
 
 def _collect_titles(rows, headers, limit=None):
-    """
-    Из списка строк вытащить title-значения.
-    :param rows:    список строк (list of lists), соответствующих headers
-    :param headers: порядок колонок
-    :param limit:   максимальное количество названий
-    :return:        список уникальных непустых title в порядке появления
-    """
     title_idx = None
     for cand in TITLE_HEADER_CANDIDATES:
         if cand in headers:
@@ -1216,16 +1198,6 @@ def fetch_terabox_records(start_url, section, diag):
 # ============================================================
 
 def sync_terabox_section(section, gs_client):
-    """
-    Синхронизирует один раздел.
-    Возвращает dict со статистикой, включая added_titles и orphan_titles,
-    либо None если раздел не содержит TeraBox-ссылок.
-
-    ВАЖНО: updated_titles НЕ собирается — в TeraBox при каждой синхронизации
-    перезаписываются dlink'и ВСЕХ файлов. Это техническая операция, а не
-    реальное изменение контента. В Telegram-отчёт попадут только Added и
-    Orphans (реально значимые события).
-    """
     label = section.get("label") or section.get("key")
     section_key = section.get("key")
     yandex_url_raw = section.get("yandex_url") or ""
@@ -1267,7 +1239,6 @@ def sync_terabox_section(section, gs_client):
         print(f"  Получено записей: {len(recs)}")
         all_records.extend(recs)
 
-    # Дедупликация по (folder, title)
     dedup = {}
     for r in all_records:
         key = ((r.get("folder") or "").lower(),
@@ -1403,8 +1374,6 @@ def sync_terabox_section(section, gs_client):
     diag.preserved_edits = preserved
     diag.unchanged_rows  = unchanged
 
-    # Собираем названия ТОЛЬКО для добавленных и осиротевших.
-    # updated_titles в TeraBox не собираем — все dlink'и перезаписываются.
     diag.added_titles  = _collect_titles(to_add, headers)
     diag.orphan_titles = [o.get("title", "") for o in orphans if o.get("title")]
 
@@ -1426,7 +1395,6 @@ def sync_terabox_section(section, gs_client):
         "orphans": diag.orphans_found,
         "added_titles":   diag.added_titles,
         "orphan_titles":  diag.orphan_titles,
-        # updated_titles умышленно отсутствует
     }
 
 
@@ -1435,10 +1403,6 @@ def sync_terabox_section(section, gs_client):
 # ============================================================
 
 def _fmt_titles_list(titles, max_show=20):
-    """
-    Форматирует список названий в одну строку:
-      "A, B, C, … (+N ещё)"
-    """
     if not titles:
         return ""
     shown = titles[:max_show]
@@ -1450,16 +1414,6 @@ def _fmt_titles_list(titles, max_show=20):
 
 
 def _build_telegram_extra_lines(total_stats, max_per_list=20):
-    """
-    Собирает extra_lines для notify_result.
-
-    Для TeraBox принципиально НЕ выводим список обновлённых файлов —
-    там обновляются все dlink'и, это не значимое событие.
-    Показываем:
-      • сводку по разделам
-      • добавленные
-      • осиротевшие
-    """
     lines = []
 
     if total_stats["sections"]:
@@ -1487,7 +1441,7 @@ def _build_telegram_extra_lines(total_stats, max_per_list=20):
 
 def main():
     print("=" * 60)
-    print("terabox_sync.py (v5) — старт")
+    print("terabox_sync.py (v6) — старт")
     print("=" * 60)
     print(f"PRESERVE_USER_EDITS = {PRESERVE_USER_EDITS}")
     print(f"BACKUP_BEFORE_SYNC  = {BACKUP_BEFORE_SYNC}")
@@ -1545,6 +1499,7 @@ def main():
     for s in terabox_sections:
         print(f"    • {s.get('key')}: {s.get('label')}")
 
+    # ─── Подключение к Google Sheets ───
     print("\nПодключение к Google Sheets...")
     try:
         gs_client = get_gspread_client()
@@ -1558,7 +1513,25 @@ def main():
         return
     print("Клиент создан.")
 
-    # ─── Аккумулируем статистику по всем разделам ───
+    # ─── Предполётная проверка здоровья Google Sheets (п. 1.12) ───
+    # Проверяем только те разделы, которые реально будем обрабатывать
+    # (уже отфильтрованы по наличию TeraBox-ссылок и по SYNC_SECTIONS).
+    print("\nПроверка здоровья Google Sheets...")
+    health = check_sheets_health(gs_client, SPREADSHEET_ID, terabox_sections)
+    print_sheets_health(health)
+
+    if not health.get("ok"):
+        notify_sheets_health_issue(health, script_name="Sync TeraBox")
+        print("\n[!] Проверка Google Sheets не пройдена — синхронизация отменена.")
+        notify_result(
+            title="Sync TeraBox",
+            status="failure",
+            details="Проверка Google Sheets не пройдена — sync отменён",
+            extra_lines=(health.get("errors") or [])[:10],
+        )
+        raise SystemExit(1)
+
+    # ─── Основная синхронизация ───
     total_stats = {
         "added":    0,
         "updated":  0,
@@ -1598,7 +1571,6 @@ def main():
     print("terabox_sync.py — готово!")
     print("=" * 60)
 
-    # ─── Telegram-уведомление с итогами ───
     run_url = None
     if os.environ.get("GITHUB_RUN_ID"):
         repo = os.environ.get("GITHUB_REPOSITORY", "")
@@ -1615,7 +1587,6 @@ def main():
     if total_stats["errors"]:
         details += f" • Ошибок: {total_stats['errors']}"
 
-    # Для TeraBox updated_titles не передаём в extra_lines
     extra_lines = _build_telegram_extra_lines(total_stats, max_per_list=20)
 
     notify_result(
