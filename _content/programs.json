@@ -6128,5 +6128,27 @@
     "size": "31.2",
     "download_link": "https://d.1024tera.com/file/860b72000d4c4a28b6f86590d7f01842?fid=4398361031480-250528-486281959941738&dstime=1791354285&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-dIF50hA3JSt8UMSU%2BjwwF7I3DkQ%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8790568684655302437&dp-callid=0&r=187187004&sh=1&region=jp",
     "file_id": "ashampoo-uninstaller"
+  },
+  {
+    "folder": "Плагины",
+    "title": "ButtonCollector",
+    "size": "0.0",
+    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%9F%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D1%8B/ButtonCollector.rar",
+    "file_id": "buttoncollector"
+  },
+  {
+    "folder": "Плагины",
+    "title": "Автосбор событий с чужими событиями или карточек с одной датой 30.17",
+    "version": "30.17",
+    "size": "0.1",
+    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%9F%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D1%8B/%D0%90%D0%B2%D1%82%D0%BE%D1%81%D0%B1%D0%BE%D1%80%20%D1%81%D0%BE%D0%B1%D1%8B%D1%82%D0%B8%D0%B9%20%D1%81%20%D1%87%D1%83%D0%B6%D0%B8%D0%BC%D0%B8%20%D1%81%D0%BE%D0%B1%D1%8B%D1%82%D0%B8%D1%8F%D0%BC%D0%B8%20%D0%B8%D0%BB%D0%B8%20%D0%BA%D0%B0%D1%80%D1%82%D0%BE%D1%87%D0%B5%D0%BA%20%D1%81%20%D0%BE%D0%B4%D0%BD%D0%BE%D0%B9%20%D0%B4%D0%B0%D1%82%D0%BE%D0%B9%2030.17.rar",
+    "file_id": "автосбор-событий-с-чужими-событиями-или-карточек-с-одной-датой-3017"
+  },
+  {
+    "folder": "Плагины",
+    "title": "ПоискВакансий",
+    "size": "0.0",
+    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%9F%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D1%8B/%D0%9F%D0%BE%D0%B8%D1%81%D0%BA%D0%92%D0%B0%D0%BA%D0%B0%D0%BD%D1%81%D0%B8%D0%B9.rar",
+    "file_id": "поисквакансий"
   }
 ]
