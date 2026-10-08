@@ -10,7 +10,9 @@ const ALLOWED_HOSTS = [
 ];
 
 function hostAllowed(url: string): boolean {
-  if (!url) return false;
+  // Пустая строка и строка "null" — это «заголовок не передан».
+  // Их обрабатываем в вызывающем коде отдельно, не блокируя.
+  if (!url || url === "null") return false;
   try {
     const u = new URL(url);
     return ALLOWED_HOSTS.some(h =>
@@ -21,10 +23,22 @@ function hostAllowed(url: string): boolean {
   }
 }
 
+/**
+ * Есть ли у запроса осмысленные Origin/Referer?
+ * Пустая строка и строка "null" считаются отсутствием заголовка.
+ */
+function hasOriginInfo(origin: string, referer: string): boolean {
+  const o = origin && origin !== "null" ? origin : "";
+  const r = referer && referer !== "null" ? referer : "";
+  return Boolean(o || r);
+}
+
 function buildCors(origin: string) {
+  // Эхо Origin — правильнее, чем "*", когда мы уже ограничили список.
+  // Если origin пустой или "null" — отдаём "*" (запрос всё равно уйдёт).
+  const allowOrigin = origin && origin !== "null" ? origin : "*";
   return {
-    // Эхо Origin — правильнее, чем "*", когда мы уже ограничили список.
-    "Access-Control-Allow-Origin": origin || "*",
+    "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Headers":
       "authorization, x-client-info, apikey, content-type, range",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
@@ -39,21 +53,36 @@ Deno.serve(async (req) => {
   const referer = req.headers.get("referer") || "";
   const corsHeaders = buildCors(origin);
 
+  // ─── Preflight ───
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   // ─── Проверка Origin/Referer ───
-  // Медиа-элемент при cross-origin запросе всегда отправляет Referer
-  // (даже если Origin не отправляет). Поэтому проверяем оба заголовка.
-  if (!hostAllowed(origin) && !hostAllowed(referer)) {
-    console.warn("[yandex-download] заблокировано:", {
-      origin, referer, ua: req.headers.get("user-agent"),
-    });
-    return new Response("Forbidden: invalid origin/referer", {
-      status: 403,
-      headers: corsHeaders,
-    });
+  //
+  // Логика:
+  //   • Если браузер не прислал ни Origin, ни Referer
+  //     (приватный режим, блокировщик, навигационный запрос без Referer) —
+  //     НЕ блокируем. Это не хотлинк, а легитимный запрос.
+  //   • Если Origin/Referer пришли — проверяем по белому списку.
+  //     Если не прошли — блокируем (это уже хотлинк с чужого сайта).
+  //
+  // Хотлинк-защита сохранена: <img src="...">, <video src="...">,
+  // fetch() с чужого сайта всегда отправляют Referer или Origin.
+  if (hasOriginInfo(origin, referer)) {
+    const originOk  = hostAllowed(origin);
+    const refererOk = hostAllowed(referer);
+    if (!originOk && !refererOk) {
+      console.warn("[yandex-download] заблокировано (чужой origin/referer):", {
+        origin, referer, ua: req.headers.get("user-agent"),
+      });
+      return new Response("Forbidden: invalid origin/referer", {
+        status: 403,
+        headers: corsHeaders,
+      });
+    }
+  } else {
+    console.log("[yandex-download] пропуск без origin/referer (навигация без Referer)");
   }
 
   const url = new URL(req.url);
