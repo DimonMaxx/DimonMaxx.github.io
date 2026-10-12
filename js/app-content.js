@@ -250,18 +250,14 @@
     // ============================================================
     // ИНКРЕМЕНТ СКАЧИВАНИЯ
     // ------------------------------------------------------------
-    // Логика по источнику:
-    //
     //   Яндекс.Диск:
-    //     1. RPC increment + лог в download_logs
+    //     1. RPC increment + лог
     //     2. fetch к yandex-dlink → получаем JSON { url, filename }
-    //     3. Открываем прямую ссылку — файл качается НАПРЯМУЮ из Яндекса
-    //     4. Egress Supabase = ~2 КБ вместо размера файла
-    //     5. Fallback: если yandex-dlink недоступен — старая функция-
-    //        прокси yandex-download (с egress, но хоть работает)
+    //     3. window.open(json.url) — открываем прямую ссылку
+    //     4. Egress Supabase = ~2 КБ (только JSON)
     //
     //   TeraBox:
-    //     → прокси через Supabase (dlink привязана к IP + cookie ndus)
+    //     → прокси через Supabase (dlink привязана к IP + cookie)
     // ============================================================
     async function incrementDownload(fileId, sectionKey, downloadUrl, fileName) {
         if (!state.currentUser) {
@@ -269,7 +265,7 @@
             return;
         }
 
-        // ─── Шаг 1. Счётчик + лог (одинаково для всех источников) ───
+        // ─── Шаг 1. Счётчик + лог ───
         try {
             const { data } = await supabaseClient.rpc('increment_download', {
                 p_file_id:     fileId,
@@ -292,14 +288,14 @@
 
         if (!downloadUrl || downloadUrl === '#') return;
 
-        // ─── Шаг 2. Определяем источник по хосту ───
+        // ─── Шаг 2. Определяем источник ───
         let host = '';
         try { host = new URL(downloadUrl).hostname.toLowerCase(); }
         catch (e) { /* ignore */ }
 
         const isYandex = host.includes('disk.yandex') || host.includes('yadi.sk');
 
-        // ─── Шаг 3a. Яндекс.Диск — прямые ссылки ───
+        // ─── Шаг 3a. Яндекс.Диск — прямая ссылка через window.open ───
         if (isYandex) {
             try {
                 const dlinkUrl = buildProxyUrl(downloadUrl, fileName);
@@ -314,23 +310,28 @@
                     throw new Error('no url in yandex-dlink response');
                 }
 
-                // Открываем прямую ссылку → Яндекс отдаёт файл
-                // без участия Supabase в передаче данных
-                const a = document.createElement('a');
-                a.href = json.url;
-                if (json.filename || fileName) {
-                    a.download = json.filename || fileName;
+                // Открываем прямую ссылку в новой вкладке.
+                // Браузер сам корректно разберётся с кодированием URL —
+                // важно НЕ трогать json.url дополнительным encodeURIComponent.
+                const opened = window.open(json.url, '_blank', 'noopener,noreferrer');
+
+                if (!opened) {
+                    // Всплывающее окно заблокировано → fallback на клик по <a>
+                    console.warn('[download] window.open заблокирован, fallback на <a>');
+                    const a = document.createElement('a');
+                    a.href = json.url;
+                    a.rel = 'noopener noreferrer';
+                    a.style.display = 'none';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
                 }
-                a.rel = 'noopener';
-                a.style.display = 'none';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
 
                 console.log('[download] Яндекс → прямая ссылка:', json.filename || fileName);
                 return;
             } catch (e) {
                 console.warn('[download] yandex-dlink failed:', e);
+
                 // ─── Fallback на старую функцию-прокси ───
                 try {
                     const cfg = window.APP_CONFIG;
