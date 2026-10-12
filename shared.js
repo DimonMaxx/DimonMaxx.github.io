@@ -226,28 +226,36 @@
     // ============================================================
     // Прокси-ссылки для скачивания
     // ============================================================
-    // Единый источник правды: определяет источник по домену URL и
-    // формирует ссылку на соответствующую Edge Function.
-    //   TeraBox  → /functions/v1/terabox-download?url=...&name=...
-    //   Яндекс   → /functions/v1/yandex-download?folder=...&path=...
-    // Прочие   → исходный URL без изменений
+    // Логика по источнику:
+    //
+    //   Яндекс.Диск:
+    //     → возвращаем URL функции yandex-dlink (JSON-эндпоинт).
+    //     Фронт делает fetch(), получает { url, filename } и открывает
+    //     прямую ссылку. Файл качается НАПРЯМУЮ из Яндекса,
+    //     egress Supabase = ~2 КБ вместо размера файла.
+    //
+    //   TeraBox:
+    //     → возвращаем URL функции terabox-download (прокси).
+    //     dlink TeraBox привязана к IP + cookie ndus, прямая передача
+    //     пользователю не работает, поэтому оставляем прокси.
+    //
+    //   Прочие:
+    //     → исходный URL без изменений.
     // ============================================================
     function buildProxyUrl(downloadUrl, fileName) {
         if (!downloadUrl) return '';
         try {
             const cfg = window.APP_CONFIG;
-            const SUPABASE_URL = cfg && cfg.SUPABASE_URL
-                ? cfg.SUPABASE_URL
-                : '';
-
+            const SUPABASE_URL = cfg && cfg.SUPABASE_URL ? cfg.SUPABASE_URL : '';
             const parsed = new URL(downloadUrl);
             const host = parsed.hostname.toLowerCase();
 
-            // ─── TeraBox ───
+            // ─── TeraBox → прокси через Supabase ───
             if (host.includes('terabox')
                 || host.includes('1024tera')
                 || host.includes('4funbox')
-                || host.includes('teraboxapp')) {
+                || host.includes('teraboxapp')
+                || host.includes('d.terabox.app')) {
                 let fname = fileName && String(fileName).trim();
                 if (!fname) {
                     const fromPath = parsed.searchParams.get('path');
@@ -261,11 +269,11 @@
                      + `&name=${encodeURIComponent(fname)}`;
             }
 
-            // ─── Яндекс.Диск ───
+            // ─── Яндекс.Диск → yandex-dlink (JSON с прямой ссылкой) ───
             const folder = `${parsed.origin}${parsed.pathname}`;
             const path = parsed.searchParams.get('path');
             if (!folder || !path) return downloadUrl;
-            return `${SUPABASE_URL}/functions/v1/yandex-download`
+            return `${SUPABASE_URL}/functions/v1/yandex-dlink`
                  + `?folder=${encodeURIComponent(folder)}`
                  + `&path=${encodeURIComponent(path)}`;
         } catch (e) { return downloadUrl; }
@@ -325,16 +333,13 @@
     // ============================================================
     // ЛОГИРОВАНИЕ JS-ОШИБОК В SUPABASE
     // ============================================================
-    // Защита от лавины: не более 5 ошибок в минуту с одной вкладки.
-    // Защита от бесконечного цикла: если ошибка возникла внутри самой
-    // отправки — не пытаемся снова.
     let _errorQueue = [];
     let _errorWindowStart = Date.now();
     let _errorSendInFlight = false;
     let _errorHandlerInstalled = false;
 
     const ERR_MAX_PER_WINDOW = 5;
-    const ERR_WINDOW_MS      = 60 * 1000; // 1 минута
+    const ERR_WINDOW_MS      = 60 * 1000;
 
     function _truncate(s, n) {
         if (!s) return '';
@@ -399,6 +404,13 @@
             try {
                 if (!e.message && !e.error) return;
 
+                // Кросс-доменные скрипты без CORS дают "Script error."
+                // с пустым стеком — деталей всё равно не увидим.
+                // Пропускаем, чтобы не засорять админку.
+                if (e.message === 'Script error.' && !e.error) {
+                    return;
+                }
+
                 const message = e.message || String(e.error && e.error.message) || 'Unknown error';
                 const stack   = (e.error && e.error.stack) || `${e.filename || ''}:${e.lineno || 0}:${e.colno || 0}`;
 
@@ -458,27 +470,8 @@
     // ============================================================
     // КЭШ site_sections В localStorage
     // ============================================================
-    // Схема:
-    //   localStorage['mf_site_sections_v1'] = {
-    //       ts: <timestamp ms>,
-    //       sections: { key: { label, icon, json, ... }, ... }
-    //   }
-    //
-    // Зачем:
-    //   При каждом открытии страницы идёт fetch site_sections из Supabase.
-    //   Это 200-500 мс. Кэш на 5 минут убирает эти запросы почти полностью.
-    //
-    // Инвалидация:
-    //   - Автоматически по TTL (5 минут).
-    //   - Вручную через MF.invalidateSectionsCache() — вызывать из админки
-    //     после создания/редактирования/удаления раздела.
-    //
-    // Версия в ключе (_v1) — если изменится структура sections,
-    // достаточно поменять на _v2, и старый кэш не помешает.
-    // ============================================================
-
     const SECTIONS_CACHE_KEY    = 'mf_site_sections_v1';
-    const SECTIONS_CACHE_TTL_MS = 5 * 60 * 1000;  // 5 минут
+    const SECTIONS_CACHE_TTL_MS = 5 * 60 * 1000;
 
     function _readSectionsCache(force) {
         if (force) return null;
@@ -489,7 +482,6 @@
             if (!parsed || !parsed.sections || !parsed.ts) return null;
             const age = Date.now() - Number(parsed.ts);
             if (age > SECTIONS_CACHE_TTL_MS) {
-                // кэш протух — удаляем, чтобы не занимал место
                 localStorage.removeItem(SECTIONS_CACHE_KEY);
                 return null;
             }
@@ -508,7 +500,6 @@
             };
             localStorage.setItem(SECTIONS_CACHE_KEY, JSON.stringify(payload));
         } catch (e) {
-            // localStorage может быть переполнен или отключён (приватный режим)
             console.warn('[sections cache] write failed:', e);
         }
     }
@@ -517,27 +508,15 @@
         try {
             localStorage.removeItem(SECTIONS_CACHE_KEY);
         } catch (_) { /* ignore */ }
-        // Сбрасываем и внутрисессионный промис-мемоизатор,
-        // чтобы следующий вызов loadSections() пошёл в Supabase
         _sectionsLoaded = null;
     }
 
     // ============================================================
-    // Загрузка разделов из Supabase (с кэшем + fallback на DEFAULT_SECTIONS)
-    // ============================================================
-    //
-    // Приоритеты:
-    //   1. force=true               → игнорировать кэш, идти в Supabase
-    //   2. localStorage (свежий)    → использовать мгновенно
-    //   3. Supabase (успех)         → записать в localStorage и применить
-    //   4. Supabase (ошибка)        → старый localStorage или DEFAULT_SECTIONS
-    //
-    // Возвращает Promise<объект SECTIONS>.
+    // Загрузка разделов из Supabase
     // ============================================================
     let _sectionsLoaded = null;
 
     function loadSections(force) {
-        // Если force=true — сбросить мемоизацию внутри сессии
         if (force) {
             _sectionsLoaded = null;
         }
@@ -551,21 +530,14 @@
                 return {};
             }
 
-            // ─── 1. Попытка взять из localStorage ───
             const cached = _readSectionsCache(force);
             if (cached) {
                 console.log('[loadSections] из localStorage (кэш):',
                     Object.keys(cached));
                 _replaceSections(cfg, cached);
-                // Дальше не идём — используем кэш.
-                // Если хочешь ещё и «фоновое обновление» — раскомментируй блок ниже.
-                //
-                // _refreshSectionsInBackground(cfg);
-                //
                 return cfg.SECTIONS;
             }
 
-            // ─── 2. Идём в Supabase ───
             const applyFallback = () => {
                 console.warn('[loadSections] → fallback на DEFAULT_SECTIONS');
                 _replaceSections(cfg, cfg.DEFAULT_SECTIONS || {});
@@ -611,8 +583,6 @@
                         .forEach(([k, v]) => { sorted[k] = v; });
 
                     _replaceSections(cfg, sorted);
-
-                    // ─── Записываем в localStorage ───
                     _writeSectionsCache(sorted);
 
                     console.log('[loadSections] из Supabase (свежие):',
@@ -624,8 +594,6 @@
                 return applyFallback();
             } catch (e) {
                 console.error('[loadSections] исключение:', e);
-                // Если есть устаревший кэш — лучше использовать его,
-                // чем DEFAULT_SECTIONS (вдруг разделы кастомные).
                 try {
                     const raw = localStorage.getItem(SECTIONS_CACHE_KEY);
                     if (raw) {
@@ -661,7 +629,6 @@
 
     window.toggleDesc = toggleDesc;
 
-    // ─── Автоматически подключаем перехват ошибок, если есть конфиг ───
     if (window.APP_CONFIG) {
         installErrorHandler();
     } else {
