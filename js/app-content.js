@@ -2,16 +2,10 @@
    app-content.js — рендеры разделов и таблиц MyFiles
    Дополняет window.MFApp из app-core.js.
    Работает с общим состоянием window.MFState.
-   Содержит: buildRenderers, buildSidebarAndTabs, loadExtraFolders,
-             loadCollection, loadSectionIfNeeded, renderSection,
-             renderFolderGrid, renderTableWithState,
-             incrementDownload, renderBreadcrumbs, goToSection,
-             highlightFileRow, инициализацию init().
    ============================================================ */
 (function () {
     'use strict';
 
-    // ─── Ссылки на общие объекты из app-core.js ───
     const App = window.MFApp;
     if (!App) {
         console.error('[app-content] app-core.js не загружен');
@@ -23,7 +17,6 @@
         return;
     }
 
-    // ─── Локальные сокращения ───
     const CFG              = App.CFG;
     const MF               = App.MF;
     const supabaseClient   = App.supabaseClient;
@@ -31,7 +24,6 @@
     const buildProxyUrl    = MF.buildProxyUrl;
     const getAudioMimeType = MF.getAudioMimeType;
 
-    // ─── Проверяем все поля state на месте ───
     if (!state.loadedSections)   state.loadedSections = new Set();
     if (!state.tableStates)      state.tableStates = {};
     if (!state.sectionRenderers) state.sectionRenderers = {};
@@ -47,14 +39,12 @@
 
         const tab = state.currentTab || 'home';
 
-        // ─── Главная: скрываем крошки ───
         if (tab === 'home') {
             el.classList.remove('breadcrumbs--active');
             el.innerHTML = '';
             return;
         }
 
-        // ─── Топ-10 ───
         if (tab === 'top10') {
             el.innerHTML = `
                 <button type="button" class="breadcrumbs__link" data-bc-action="home">
@@ -69,7 +59,6 @@
             return;
         }
 
-        // ─── Раздел ───
         const meta = CFG.SECTIONS[tab];
         if (!meta) {
             el.classList.remove('breadcrumbs--active');
@@ -80,11 +69,7 @@
         const st = state.tableStates[meta.container];
         const folderFilter = st?.folderFilter || null;
 
-        // Раздел показан «текущим» (не кликабельным), если:
-        //   • нет фильтра папки
-        //   • и режим отображения — сетка папок (мы на верхнем уровне раздела)
-        const sectionIsCurrent = !folderFilter
-            && (st?.viewMode !== 'table');
+        const sectionIsCurrent = !folderFilter && (st?.viewMode !== 'table');
 
         let html = `
             <button type="button" class="breadcrumbs__link" data-bc-action="home">
@@ -135,10 +120,6 @@
         });
     }
 
-    /**
-     * Возврат в раздел на верхний уровень.
-     * Сбрасывает фильтр папки, поиск, сорт. Обновляет URL и перерисовывает.
-     */
     function goToSection(sectionKey) {
         const meta = CFG.SECTIONS[sectionKey];
         if (!meta) return;
@@ -160,7 +141,6 @@
             }
         }
 
-        // Устанавливаем URL #section (без сегмента)
         App.setHash(sectionKey);
 
         if (state.currentTab !== sectionKey) {
@@ -177,7 +157,7 @@
     }
 
     // ============================================================
-    // ПОСТРОЕНИЕ КОЛОНОК ПО КОНФИГУ
+    // ПОСТРОЕНИЕ КОЛОНОК
     // ============================================================
     function buildRenderers() {
         state.sectionRenderers = {};
@@ -198,9 +178,6 @@
         });
     }
 
-    // ============================================================
-    // САЙДБАР И ТАБЫ
-    // ============================================================
     function buildSidebarAndTabs() {
         const navInner    = document.getElementById('sidebarNavInner');
         const tabsWrapper = document.getElementById('tabsWrapper');
@@ -226,9 +203,6 @@
         });
     }
 
-    // ============================================================
-    // ЗАГРУЗКА ДОПОЛНИТЕЛЬНЫХ ПАПОК
-    // ============================================================
     async function loadExtraFolders() {
         try {
             const { data, error } = await supabaseClient
@@ -275,12 +249,27 @@
 
     // ============================================================
     // ИНКРЕМЕНТ СКАЧИВАНИЯ
+    // ------------------------------------------------------------
+    // Логика по источнику:
+    //
+    //   Яндекс.Диск:
+    //     1. RPC increment + лог в download_logs
+    //     2. fetch к yandex-dlink → получаем JSON { url, filename }
+    //     3. Открываем прямую ссылку — файл качается НАПРЯМУЮ из Яндекса
+    //     4. Egress Supabase = ~2 КБ вместо размера файла
+    //     5. Fallback: если yandex-dlink недоступен — старая функция-
+    //        прокси yandex-download (с egress, но хоть работает)
+    //
+    //   TeraBox:
+    //     → прокси через Supabase (dlink привязана к IP + cookie ndus)
     // ============================================================
     async function incrementDownload(fileId, sectionKey, downloadUrl, fileName) {
         if (!state.currentUser) {
             alert('Для скачивания необходимо зарегистрироваться.');
             return;
         }
+
+        // ─── Шаг 1. Счётчик + лог (одинаково для всех источников) ───
         try {
             const { data } = await supabaseClient.rpc('increment_download', {
                 p_file_id:     fileId,
@@ -297,15 +286,78 @@
                 user_id:     state.currentUser.id,
                 username:    state.currentProfile?.username || state.currentUser.email,
             }]);
-
-            if (downloadUrl && downloadUrl !== '#') {
-                MF.triggerDownload(buildProxyUrl(downloadUrl, fileName), fileName);
-            }
         } catch (e) {
-            console.warn('[incrementDownload]', e);
-            if (downloadUrl && downloadUrl !== '#') {
-                MF.triggerDownload(buildProxyUrl(downloadUrl, fileName), fileName);
+            console.warn('[incrementDownload] rpc/log error:', e);
+        }
+
+        if (!downloadUrl || downloadUrl === '#') return;
+
+        // ─── Шаг 2. Определяем источник по хосту ───
+        let host = '';
+        try { host = new URL(downloadUrl).hostname.toLowerCase(); }
+        catch (e) { /* ignore */ }
+
+        const isYandex = host.includes('disk.yandex') || host.includes('yadi.sk');
+
+        // ─── Шаг 3a. Яндекс.Диск — прямые ссылки ───
+        if (isYandex) {
+            try {
+                const dlinkUrl = buildProxyUrl(downloadUrl, fileName);
+                const resp = await fetch(dlinkUrl);
+
+                if (!resp.ok) {
+                    throw new Error('yandex-dlink HTTP ' + resp.status);
+                }
+
+                const json = await resp.json();
+                if (!json.url) {
+                    throw new Error('no url in yandex-dlink response');
+                }
+
+                // Открываем прямую ссылку → Яндекс отдаёт файл
+                // без участия Supabase в передаче данных
+                const a = document.createElement('a');
+                a.href = json.url;
+                if (json.filename || fileName) {
+                    a.download = json.filename || fileName;
+                }
+                a.rel = 'noopener';
+                a.style.display = 'none';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                console.log('[download] Яндекс → прямая ссылка:', json.filename || fileName);
+                return;
+            } catch (e) {
+                console.warn('[download] yandex-dlink failed:', e);
+                // ─── Fallback на старую функцию-прокси ───
+                try {
+                    const cfg = window.APP_CONFIG;
+                    const SUPABASE_URL = cfg.SUPABASE_URL;
+                    const parsed = new URL(downloadUrl);
+                    const folder = `${parsed.origin}${parsed.pathname}`;
+                    const path = parsed.searchParams.get('path');
+                    if (folder && path) {
+                        const fallbackUrl = `${SUPABASE_URL}/functions/v1/yandex-download`
+                            + `?folder=${encodeURIComponent(folder)}`
+                            + `&path=${encodeURIComponent(path)}`;
+                        console.log('[download] Fallback на yandex-download (прокси)');
+                        MF.triggerDownload(fallbackUrl, fileName);
+                        return;
+                    }
+                } catch (_) { /* ignore */ }
+
+                alert('Не удалось получить ссылку на файл. Попробуйте позже.');
+                return;
             }
+        }
+
+        // ─── Шаг 3b. TeraBox и прочее — через прокси Supabase ───
+        try {
+            MF.triggerDownload(buildProxyUrl(downloadUrl, fileName), fileName);
+        } catch (e) {
+            console.warn('[download] fallback trigger failed:', e);
         }
     }
 
@@ -367,9 +419,6 @@
         }
     }
 
-    // ============================================================
-    // ЛЕНИВАЯ ЗАГРУЗКА РАЗДЕЛА
-    // ============================================================
     async function loadSectionIfNeeded(tabId) {
         if (state.loadedSections.has(tabId)) return;
         const meta = CFG.SECTIONS[tabId];
@@ -382,9 +431,6 @@
         await loadCollection(meta.container, meta.json, renderFn, tabId);
     }
 
-    // ============================================================
-    // РОУТЕР РЕНДЕРА
-    // ============================================================
     function renderSection(containerId, container, renderFn) {
         const st = state.tableStates[containerId];
         if (!st) return;
@@ -459,12 +505,8 @@
                 st.sortDir = 'asc';
                 st.currentPage = 1;
 
-                // Обновляем URL: #section/folderName (или просто #section для «Все»)
                 if (folder && folder !== '__ALL__' && folder !== '__NOFOLDER__') {
                     App.setHash(sectionKey, folder);
-                } else if (folder === '__NOFOLDER__') {
-                    // «Без папки» в URL не пишем — оставляем #section
-                    App.setHash(sectionKey);
                 } else {
                     App.setHash(sectionKey);
                 }
@@ -570,10 +612,6 @@
     // ============================================================
     // ПОДСВЕТКА СТРОКИ ПО DEEP-LINK
     // ============================================================
-    /**
-     * Находит <tr> с data-file-id = fileId, скроллит к нему и подсвечивает.
-     * Класс row-highlight снимается автоматически через 3 секунды (анимация CSS).
-     */
     function highlightFileRow(fileId) {
         if (!fileId) return;
         const rows = document.querySelectorAll(
@@ -584,12 +622,10 @@
         const row = rows[0];
         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
-        // Перезапускаем анимацию: сначала убираем, потом добавляем через RAF
         row.classList.remove('row-highlight');
-        void row.offsetWidth;  // force reflow
+        void row.offsetWidth;
         row.classList.add('row-highlight');
 
-        // Снимаем класс через 3.2 сек (чуть больше анимации)
         setTimeout(() => {
             row.classList.remove('row-highlight');
         }, 3200);
@@ -614,7 +650,6 @@
 
         const currentSectionKey = st.sectionKey || '';
 
-        // ─── thead ───
         let thead = '<tr>';
         cols.forEach(col => {
             let cls = '';
@@ -638,14 +673,12 @@
         });
         thead += '</tr>';
 
-        // ─── tbody ───
         let audioIdx = 0;
         let tbody = '';
         if (pageItems.length === 0) {
             tbody = `<tr><td colspan="${cols.length}" class="empty-block">Ничего не найдено</td></tr>`;
         } else {
             pageItems.forEach(item => {
-                // file_id этого item — используем и для строки, и для кнопки 🔗
                 const itemFileId = item.file_id || MF.slugify(item.title || '');
 
                 tbody += `<tr data-file-id="${MF.escapeAttr(itemFileId)}">`;
@@ -730,7 +763,6 @@
                             tbody += `<td class="col-num" data-count-file-id="${MF.escapeAttr(itemFileId)}">${c}</td>`;
                         }
                     } else if (col.key === 'title') {
-                        // ─── Столбец «Название»: добавляем кнопку 🔗 «Поделиться» ───
                         const val = item[col.key] || '';
                         tbody += `<td class="col-title">
                             <span class="title-text">${MF.escapeHtml(val)}</span>
@@ -758,7 +790,6 @@
             ? MF.renderPagination(containerId, totalItems, totalPages, st, 'bottom')
             : '';
 
-        // ─── кнопка «К папкам» + плашка для программ ───
         let backBtnHtml = '';
         let noticeHtml = '';
 
@@ -793,7 +824,6 @@
             </div>
             ${paginationBottom}`;
 
-        // ─── обработчики ───
         const backBtn = container.querySelector('[data-back-to-folders]');
         if (backBtn) {
             backBtn.addEventListener('click', () => {
@@ -804,7 +834,6 @@
                 st.sortKey = null;
                 st.sortDir = 'asc';
 
-                // URL → #section (без сегмента)
                 App.setHash(currentSectionKey);
 
                 renderSection(containerId, container, renderFn);
@@ -812,7 +841,6 @@
             });
         }
 
-        // Кнопки 🔗 «Поделиться»
         container.querySelectorAll('.share-btn[data-share-section]').forEach(btn => {
             btn.addEventListener('click', async function (e) {
                 e.preventDefault();
@@ -837,7 +865,6 @@
             });
         });
 
-        // Сортировка
         container.querySelectorAll('.th-label').forEach(el => {
             el.addEventListener('click', function () {
                 const key = this.dataset.sortKey;
@@ -853,7 +880,6 @@
             });
         });
 
-        // Поиск по колонкам
         container.querySelectorAll('.col-search').forEach(input => {
             input.addEventListener('input', function () {
                 const key = this.dataset.searchKey;
@@ -872,7 +898,6 @@
             });
         });
 
-        // Кнопки скачивания
         container.querySelectorAll('.btn-download-sm[data-file-id], .audio-download[data-file-id]').forEach(btn => {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -889,7 +914,6 @@
             });
         });
 
-        // Кнопки ±10 секунд
         container.querySelectorAll('.audio-seek-btn').forEach(btn => {
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
@@ -915,7 +939,6 @@
             });
         });
 
-        // Блокировка contextmenu на аудио
         container.querySelectorAll('.audio-cell audio').forEach(audio => {
             audio.addEventListener('contextmenu', e => {
                 e.preventDefault();
@@ -940,7 +963,6 @@
 
         updateDownloadCountsDisplay();
 
-        // Хлебные крошки: путь с папкой, если фильтр активен
         renderBreadcrumbs();
     }
 
@@ -961,7 +983,6 @@
         App.bindTop10Refresh();
         App.bindRefreshModal();
 
-        // ─── Применяем hash-роут (или открываем сохранённый таб) ───
         const route = App.parseHash?.();
         if (route) {
             await App.applyHashRoute();
@@ -969,7 +990,6 @@
             const saved = localStorage.getItem('activeTab');
             if (saved && document.getElementById(saved)) {
                 App.switchTab(saved, { skipHash: true });
-                // После загрузки раздела — обновим URL под сохранённый таб
                 setTimeout(() => App.setHash?.(saved), 500);
             } else {
                 App.switchTab('home', { skipHash: true });
@@ -978,17 +998,12 @@
     }
 
     // ============================================================
-    // ДОБАВЛЯЕМ В MFApp ФУНКЦИИ ЭТОГО МОДУЛЯ
+    // ЭКСПОРТ
     // ============================================================
     Object.assign(App, {
-        // Хлебные крошки и навигация
         renderBreadcrumbs,
         goToSection,
-
-        // Подсветка строки при deep-link
         highlightFileRow,
-
-        // Рендеры
         buildRenderers,
         buildSidebarAndTabs,
         loadExtraFolders,
@@ -1003,12 +1018,9 @@
         buildProgramsNotice,
         getFilteredSorted,
         renderTableWithState,
-
-        // Инициализация
         init,
     });
 
-    // ─── Автозапуск после загрузки DOM ───
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => {
             init().catch(err => {
