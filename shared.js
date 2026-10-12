@@ -225,22 +225,15 @@
 
     // ============================================================
     // Прокси-ссылки для скачивания
-    // ============================================================
-    // Логика по источнику:
+    // ------------------------------------------------------------
+    // ВАЖНО: и Яндекс, и TeraBox проксируем через Supabase.
     //
-    //   Яндекс.Диск:
-    //     → возвращаем URL функции yandex-dlink (JSON-эндпоинт).
-    //     Фронт делает fetch(), получает { url, filename } и открывает
-    //     прямую ссылку. Файл качается НАПРЯМУЮ из Яндекса,
-    //     egress Supabase = ~2 КБ вместо размера файла.
+    // Yandex dlink оказалась привязана к IP того, кто её запросил
+    // (Supabase = AWS IP). Пользователь с российского IP получает
+    // ошибку "file IO failure: no more reliable hosts". Прямые
+    // ссылки не работают без прокси на российском IP.
     //
-    //   TeraBox:
-    //     → возвращаем URL функции terabox-download (прокси).
-    //     dlink TeraBox привязана к IP + cookie ndus, прямая передача
-    //     пользователю не работает, поэтому оставляем прокси.
-    //
-    //   Прочие:
-    //     → исходный URL без изменений.
+    // TeraBox аналогично: dlink привязана к IP + cookie ndus.
     // ============================================================
     function buildProxyUrl(downloadUrl, fileName) {
         if (!downloadUrl) return '';
@@ -250,7 +243,7 @@
             const parsed = new URL(downloadUrl);
             const host = parsed.hostname.toLowerCase();
 
-            // ─── TeraBox → прокси через Supabase ───
+            // ─── TeraBox ───
             if (host.includes('terabox')
                 || host.includes('1024tera')
                 || host.includes('4funbox')
@@ -269,11 +262,11 @@
                      + `&name=${encodeURIComponent(fname)}`;
             }
 
-            // ─── Яндекс.Диск → yandex-dlink (JSON с прямой ссылкой) ───
+            // ─── Яндекс.Диск ───
             const folder = `${parsed.origin}${parsed.pathname}`;
             const path = parsed.searchParams.get('path');
             if (!folder || !path) return downloadUrl;
-            return `${SUPABASE_URL}/functions/v1/yandex-dlink`
+            return `${SUPABASE_URL}/functions/v1/yandex-download`
                  + `?folder=${encodeURIComponent(folder)}`
                  + `&path=${encodeURIComponent(path)}`;
         } catch (e) { return downloadUrl; }
@@ -404,9 +397,6 @@
             try {
                 if (!e.message && !e.error) return;
 
-                // Кросс-доменные скрипты без CORS дают "Script error."
-                // с пустым стеком — деталей всё равно не увидим.
-                // Пропускаем, чтобы не засорять админку.
                 if (e.message === 'Script error.' && !e.error) {
                     return;
                 }
