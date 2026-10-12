@@ -1,7 +1,5 @@
 /* ============================================================
    app-content.js — рендеры разделов и таблиц MyFiles
-   Дополняет window.MFApp из app-core.js.
-   Работает с общим состоянием window.MFState.
    ============================================================ */
 (function () {
     'use strict';
@@ -248,24 +246,13 @@
     }
 
     // ============================================================
-    // ИНКРЕМЕНТ СКАЧИВАНИЯ
-    // ------------------------------------------------------------
-    //   Яндекс.Диск:
-    //     1. RPC increment + лог
-    //     2. fetch к yandex-dlink → получаем JSON { url, filename }
-    //     3. window.open(json.url) — открываем прямую ссылку
-    //     4. Egress Supabase = ~2 КБ (только JSON)
-    //
-    //   TeraBox:
-    //     → прокси через Supabase (dlink привязана к IP + cookie)
+    // ИНКРЕМЕНТ СКАЧИВАНИЯ — через прокси Supabase
     // ============================================================
     async function incrementDownload(fileId, sectionKey, downloadUrl, fileName) {
         if (!state.currentUser) {
             alert('Для скачивания необходимо зарегистрироваться.');
             return;
         }
-
-        // ─── Шаг 1. Счётчик + лог ───
         try {
             const { data } = await supabaseClient.rpc('increment_download', {
                 p_file_id:     fileId,
@@ -282,83 +269,15 @@
                 user_id:     state.currentUser.id,
                 username:    state.currentProfile?.username || state.currentUser.email,
             }]);
-        } catch (e) {
-            console.warn('[incrementDownload] rpc/log error:', e);
-        }
 
-        if (!downloadUrl || downloadUrl === '#') return;
-
-        // ─── Шаг 2. Определяем источник ───
-        let host = '';
-        try { host = new URL(downloadUrl).hostname.toLowerCase(); }
-        catch (e) { /* ignore */ }
-
-        const isYandex = host.includes('disk.yandex') || host.includes('yadi.sk');
-
-        // ─── Шаг 3a. Яндекс.Диск — прямая ссылка через window.open ───
-        if (isYandex) {
-            try {
-                const dlinkUrl = buildProxyUrl(downloadUrl, fileName);
-                const resp = await fetch(dlinkUrl);
-
-                if (!resp.ok) {
-                    throw new Error('yandex-dlink HTTP ' + resp.status);
-                }
-
-                const json = await resp.json();
-                if (!json.url) {
-                    throw new Error('no url in yandex-dlink response');
-                }
-
-                // Открываем прямую ссылку в новой вкладке.
-                // Браузер сам корректно разберётся с кодированием URL —
-                // важно НЕ трогать json.url дополнительным encodeURIComponent.
-                const opened = window.open(json.url, '_blank', 'noopener,noreferrer');
-
-                if (!opened) {
-                    // Всплывающее окно заблокировано → fallback на клик по <a>
-                    console.warn('[download] window.open заблокирован, fallback на <a>');
-                    const a = document.createElement('a');
-                    a.href = json.url;
-                    a.rel = 'noopener noreferrer';
-                    a.style.display = 'none';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                }
-
-                console.log('[download] Яндекс → прямая ссылка:', json.filename || fileName);
-                return;
-            } catch (e) {
-                console.warn('[download] yandex-dlink failed:', e);
-
-                // ─── Fallback на старую функцию-прокси ───
-                try {
-                    const cfg = window.APP_CONFIG;
-                    const SUPABASE_URL = cfg.SUPABASE_URL;
-                    const parsed = new URL(downloadUrl);
-                    const folder = `${parsed.origin}${parsed.pathname}`;
-                    const path = parsed.searchParams.get('path');
-                    if (folder && path) {
-                        const fallbackUrl = `${SUPABASE_URL}/functions/v1/yandex-download`
-                            + `?folder=${encodeURIComponent(folder)}`
-                            + `&path=${encodeURIComponent(path)}`;
-                        console.log('[download] Fallback на yandex-download (прокси)');
-                        MF.triggerDownload(fallbackUrl, fileName);
-                        return;
-                    }
-                } catch (_) { /* ignore */ }
-
-                alert('Не удалось получить ссылку на файл. Попробуйте позже.');
-                return;
+            if (downloadUrl && downloadUrl !== '#') {
+                MF.triggerDownload(buildProxyUrl(downloadUrl, fileName), fileName);
             }
-        }
-
-        // ─── Шаг 3b. TeraBox и прочее — через прокси Supabase ───
-        try {
-            MF.triggerDownload(buildProxyUrl(downloadUrl, fileName), fileName);
         } catch (e) {
-            console.warn('[download] fallback trigger failed:', e);
+            console.warn('[incrementDownload]', e);
+            if (downloadUrl && downloadUrl !== '#') {
+                MF.triggerDownload(buildProxyUrl(downloadUrl, fileName), fileName);
+            }
         }
     }
 
@@ -611,7 +530,7 @@
     }
 
     // ============================================================
-    // ПОДСВЕТКА СТРОКИ ПО DEEP-LINK
+    // ПОДСВЕТКА СТРОКИ
     // ============================================================
     function highlightFileRow(fileId) {
         if (!fileId) return;
