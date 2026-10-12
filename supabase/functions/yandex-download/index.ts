@@ -1,88 +1,42 @@
+// ============================================================
+// supabase/functions/yandex-download
+// Версия 2: 302 redirect вместо стриминга.
+// Возвращает прямую ссылку через Location-заголовок.
+// Если Яндекс пропустит — egress Supabase = 0.
+// ============================================================
+
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-// ─── Разрешённые домены ───
-// Сюда перечислите ВСЕ домены, с которых ваш сайт может обращаться.
-// Если у вас GitHub Pages + пользовательский домен, добавьте оба.
-const ALLOWED_HOSTS = [
-  "dimonmaxx.github.io",
-  // "ваш-домен.ru",
-  // "my-site.pages.dev",
+const USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+  "AppleWebKit/537.36 (KHTML, like Gecko) " +
+  "Chrome/120.0.0.0 Safari/537.36";
+
+const ALLOWED_ORIGINS = [
+  "https://dimonmaxx.github.io",
+  "https://my-site-8vm.pages.dev",
 ];
 
-function hostAllowed(url: string): boolean {
-  // Пустая строка и строка "null" — это «заголовок не передан».
-  // Их обрабатываем в вызывающем коде отдельно, не блокируя.
-  if (!url || url === "null") return false;
-  try {
-    const u = new URL(url);
-    return ALLOWED_HOSTS.some(h =>
-      u.hostname === h || u.hostname.endsWith("." + h)
-    );
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Есть ли у запроса осмысленные Origin/Referer?
- * Пустая строка и строка "null" считаются отсутствием заголовка.
- */
-function hasOriginInfo(origin: string, referer: string): boolean {
-  const o = origin && origin !== "null" ? origin : "";
-  const r = referer && referer !== "null" ? referer : "";
-  return Boolean(o || r);
-}
-
-function buildCors(origin: string) {
-  // Эхо Origin — правильнее, чем "*", когда мы уже ограничили список.
-  // Если origin пустой или "null" — отдаём "*" (запрос всё равно уйдёт).
-  const allowOrigin = origin && origin !== "null" ? origin : "*";
+function corsHeaders(origin: string) {
+  const allowOrigin = ALLOWED_ORIGINS.includes(origin)
+    ? origin
+    : ALLOWED_ORIGINS[0];
   return {
     "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Headers":
-      "authorization, x-client-info, apikey, content-type, range",
     "Access-Control-Allow-Methods": "GET, OPTIONS",
-    "Access-Control-Expose-Headers":
-      "Content-Length, Content-Range, Accept-Ranges, Content-Type",
-    "Vary": "Origin, Referer",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, range",
+    "Access-Control-Expose-Headers": "Location",
+    "Access-Control-Allow-Credentials": "true",
+    "Vary": "Origin",
   };
 }
 
 Deno.serve(async (req) => {
   const origin = req.headers.get("origin") || "";
-  const referer = req.headers.get("referer") || "";
-  const corsHeaders = buildCors(origin);
+  const cors = corsHeaders(origin);
 
-  // ─── Preflight ───
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
-  }
-
-  // ─── Проверка Origin/Referer ───
-  //
-  // Логика:
-  //   • Если браузер не прислал ни Origin, ни Referer
-  //     (приватный режим, блокировщик, навигационный запрос без Referer) —
-  //     НЕ блокируем. Это не хотлинк, а легитимный запрос.
-  //   • Если Origin/Referer пришли — проверяем по белому списку.
-  //     Если не прошли — блокируем (это уже хотлинк с чужого сайта).
-  //
-  // Хотлинк-защита сохранена: <img src="...">, <video src="...">,
-  // fetch() с чужого сайта всегда отправляют Referer или Origin.
-  if (hasOriginInfo(origin, referer)) {
-    const originOk  = hostAllowed(origin);
-    const refererOk = hostAllowed(referer);
-    if (!originOk && !refererOk) {
-      console.warn("[yandex-download] заблокировано (чужой origin/referer):", {
-        origin, referer, ua: req.headers.get("user-agent"),
-      });
-      return new Response("Forbidden: invalid origin/referer", {
-        status: 403,
-        headers: corsHeaders,
-      });
-    }
-  } else {
-    console.log("[yandex-download] пропуск без origin/referer (навигация без Referer)");
+    return new Response(null, { status: 204, headers: cors });
   }
 
   const url = new URL(req.url);
@@ -92,7 +46,7 @@ Deno.serve(async (req) => {
   if (!folderUrl || !path) {
     return new Response("Missing folder or path", {
       status: 400,
-      headers: corsHeaders,
+      headers: cors,
     });
   }
 
@@ -100,14 +54,10 @@ Deno.serve(async (req) => {
     // ─── Шаг 0: авто-отрезание префикса ───
     try {
       const metaUrl =
-        `https://cloud-api.yandex.net/v1/disk/public/resources?public_key=${
-          encodeURIComponent(folderUrl)
-        }&path=/`;
+        `https://cloud-api.yandex.net/v1/disk/public/resources` +
+        `?public_key=${encodeURIComponent(folderUrl)}&path=/`;
       const metaResp = await fetch(metaUrl, {
-        headers: {
-          "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
-        },
+        headers: { "User-Agent": USER_AGENT },
       });
       if (metaResp.ok) {
         const meta = await metaResp.json();
@@ -116,9 +66,7 @@ Deno.serve(async (req) => {
           const prefix = `/${rootName}/`;
           if (path.startsWith(prefix)) {
             path = path.slice(prefix.length - 1);
-            console.log(
-              `[yandex-download] авто-отрезан префикс «${prefix}» → «${path}»`,
-            );
+            console.log(`[yandex-download] авто-отрезан префикс «${prefix}»`);
           }
         }
       }
@@ -126,70 +74,60 @@ Deno.serve(async (req) => {
       console.warn("[yandex-download] root-check:", e);
     }
 
-    // ─── Шаг 1: получаем прямую ссылку у Яндекса ───
+    // ─── Шаг 1: получаем dlink у Яндекса ───
     const apiUrl =
-      `https://cloud-api.yandex.net/v1/disk/public/resources/download?public_key=${
-        encodeURIComponent(folderUrl)
-      }&path=${encodeURIComponent(path)}`;
-    const metaResp = await fetch(apiUrl, {
+      `https://cloud-api.yandex.net/v1/disk/public/resources/download` +
+      `?public_key=${encodeURIComponent(folderUrl)}` +
+      `&path=${encodeURIComponent(path)}`;
+
+    const resp = await fetch(apiUrl, {
+      headers: { "User-Agent": USER_AGENT },
+    });
+
+    if (!resp.ok) {
+      const text = await resp.text().catch(() => "");
+      return new Response(
+        JSON.stringify({
+          error: "Yandex API error",
+          status: resp.status,
+          body: text.slice(0, 500),
+        }),
+        {
+          status: 502,
+          headers: { ...cors, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    const meta = await resp.json();
+    if (!meta.href) {
+      return new Response(
+        JSON.stringify({ error: "No href in Yandex response", details: meta }),
+        {
+          status: 502,
+          headers: { ...cors, "Content-Type": "application/json" },
+        },
+      );
+    }
+
+    // ─── Шаг 2: 302 redirect на прямую ссылку ───
+    console.log("[yandex-download] → 302 redirect на:", meta.href.slice(0, 80));
+
+    return new Response(null, {
+      status: 302,
       headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
+        ...cors,
+        "Location": meta.href,
+        "Cache-Control": "no-store",
       },
     });
-    const meta = await metaResp.json();
-
-    if (!metaResp.ok || !meta.href) {
-      return new Response(`Yandex API error: ${JSON.stringify(meta)}`, {
-        status: 500,
-        headers: corsHeaders,
-      });
-    }
-
-    // ─── Шаг 2: пробрасываем Range ───
-    const rangeHeader = req.headers.get("range") || req.headers.get("Range");
-    const upstreamHeaders: Record<string, string> = {
-      "User-Agent":
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
-      "Referer": "https://disk.yandex.ru/",
-    };
-    if (rangeHeader) upstreamHeaders["Range"] = rangeHeader;
-
-    const fileResp = await fetch(meta.href, { headers: upstreamHeaders });
-
-    if (!fileResp.ok && fileResp.status !== 206) {
-      return new Response(`Yandex download error: ${fileResp.status}`, {
-        status: fileResp.status,
-        headers: corsHeaders,
-      });
-    }
-
-    // ─── Шаг 3: формируем ответ ───
-    const fileName = path.split("/").pop() || "file";
-    const headers = new Headers(corsHeaders);
-    headers.set(
-      "Content-Type",
-      fileResp.headers.get("Content-Type") || "application/octet-stream",
-    );
-    headers.set(
-      "Content-Disposition",
-      `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`,
-    );
-    headers.set("Accept-Ranges", "bytes");
-
-    const contentLength = fileResp.headers.get("Content-Length");
-    if (contentLength) headers.set("Content-Length", contentLength);
-    const contentRange = fileResp.headers.get("Content-Range");
-    if (contentRange) headers.set("Content-Range", contentRange);
-
-    return new Response(fileResp.body, {
-      status: fileResp.status,
-      headers,
-    });
   } catch (e) {
-    return new Response(`Error: ${e.message}`, {
-      status: 500,
-      headers: corsHeaders,
-    });
+    return new Response(
+      JSON.stringify({ error: "Internal error", message: String(e) }),
+      {
+        status: 500,
+        headers: { ...cors, "Content-Type": "application/json" },
+      },
+    );
   }
 });
