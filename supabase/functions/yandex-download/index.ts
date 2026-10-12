@@ -1,8 +1,8 @@
 // ============================================================
 // supabase/functions/yandex-download
-// Версия 2: 302 redirect вместо стриминга.
-// Возвращает прямую ссылку через Location-заголовок.
-// Если Яндекс пропустит — egress Supabase = 0.
+// Стриминг: проксирует файл с Яндекса через Supabase.
+// dlink Яндекса привязана к IP запросившего, поэтому прямые
+// ссылки пользователю не работают — нужен прокси.
 // ============================================================
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
@@ -23,10 +23,10 @@ function corsHeaders(origin: string) {
     : ALLOWED_ORIGINS[0];
   return {
     "Access-Control-Allow-Origin": allowOrigin,
-    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, range",
-    "Access-Control-Expose-Headers": "Location",
-    "Access-Control-Allow-Credentials": "true",
+    "Access-Control-Expose-Headers":
+      "Content-Length, Content-Range, Accept-Ranges, Content-Disposition",
     "Vary": "Origin",
   };
 }
@@ -51,7 +51,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    // ─── Шаг 0: авто-отрезание префикса ───
+    // ─── Авто-отрезание префикса ───
     try {
       const metaUrl =
         `https://cloud-api.yandex.net/v1/disk/public/resources` +
@@ -66,7 +66,6 @@ Deno.serve(async (req) => {
           const prefix = `/${rootName}/`;
           if (path.startsWith(prefix)) {
             path = path.slice(prefix.length - 1);
-            console.log(`[yandex-download] авто-отрезан префикс «${prefix}»`);
           }
         }
       }
@@ -74,60 +73,65 @@ Deno.serve(async (req) => {
       console.warn("[yandex-download] root-check:", e);
     }
 
-    // ─── Шаг 1: получаем dlink у Яндекса ───
+    // ─── Получаем dlink ───
     const apiUrl =
       `https://cloud-api.yandex.net/v1/disk/public/resources/download` +
       `?public_key=${encodeURIComponent(folderUrl)}` +
       `&path=${encodeURIComponent(path)}`;
-
-    const resp = await fetch(apiUrl, {
+    const metaResp = await fetch(apiUrl, {
       headers: { "User-Agent": USER_AGENT },
     });
+    const meta = await metaResp.json();
 
-    if (!resp.ok) {
-      const text = await resp.text().catch(() => "");
-      return new Response(
-        JSON.stringify({
-          error: "Yandex API error",
-          status: resp.status,
-          body: text.slice(0, 500),
-        }),
-        {
-          status: 502,
-          headers: { ...cors, "Content-Type": "application/json" },
-        },
-      );
+    if (!metaResp.ok || !meta.href) {
+      return new Response(`Yandex API error: ${JSON.stringify(meta)}`, {
+        status: 500,
+        headers: cors,
+      });
     }
 
-    const meta = await resp.json();
-    if (!meta.href) {
-      return new Response(
-        JSON.stringify({ error: "No href in Yandex response", details: meta }),
-        {
-          status: 502,
-          headers: { ...cors, "Content-Type": "application/json" },
-        },
-      );
+    // ─── Пробрасываем Range ───
+    const rangeHeader = req.headers.get("range") || req.headers.get("Range");
+    const upstreamHeaders: Record<string, string> = {
+      "User-Agent": USER_AGENT,
+      "Referer": "https://disk.yandex.ru/",
+    };
+    if (rangeHeader) upstreamHeaders["Range"] = rangeHeader;
+
+    const fileResp = await fetch(meta.href, { headers: upstreamHeaders });
+
+    if (!fileResp.ok && fileResp.status !== 206) {
+      return new Response(`Yandex download error: ${fileResp.status}`, {
+        status: fileResp.status,
+        headers: cors,
+      });
     }
 
-    // ─── Шаг 2: 302 redirect на прямую ссылку ───
-    console.log("[yandex-download] → 302 redirect на:", meta.href.slice(0, 80));
+    const fileName = path.split("/").pop() || "file";
+    const headers = new Headers(cors);
+    headers.set(
+      "Content-Type",
+      fileResp.headers.get("Content-Type") || "application/octet-stream",
+    );
+    headers.set(
+      "Content-Disposition",
+      `attachment; filename*=UTF-8''${encodeURIComponent(fileName)}`,
+    );
+    headers.set("Accept-Ranges", "bytes");
 
-    return new Response(null, {
-      status: 302,
-      headers: {
-        ...cors,
-        "Location": meta.href,
-        "Cache-Control": "no-store",
-      },
+    const cl = fileResp.headers.get("Content-Length");
+    if (cl) headers.set("Content-Length", cl);
+    const cr = fileResp.headers.get("Content-Range");
+    if (cr) headers.set("Content-Range", cr);
+
+    return new Response(fileResp.body, {
+      status: fileResp.status,
+      headers,
     });
   } catch (e) {
-    return new Response(
-      JSON.stringify({ error: "Internal error", message: String(e) }),
-      {
-        status: 500,
-        headers: { ...cors, "Content-Type": "application/json" },
-      },
-    );
+    return new Response(`Error: ${e.message}`, {
+      status: 500,
+      headers: cors,
+    });
   }
 });
