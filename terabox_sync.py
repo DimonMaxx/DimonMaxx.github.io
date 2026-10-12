@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-terabox_sync.py (v6)
+terabox_sync.py (v7)
 Синхронизация TeraBox → Google Sheets через Playwright.
 
 Логика:
@@ -15,7 +15,10 @@ terabox_sync.py (v6)
        • Обходит все подпапки, собирая файлы (folder = имя подпапки).
        • Пишет результаты в Google Sheets.
        • Делает backup, находит orphans, сохраняет их в Supabase.
-  5. По завершении отправляет итоговый отчёт в Telegram.
+  5. По завершении — уведомление в Telegram ТОЛЬКО если есть
+     значимые изменения (новые файлы, осиротевшие, ошибки).
+     В TeraBox dlink перезаписываются всегда, поэтому «обновлено ссылок: N»
+     само по себе не считается значимым событием.
 
 ВАЖНО:
   В TeraBox при каждом прогоне обновляются dlink-ссылки у ВСЕХ файлов
@@ -1441,7 +1444,7 @@ def _build_telegram_extra_lines(total_stats, max_per_list=20):
 
 def main():
     print("=" * 60)
-    print("terabox_sync.py (v6) — старт")
+    print("terabox_sync.py (v7) — старт")
     print("=" * 60)
     print(f"PRESERVE_USER_EDITS = {PRESERVE_USER_EDITS}")
     print(f"BACKUP_BEFORE_SYNC  = {BACKUP_BEFORE_SYNC}")
@@ -1514,8 +1517,6 @@ def main():
     print("Клиент создан.")
 
     # ─── Предполётная проверка здоровья Google Sheets (п. 1.12) ───
-    # Проверяем только те разделы, которые реально будем обрабатывать
-    # (уже отфильтрованы по наличию TeraBox-ссылок и по SYNC_SECTIONS).
     print("\nПроверка здоровья Google Sheets...")
     health = check_sheets_health(gs_client, SPREADSHEET_ID, terabox_sections)
     print_sheets_health(health)
@@ -1589,13 +1590,33 @@ def main():
 
     extra_lines = _build_telegram_extra_lines(total_stats, max_per_list=20)
 
-    notify_result(
-        title="Sync TeraBox",
-        status=status,
-        details=details,
-        extra_lines=extra_lines or None,
-        run_url=run_url,
+    # ─── Проверка «значимости» изменений ───
+    # В TeraBox при каждом прогоне перезаписываются dlink'и ВСЕХ файлов
+    # (техническое событие). Если при этом нет ни новых файлов, ни
+    # осиротевших, ни ошибок — уведомление не отправляем, чтобы
+    # не засорять чат. При status=failure — всегда отправляем.
+    has_significant = (
+        total_stats["added"] > 0
+        or total_stats["orphans"] > 0
+        or total_stats["errors"] > 0
     )
+
+    if status == "failure" or has_significant:
+        print(f"\n[i] Значимые изменения: added={total_stats['added']}, "
+              f"orphans={total_stats['orphans']}, "
+              f"errors={total_stats['errors']} — уведомление отправляется.")
+        notify_result(
+            title="Sync TeraBox",
+            status=status,
+            details=details,
+            extra_lines=extra_lines or None,
+            run_url=run_url,
+        )
+    else:
+        print(f"\n[i] Значимых изменений нет "
+              f"(только техническая перезапись dlink: "
+              f"{total_stats['updated']} ссылок). "
+              f"Уведомление НЕ отправляется.")
 
 
 if __name__ == "__main__":
