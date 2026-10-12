@@ -1,18 +1,4 @@
-# ============================================================
-# supabase/config.toml — конфигурация проекта для Supabase CLI
-# ============================================================
-# Этот файл нужен CLI, чтобы знать, к какому проекту подключаться
-# и как деплоить функции. Он не влияет на прод-базу и не заменяет
-# секреты (SUPABASE_ACCESS_TOKEN, SERVICE_ROLE_KEY и т.д.).
-#
-# Если меняешь verify_jwt у функции — меняй здесь, потом push:
-# workflow Deploy Supabase Functions задеплоит новые настройки.
-# ============================================================
-
 project_id = "rmoonebbvpmvthvpcmpt"
-
-# ─── Локальные сервисы (для разработки, на CI не используются) ───
-# Значения — дефолтные из supabase init. На деплой функций не влияют.
 
 [api]
 enabled = true
@@ -50,15 +36,8 @@ enable_signup = true
 double_confirm_changes = true
 enable_confirmations = false
 
-# ─── Edge Functions: настройки verify_jwt ───
-# verify_jwt = true  — Edge Function проверяет JWT перед выполнением.
-#                      Анонимные вызовы отклоняются с 401.
-# verify_jwt = false — функция доступна всем (включая анонимных).
-#
-# Внутри самой функции всё равно может быть проверка роли —
-# это независимый уровень.
+# ─── Edge Functions ───
 
-# Публичные функции (скачивание, форма submit):
 [functions.yandex-download]
 verify_jwt = false
 
@@ -68,9 +47,12 @@ verify_jwt = false
 [functions.submit-form]
 verify_jwt = false
 
-# Админские функции (требуют JWT пользователя, внутри проверяется роль):
 [functions.github-dispatch]
 verify_jwt = true
 
 [functions.admin-delete-user]
 verify_jwt = true
+
+# ─── Новая функция: возвращает прямую ссылку Яндекса ───
+[functions.yandex-dlink]
+verify_jwt = false
