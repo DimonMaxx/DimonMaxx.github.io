@@ -7,6 +7,9 @@
     // Используются как fallback, если Supabase недоступен.
     // В рабочем режиме разделы подгружаются из таблицы site_sections
     // через MF.loadSections() в shared.js.
+    //
+    // ВАЖНО: columns должны совпадать с site_sections.columns в Supabase
+    // и с реальными колонками в Google Sheets.
     // ============================================================
     const DEFAULT_SECTIONS = {
         programs: {
@@ -19,25 +22,25 @@
             label: 'Книги', icon: 'fa-book',
             json: '_content/books.json', container: 'books-container',
             folderable: true,
-            columns: ['cover','title','author','description','format','download_link']
+            columns: ['folder','cover','title','author','description','format','size','download_link']
         },
         movies: {
             label: 'Фильмы', icon: 'fa-film',
             json: '_content/movies.json', container: 'movies-container',
-            folderable: true,
-            columns: ['folder','title','year','description','download_link']
+            folderable: false,
+            columns: ['title','year','description','download_link']
         },
         music: {
             label: 'Музыка', icon: 'fa-music',
             json: '_content/music.json', container: 'music-container',
             folderable: true,
-            columns: ['title','artist','year','download_link']
+            columns: ['folder','title','artist','year','size','download_link']
         },
         games: {
             label: 'Игры', icon: 'fa-gamepad',
             json: '_content/games.json', container: 'games-container',
-            folderable: true,
-            columns: ['folder','title','platform','year','description','download_link']
+            folderable: false,
+            columns: ['title','platform','year','description','download_link']
         },
         misc: {
             label: 'Разное', icon: 'fa-ellipsis-h',
@@ -57,13 +60,11 @@
         GITHUB_REPO: 'DimonMaxx.github.io',
         GITHUB_BRANCH: 'main',
 
-        // Актуальные workflow-файлы (используются Edge Function github-dispatch):
-        //   • sync-yandex.yml    — синхронизация Яндекс.Диска (по cron 03:00 UTC)
-        //   • sync-terabox.yml   — синхронизация TeraBox (по cron каждые 4 часа)
+        // Актуальные workflow-файлы:
+        //   • sync-content.yml   — единый скрипт обновления контента
         //   • delete-content.yml — удаление записей из Google Sheets
         //   • cleanup-backups.yml — удаление старых бэкапов
-        // Переменная WORKFLOW_DELETE используется в admin-panel.html для
-        // отправки списка удаляемых записей через github-dispatch.
+        //   • cleanup-errors.yml  — удаление старых JS-ошибок
         WORKFLOW_DELETE: 'delete-content.yml',
 
         // ─── Пагинация ───
@@ -105,14 +106,15 @@
             artist: 'Исполнитель',
             platform: 'Платформа',
             folder: 'Папка',
+            cover: 'Обложка',
             file_name: 'Файл',
             username: 'Пользователь',
             downloaded_at: 'Дата и время'
         },
 
         // ─── Соответствие разделов и имён листов Google Sheets ───
-        // Используется скриптами Python (common.py), а не фронтендом.
-        // Оставлено в config.js для справки и возможных проверок.
+        // Используется скриптами Python (update_content_json.py), а не
+        // фронтендом. Оставлено для справки.
         SECTION_TO_SHEET: {
             programs: 'Программы',
             books: 'Книги',
@@ -125,7 +127,7 @@
 
     window.APP_CONFIG = APP_CONFIG;
 
-    // Диагностика (можно закомментировать при релизе)
+    // Диагностика
     console.log('[config.js] DEFAULT_SECTIONS keys:',
         Object.keys(DEFAULT_SECTIONS));
     console.log('[config.js] SECTIONS keys:',

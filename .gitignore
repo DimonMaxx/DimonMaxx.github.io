@@ -7,3 +7,17 @@ venv/
 .idea/
 .vscode/
 .DS_Store
+
+# --- Одноразовые скрипты миграции (не коммитим) ---
+_fix_*.py
+_diag_*.py
+_rename_*.py
+_delete_*.py
+_diagnose_*.py
+_content_backup_*
+
+# --- Бэкапы патч-скриптов ---
+*.bak
+*.bak2
+*.bak3
+*.bak4

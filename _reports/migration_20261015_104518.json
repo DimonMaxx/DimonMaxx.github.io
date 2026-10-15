@@ -1,0 +1,60 @@
+{
+  "ts": "2026-10-15T10:45:18.506858Z",
+  "mode": "repo-to-sheets",
+  "repo_to_sheets": {
+    "sections": {
+      "books": {
+        "to_update": 0,
+        "new_in_repo": 5,
+        "legacy_only": 0,
+        "unchanged": 0
+      }
+    },
+    "to_update_rows": [],
+    "new_in_repo_rows": [
+      {
+        "section": "books",
+        "tag": "ajzek-azimov",
+        "file": "delo-principa.txt",
+        "title": "delo-principa",
+        "link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/ajzek-azimov/delo-principa.txt",
+        "size": "0.0"
+      },
+      {
+        "section": "books",
+        "tag": "ajzek-azimov",
+        "file": "demon-rostom-dva-santimetra.txt",
+        "title": "demon-rostom-dva-santimetra",
+        "link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/ajzek-azimov/demon-rostom-dva-santimetra.txt",
+        "size": "0.0"
+      },
+      {
+        "section": "books",
+        "tag": "ajzek-azimov",
+        "file": "est-mnogoe-na-nebe-i-zemle.txt",
+        "title": "est-mnogoe-na-nebe-i-zemle",
+        "link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/ajzek-azimov/est-mnogoe-na-nebe-i-zemle.txt",
+        "size": "0.0"
+      },
+      {
+        "section": "books",
+        "tag": "ajzek-azimov",
+        "file": "galateya.txt",
+        "title": "galateya",
+        "link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/ajzek-azimov/galateya.txt",
+        "size": "0.0"
+      },
+      {
+        "section": "books",
+        "tag": "ajzek-azimov",
+        "file": "ya-robot.txt",
+        "title": "ya-robot",
+        "link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/ajzek-azimov/ya-robot.txt",
+        "size": "0.3"
+      }
+    ],
+    "legacy_only_rows": [],
+    "errors": []
+  },
+  "sheets_to_json": {}
+}

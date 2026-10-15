@@ -1,10 +1,420 @@
 [
   {
     "folder": "Linkin Park",
+    "title": "Easier to Run",
+    "artist": "Linkin Park",
+    "size": "3.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Easier.to.run.mp3",
+    "file_id": "easier-to-run"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Forgotten",
+    "artist": "Linkin Park",
+    "size": "3.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Forgotten.mp3",
+    "file_id": "forgotten"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "By Myself",
+    "artist": "Linkin Park",
+    "size": "5.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.By.myself.mp3",
+    "file_id": "by-myself"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "No More Sorrow",
+    "artist": "Linkin Park",
+    "size": "5.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/08.-.Linkin.Park.-.No.More.Sorrow.mp3",
+    "file_id": "no-more-sorrow"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Pushing Me Away",
+    "artist": "Linkin Park",
+    "size": "5.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Pushing.me.away.mp3",
+    "file_id": "pushing-me-away"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "ENJOY THE SILENCE ‘",
+    "artist": "Linkin Park",
+    "year": "2004",
+    "size": "6.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/LINKIN.PARK.vs.DEPECHE.MODE.-.ENJOY.THE.SILENCE.2004.mp3",
+    "file_id": "enjoy-the-silence"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Hole",
+    "artist": "Linkin Park",
+    "size": "6.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/011_Linkin.Park.-.Hole.mp3",
+    "file_id": "hole"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Paper Cut Piano",
+    "artist": "Linkin Park",
+    "size": "2.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.09.-.Paper.Cut.Piano.mp3",
+    "file_id": "paper-cut-piano"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Session",
+    "artist": "Linkin Park",
+    "size": "2.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Session.mp3",
+    "file_id": "session"
+  },
+  {
+    "folder": "Linkin Park",
     "title": "A Place For My Head",
     "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/A%20Place%20For%20My%20Head.mp3",
+    "size": "4.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/008_Linkin.Park.-.A.Place.For.My.Head.mp3",
     "file_id": "a-place-for-my-head"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "The Down Syndrome",
+    "artist": "Linkin Park",
+    "size": "4.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/015_Linkin.Park.-.The.Down.Syndrome.mp3",
+    "file_id": "the-down-syndrome"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "One Step Closer",
+    "artist": "Linkin Park",
+    "size": "6.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/06.Linkin.Park.-.One.Step.Closer.mp3",
+    "file_id": "one-step-closer"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Wish (Live)",
+    "artist": "Linkin Park",
+    "size": "6.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/05.Linkin.Park.-.Wish.Live.mp3",
+    "file_id": "wish-live"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Somewhere I Belong",
+    "artist": "Linkin Park",
+    "size": "3.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Somewhere.I.belong.mp3",
+    "file_id": "somewhere-i-belong"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Numb Encore",
+    "artist": "Linkin Park",
+    "size": "6.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.feat.Jay.Z.-.Numb.Encore.mp3",
+    "file_id": "numb-encore"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Unda",
+    "artist": "Linkin Park",
+    "size": "6.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Unda.mp3",
+    "file_id": "unda"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Step Up Nobody's Listening",
+    "artist": "Linkin Park",
+    "size": "7.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/04.Linkin.Park.-.Step.Up.Nobody.s.Listening.mp3",
+    "file_id": "step-up-nobodys-listening"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Wake",
+    "artist": "Linkin Park",
+    "size": "2.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/01.-.Linkin.Park.-.Wake.mp3",
+    "file_id": "wake"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Given Up",
+    "artist": "Linkin Park",
+    "size": "4.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/02.-.Linkin.Park.-.Given.Up.mp3",
+    "file_id": "given-up"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Standing In The Middle",
+    "artist": "Linkin Park",
+    "size": "4.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/03.Linkin.Park.-.Standing.In.The.Middle.mp3",
+    "file_id": "standing-in-the-middle"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Hands Held High",
+    "artist": "Linkin Park",
+    "size": "5.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/07.-.Linkin.Park.-.Hands.Held.High.mp3",
+    "file_id": "hands-held-high"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Points Of Authority",
+    "artist": "Linkin Park",
+    "size": "5.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Points.of.authority.mp3",
+    "file_id": "points-of-authority"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Faint",
+    "artist": "Linkin Park",
+    "size": "2.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Faint.mp3",
+    "file_id": "faint"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Hit the Floor",
+    "artist": "Linkin Park",
+    "size": "2.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Hit.the.floor.mp3",
+    "file_id": "hit-the-floor"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Qwerty",
+    "artist": "Linkin Park",
+    "size": "5.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/001_Linkin.Park.-.Qwerty.mp3",
+    "file_id": "qwerty"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Sold My Soul To Yo Mama",
+    "artist": "Linkin Park",
+    "size": "2.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/01.Linkin.Park.-.Sold.My.Soul.To.Yo.Mama.mp3",
+    "file_id": "sold-my-soul-to-yo-mama"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "In Between",
+    "artist": "Linkin Park",
+    "size": "4.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/10.-.Linkin.Park.-.In.Between.mp3",
+    "file_id": "in-between"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Valentine's Day",
+    "artist": "Linkin Park",
+    "size": "4.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/09.-.Linkin.Park.-.Valentine.s.Day.mp3",
+    "file_id": "valentines-day"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "With You",
+    "artist": "Linkin Park",
+    "size": "4.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/013_Linkin.Park.-.With.You.mp3",
+    "file_id": "with-you"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Crawling",
+    "artist": "Linkin Park",
+    "size": "5.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Crawling.mp3",
+    "file_id": "crawling"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "In The End",
+    "artist": "Linkin Park",
+    "size": "1.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.In.the.end.mp3",
+    "file_id": "in-the-end"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "From The Inside",
+    "artist": "Linkin Park",
+    "size": "2.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.From.the.inside.mp3",
+    "file_id": "from-the-inside"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Nobody's Listening",
+    "artist": "Linkin Park",
+    "size": "2.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Nobody.s.listening.mp3",
+    "file_id": "nobodys-listening"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Papercut",
+    "artist": "Linkin Park",
+    "size": "2.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Papercut.mp3",
+    "file_id": "papercut"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Shadow Of The Day",
+    "artist": "Linkin Park",
+    "size": "6.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/05.-.Linkin.Park.-.Shadow.Of.The.Day.mp3",
+    "file_id": "shadow-of-the-day"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Runaway",
+    "artist": "Linkin Park",
+    "size": "2.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Runaway.mp3",
+    "file_id": "runaway"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Bleed it Out",
+    "artist": "Linkin Park",
+    "size": "3.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/04.-.Linkin.Park.-.Bleed.It.Out.mp3",
+    "file_id": "bleed-it-out"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Krawling Piano",
+    "artist": "Linkin Park",
+    "size": "3.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.03.-.Krawling.Piano.mp3",
+    "file_id": "krawling-piano"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Leave Out All The Rest",
+    "artist": "Linkin Park",
+    "size": "4.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/03.-.Linkin.Park.-.Leave.Out.All.The.Rest.mp3",
+    "file_id": "leave-out-all-the-rest"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "What I've Done",
+    "artist": "Linkin Park",
+    "size": "4.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/06.-.Linkin.Park.-.What.I.ve.Done.mp3",
+    "file_id": "what-ive-done"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "My December",
+    "artist": "Linkin Park",
+    "size": "5.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/009_Linkin.Park.-.My.December.mp3",
+    "file_id": "my-december"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "The Little Things Give You Away",
+    "artist": "Linkin Park",
+    "size": "8.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/12.-.Linkin.Park.-.The.Little.Things.Give.You.Away.mp3",
+    "file_id": "the-little-things-give-you-away"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Lying From You",
+    "artist": "Dirt Off Your Shoulder",
+    "size": "1.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.04.-.Lying.From.You.Piano.mp3",
+    "file_id": "lying-from-you"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Don't Stay",
+    "artist": "Linkin Park",
+    "size": "2.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Don.t.stay.mp3",
+    "file_id": "dont-stay"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Numb",
+    "artist": "Linkin Park",
+    "size": "2.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.park.-.13.-.numb.mp3",
+    "file_id": "numb"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Place for my head",
+    "artist": "Linkin Park",
+    "size": "4.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Place.for.my.head.mp3",
+    "file_id": "place-for-my-head"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Breaking The Habit",
+    "artist": "Linkin Park",
+    "size": "3.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Breaking.the.habit.mp3",
+    "file_id": "breaking-the-habit"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Figure.09",
+    "artist": "Linkin Park",
+    "size": "3.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Figure.09.mp3",
+    "file_id": "figure09"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "My Reason",
+    "artist": "Linkin Park",
+    "size": "4.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/019_Linkin.Park.-.My.Reason.mp3",
+    "file_id": "my-reason"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "Step Up",
+    "artist": "Linkin Park",
+    "size": "4.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/020_Linkin.Park.-.Step.Up.mp3",
+    "file_id": "step-up"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "In Pieces",
+    "artist": "Linkin Park",
+    "size": "5.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/11.-.Linkin.Park.-.In.Pieces.mp3",
+    "file_id": "in-pieces"
+  },
+  {
+    "folder": "Linkin Park",
+    "title": "The Untitled (In the End)",
+    "artist": "Linkin Park",
+    "size": "5.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.The.Untitled.In.the.End.mp3",
+    "file_id": "the-untitled-in-the-end"
   },
   {
     "folder": "Linkin Park",
@@ -15,81 +425,10 @@
   },
   {
     "folder": "Linkin Park",
-    "title": "Bleed it Out",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Bleed%20it%20Out.mp3",
-    "file_id": "bleed-it-out"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Breaking The Habit",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Breaking%20The%20Habit.mp3",
-    "file_id": "breaking-the-habit"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "By Myself",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/By%20Myself.mp3",
-    "file_id": "by-myself"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Crawling",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Crawling.mp3",
-    "file_id": "crawling"
-  },
-  {
-    "folder": "Linkin Park",
     "title": "Cure For The Itch",
     "artist": "Linkin Park",
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Cure%20For%20The%20Itch.mp3",
     "file_id": "cure-for-the-itch"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Lying From You",
-    "artist": "Dirt Off Your Shoulder",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Dirt%20Off%20Your%20Shoulder%20-%20Lying%20From%20You.mp3",
-    "file_id": "lying-from-you"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Don't Stay",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Don%27t%20Stay.mp3",
-    "file_id": "dont-stay"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "ENJOY THE SILENCE ‘",
-    "artist": "Linkin Park",
-    "year": "2004",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/ENJOY%20THE%20SILENCE%20%E2%80%982004.mp3",
-    "file_id": "enjoy-the-silence"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Easier to Run",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Easier%20to%20Run.mp3",
-    "file_id": "easier-to-run"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Faint",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Faint.mp3",
-    "file_id": "faint"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Figure.09",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Figure.09.mp3",
-    "file_id": "figure09"
   },
   {
     "folder": "Linkin Park",
@@ -100,31 +439,10 @@
   },
   {
     "folder": "Linkin Park",
-    "title": "Forgotten",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Forgotten.mp3",
-    "file_id": "forgotten"
-  },
-  {
-    "folder": "Linkin Park",
     "title": "Frgt#10",
     "artist": "Linkin Park",
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Frgt%2310.MP3",
     "file_id": "frgt10"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "From The Inside",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/From%20The%20Inside.mp3",
-    "file_id": "from-the-inside"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Given Up",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Given%20Up.mp3",
-    "file_id": "given-up"
   },
   {
     "folder": "Linkin Park",
@@ -149,13 +467,6 @@
   },
   {
     "folder": "Linkin Park",
-    "title": "Hands Held High",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hands%20Held%20High.mp3",
-    "file_id": "hands-held-high"
-  },
-  {
-    "folder": "Linkin Park",
     "title": "Heavy (feat. Kiiara)",
     "artist": "Linkin Park",
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Heavy%20%28feat.%20Kiiara%29.mp3",
@@ -163,45 +474,10 @@
   },
   {
     "folder": "Linkin Park",
-    "title": "Hit the Floor",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hit%20the%20Floor.mp3",
-    "file_id": "hit-the-floor"
-  },
-  {
-    "folder": "Linkin Park",
     "title": "Hit the floor noise instrumental project",
     "artist": "Linkin Park",
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hit%20the%20floor%20noise%20instrumental%20project.mp3",
     "file_id": "hit-the-floor-noise-instrumental-project"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Hole",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Hole.mp3",
-    "file_id": "hole"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "In Between",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/In%20Between.mp3",
-    "file_id": "in-between"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "In Pieces",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/In%20Pieces.mp3",
-    "file_id": "in-pieces"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "In The End",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/In%20The%20End.mp3",
-    "file_id": "in-the-end"
   },
   {
     "folder": "Linkin Park",
@@ -233,45 +509,10 @@
   },
   {
     "folder": "Linkin Park",
-    "title": "Krawling Piano",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Krawling%20Piano.mp3",
-    "file_id": "krawling-piano"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Leave Out All The Rest",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Leave%20Out%20All%20The%20Rest.mp3",
-    "file_id": "leave-out-all-the-rest"
-  },
-  {
-    "folder": "Linkin Park",
     "title": "Lying From You",
     "artist": "Linkin Park",
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Lying%20From%20You.mp3",
     "file_id": "lying-from-you"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "My December",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/My%20December.mp3",
-    "file_id": "my-december"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "My Reason",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/My%20Reason.mp3",
-    "file_id": "my-reason"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "No More Sorrow",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/No%20More%20Sorrow.mp3",
-    "file_id": "no-more-sorrow"
   },
   {
     "folder": "Linkin Park",
@@ -289,101 +530,10 @@
   },
   {
     "folder": "Linkin Park",
-    "title": "Nobody's Listening",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Nobody%27s%20Listening.mp3",
-    "file_id": "nobodys-listening"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Numb Encore",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Numb%20Encore.mp3",
-    "file_id": "numb-encore"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Numb",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Numb.mp3",
-    "file_id": "numb"
-  },
-  {
-    "folder": "Linkin Park",
     "title": "One More Light",
     "artist": "Linkin Park",
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/One%20More%20Light.mp3",
     "file_id": "one-more-light"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "One Step Closer",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/One%20Step%20Closer.mp3",
-    "file_id": "one-step-closer"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Paper Cut Piano",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Paper%20Cut%20Piano.mp3",
-    "file_id": "paper-cut-piano"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Papercut",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Papercut.mp3",
-    "file_id": "papercut"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Place for my head",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Place%20for%20my%20head.mp3",
-    "file_id": "place-for-my-head"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Points Of Authority",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Points%20Of%20Authority.mp3",
-    "file_id": "points-of-authority"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Pushing Me Away",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Pushing%20Me%20Away.mp3",
-    "file_id": "pushing-me-away"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Qwerty",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Qwerty.mp3",
-    "file_id": "qwerty"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Runaway",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Runaway.mp3",
-    "file_id": "runaway"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Session",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Session.mp3",
-    "file_id": "session"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Shadow Of The Day",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Shadow%20Of%20The%20Day.mp3",
-    "file_id": "shadow-of-the-day"
   },
   {
     "folder": "Linkin Park",
@@ -394,45 +544,10 @@
   },
   {
     "folder": "Linkin Park",
-    "title": "Sold My Soul To Yo Mama",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Sold%20My%20Soul%20To%20Yo%20Mama.mp3",
-    "file_id": "sold-my-soul-to-yo-mama"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Somewhere I Belong",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Somewhere%20I%20Belong.mp3",
-    "file_id": "somewhere-i-belong"
-  },
-  {
-    "folder": "Linkin Park",
     "title": "Sorry for Now",
     "artist": "Linkin Park",
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Sorry%20for%20Now.mp3",
     "file_id": "sorry-for-now"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Standing In The Middle",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Standing%20In%20The%20Middle.mp3",
-    "file_id": "standing-in-the-middle"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Step Up Nobody's Listening",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Step%20Up%20%20Nobody%27s%20Listening.mp3",
-    "file_id": "step-up-nobodys-listening"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Step Up",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Step%20Up.mp3",
-    "file_id": "step-up"
   },
   {
     "folder": "Linkin Park",
@@ -443,472 +558,1115 @@
   },
   {
     "folder": "Linkin Park",
-    "title": "The Down Syndrome",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/The%20Down%20Syndrome.mp3",
-    "file_id": "the-down-syndrome"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "The Little Things Give You Away",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/The%20Little%20Things%20Give%20You%20Away.mp3",
-    "file_id": "the-little-things-give-you-away"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "The Untitled (In the End)",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/The%20Untitled%20%28In%20the%20End%29.mp3",
-    "file_id": "the-untitled-in-the-end"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Unda",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Unda.mp3",
-    "file_id": "unda"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Valentine's Day",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Valentine%27s%20Day.mp3",
-    "file_id": "valentines-day"
-  },
-  {
-    "folder": "Linkin Park",
-    "title": "Wake",
-    "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Wake.mp3",
-    "file_id": "wake"
-  },
-  {
-    "folder": "Linkin Park",
     "title": "What I've Done (Distorted Remix)",
     "artist": "Linkin Park",
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/What%20I%27ve%20Done%20%28Distorted%20Remix%29.mp3",
     "file_id": "what-ive-done-distorted-remix"
   },
   {
-    "folder": "Linkin Park",
-    "title": "What I've Done",
+    "folder": "linkin-park",
+    "title": "Pts Of Athrty Linkin Park Jay Gordon",
     "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/What%20I%27ve%20Done.mp3",
-    "file_id": "what-ive-done"
+    "size": "5.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/022_Linkin.Park.-.Pts.Of.Athrty.Linkin.Park.Jay.Gordon.mp3",
+    "file_id": "pts-of-athrty-linkin-park-jay-gordon"
   },
   {
-    "folder": "Linkin Park",
-    "title": "Wish (Live)",
+    "folder": "linkin-park",
+    "title": "by_myself_marylin_manson_rmx_",
+    "size": "6.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/02_by_myself_marylin_manson_rmx_.mp3",
+    "file_id": "bymyselfmarylinmansonrmx"
+  },
+  {
+    "folder": "linkin-park",
+    "title": "With you Live ozzfest",
     "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/Wish%20%28Live%29.mp3",
-    "file_id": "wish-live"
+    "year": "2001",
+    "size": "3.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.With.you.Live.ozzfest.2001.mp3",
+    "file_id": "with-you-live-ozzfest"
   },
   {
-    "folder": "Linkin Park",
-    "title": "With You",
+    "folder": "linkin-park",
+    "title": "LINKIN PARK- Hit the floor",
+    "size": "1.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/LINKIN.PARK-.Hit.the.floor.MP3",
+    "file_id": "linkin-park-hit-the-floor"
+  },
+  {
+    "folder": "linkin-park",
+    "title": "02 - Faint Piano",
     "artist": "Linkin Park",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Linkin%20Park/With%20You.mp3",
-    "file_id": "with-you"
+    "size": "3.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.02.-.Faint.Piano.mp3",
+    "file_id": "02-faint-piano"
   },
   {
-    "folder": "Skillet",
-    "title": "A Little More",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/A%20Little%20More.mp3",
-    "file_id": "a-little-more"
+    "folder": "linkin-park",
+    "title": "Don t Say",
+    "artist": "Linkin Park",
+    "size": "4.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/016_Linkin.Park.-.Don.t.Say.mp3",
+    "file_id": "don-t-say"
   },
   {
-    "folder": "Skillet",
-    "title": "Angels Fall Down",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Angels%20Fall%20Down.mp3",
-    "file_id": "angels-fall-down"
+    "folder": "linkin-park",
+    "title": "giving_in_feat_adema_",
+    "size": "5.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/06_giving_in_feat_adema_.mp3",
+    "file_id": "givinginfeatadema"
   },
   {
-    "folder": "Skillet",
-    "title": "Awake And Alive",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Awake%20And%20Alive.mp3",
-    "file_id": "awake-and-alive"
+    "folder": "linkin-park",
+    "title": "LINKIN PARK- Frgt 10",
+    "size": "1.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/LINKIN.PARK-.Frgt.10.MP3",
+    "file_id": "linkin-park-frgt-10"
   },
   {
-    "folder": "Skillet",
-    "title": "Awake and Alive (iTunes Session)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Awake%20and%20Alive%20%28iTunes%20Session%29.mp3",
-    "file_id": "awake-and-alive-itunes-session"
+    "folder": "linkin-park",
+    "title": "06 - Numb iano",
+    "artist": "Linkin Park",
+    "size": "2.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.06.-.Numb.iano.mp3",
+    "file_id": "06-numb-iano"
   },
   {
-    "folder": "Skillet",
-    "title": "Believe (iTunes Session)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Believe%20%28iTunes%20Session%29.mp3",
-    "file_id": "believe-itunes-session"
+    "folder": "linkin-park",
+    "title": "Liying from you",
+    "artist": "Linkin Park",
+    "size": "2.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.Liying.from.you.mp3",
+    "file_id": "liying-from-you"
   },
   {
-    "folder": "Skillet",
-    "title": "Best Kept Secret",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Best%20Kept%20Secret.mp3",
-    "file_id": "best-kept-secret"
+    "folder": "linkin-park",
+    "title": "Crawing",
+    "artist": "Linkin Park",
+    "size": "4.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/018_Linkin.Park.-.Crawing.mp3",
+    "file_id": "crawing"
   },
   {
-    "folder": "Skillet",
-    "title": "Better Than Drugs",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Better%20Than%20Drugs.mp3",
-    "file_id": "better-than-drugs"
+    "folder": "linkin-park",
+    "title": "01 - In The End Piano",
+    "artist": "Linkin Park",
+    "size": "2.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.01.-.In.The.End.Piano.mp3",
+    "file_id": "01-in-the-end-piano"
   },
   {
-    "folder": "Skillet",
-    "title": "Collide",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Collide.mp3",
-    "file_id": "collide"
+    "folder": "linkin-park",
+    "title": "hit_the_floor_noise_instrumental_project_",
+    "size": "3.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/04_hit_the_floor_noise_instrumental_project_.mp3",
+    "file_id": "hitthefloornoiseinstrumentalproject"
   },
   {
-    "folder": "Skillet",
-    "title": "Comatose (iTunes Session)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Comatose%20%28iTunes%20Session%29.mp3",
-    "file_id": "comatose-itunes-session"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Comatose",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Comatose.mp3",
-    "file_id": "comatose"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Cycle Down",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Cycle%20Down.mp3",
-    "file_id": "cycle-down"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Dead Inside (Bonus Track)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Dead%20Inside%20%28Bonus%20Track%29.mp3",
-    "file_id": "dead-inside-bonus-track"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Don't Wake Me (Pull Remix)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Don%27t%20Wake%20Me%20%28Pull%20Remix%29.mp3",
-    "file_id": "dont-wake-me-pull-remix"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Don't Wake Me",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Don%27t%20Wake%20Me.mp3",
-    "file_id": "dont-wake-me"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Energy",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Energy.mp3",
-    "file_id": "energy"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Falling Inside the Black",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Falling%20Inside%20the%20Black.mp3",
-    "file_id": "falling-inside-the-black"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Fingernails",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Fingernails.mp3",
-    "file_id": "fingernails"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Forgiven",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Forgiven.mp3",
-    "file_id": "forgiven"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Forsaken",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Forsaken.mp3",
-    "file_id": "forsaken"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Freakshow",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Freakshow.mp3",
-    "file_id": "freakshow"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Hard To Find",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hard%20To%20Find.mp3",
-    "file_id": "hard-to-find"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Hero (The Legion of Doom Remix)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hero%20%28The%20Legion%20of%20Doom%20Remix%29.mp3",
-    "file_id": "hero-the-legion-of-doom-remix"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Hero (iTunes Session)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hero%20%28iTunes%20Session%29.mp3",
-    "file_id": "hero-itunes-session"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Hero",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Hero.mp3",
-    "file_id": "hero"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Imperfection",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Imperfection.mp3",
-    "file_id": "imperfection"
+    "folder": "linkin-park",
+    "title": "in_the_end_club_rmx_",
+    "size": "11.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/05_in_the_end_club_rmx_.mp3",
+    "file_id": "intheendclubrmx"
   },
   {
     "folder": "Skillet",
     "title": "Intro",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Intro.mp3",
+    "size": "5.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.-.Intro.mp3",
     "file_id": "intro"
   },
   {
-    "folder": "Skillet",
-    "title": "Live Free Or Let Me Die",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Live%20Free%20Or%20Let%20Me%20Die.mp3",
-    "file_id": "live-free-or-let-me-die"
+    "folder": "skillet",
+    "title": "Splinter",
+    "size": "6.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/10.Splinter.mp3",
+    "file_id": "splinter"
   },
   {
     "folder": "Skillet",
-    "title": "Looking For Angels",
+    "title": "Hero",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Looking%20For%20Angels.mp3",
-    "file_id": "looking-for-angels"
+    "size": "7.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.Hero.mp3",
+    "file_id": "hero"
   },
   {
     "folder": "Skillet",
-    "title": "Lucy",
+    "title": "Awake And Alive",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Lucy.mp3",
-    "file_id": "lucy"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Monster (Radio Edit) (Bonus Track)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster%20%28Radio%20Edit%29%20%28Bonus%20Track%29.mp3",
-    "file_id": "monster-radio-edit-bonus-track"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Monster (Unleash the Beast)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster%20%28Unleash%20the%20Beast%29.mp3",
-    "file_id": "monster-unleash-the-beast"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Monster (iTunes Session)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster%20%28iTunes%20Session%29.mp3",
-    "file_id": "monster-itunes-session"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Monster",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Monster.mp3",
-    "file_id": "monster"
-  },
-  {
-    "folder": "Skillet",
-    "title": "My Obsession",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/My%20Obsession.mp3",
-    "file_id": "my-obsession"
-  },
-  {
-    "folder": "Skillet",
-    "title": "My Religion",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/My%20Religion.mp3",
-    "file_id": "my-religion"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Not Gonna Die",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Not%20Gonna%20Die.mp3",
-    "file_id": "not-gonna-die"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Open Wounds",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Open%20Wounds.mp3",
-    "file_id": "open-wounds"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Rebirthing (Acoustic)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rebirthing%20%28Acoustic%29.mp3",
-    "file_id": "rebirthing-acoustic"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Rebirthing (iTunes Session)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rebirthing%20%28iTunes%20Session%29.mp3",
-    "file_id": "rebirthing-itunes-session"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Rebirthing",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rebirthing.mp3",
-    "file_id": "rebirthing"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Rise",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Rise.mp3",
-    "file_id": "rise"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Salvation",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Salvation.mp3",
-    "file_id": "salvation"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Savior",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Savior.mp3",
-    "file_id": "savior"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Say Goodbye (Acoustic)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Say%20Goodbye%20%28Acoustic%29.mp3",
-    "file_id": "say-goodbye-acoustic"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Say Goodbye",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Say%20Goodbye.mp3",
-    "file_id": "say-goodbye"
+    "size": "8.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.Awake.And.Alive.mp3",
+    "file_id": "awake-and-alive"
   },
   {
     "folder": "Skillet",
     "title": "Should've When You Could've",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Should%27ve%20When%20You%20Could%27ve.mp3",
+    "size": "8.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/07.Should.ve.When.You.Could.ve.mp3",
     "file_id": "shouldve-when-you-couldve"
   },
   {
-    "folder": "Skillet",
-    "title": "Sometimes (iTunes Session)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Sometimes%20%28iTunes%20Session%29.mp3",
-    "file_id": "sometimes-itunes-session"
+    "folder": "skillet",
+    "title": "Back From the Dead",
+    "size": "8.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/02.Back.From.the.Dead.mp3",
+    "file_id": "back-from-the-dead"
+  },
+  {
+    "folder": "skillet",
+    "title": "Say It Loud",
+    "size": "8.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/10.Say.It.Loud.mp3",
+    "file_id": "say-it-loud"
   },
   {
     "folder": "Skillet",
-    "title": "Sometimes",
+    "title": "Cycle Down",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Sometimes.mp3",
-    "file_id": "sometimes"
+    "size": "9.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/11.Cycle.Down.mp3",
+    "file_id": "cycle-down"
+  },
+  {
+    "folder": "skillet",
+    "title": "Heaven In My Veins",
+    "size": "9.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.Heaven.In.My.Veins.mp3",
+    "file_id": "heaven-in-my-veins"
+  },
+  {
+    "folder": "Skillet",
+    "title": "A Little More",
+    "artist": "Skillet",
+    "size": "11.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.A.Little.More.mp3",
+    "file_id": "a-little-more"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Savior",
+    "artist": "Skillet",
+    "size": "16.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/14.-.Savior.mp3",
+    "file_id": "savior"
+  },
+  {
+    "folder": "skillet",
+    "title": "Suspended In You",
+    "size": "7.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/07.Suspended.In.You.mp3",
+    "file_id": "suspended-in-you"
+  },
+  {
+    "folder": "skillet",
+    "title": "Undefeated",
+    "size": "8.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/05.Undefeated.mp3",
+    "file_id": "undefeated"
+  },
+  {
+    "folder": "skillet",
+    "title": "Kill Me Heal Me",
+    "size": "8.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/06.Kill.Me.Heal.Me.mp3",
+    "file_id": "kill-me-heal-me"
+  },
+  {
+    "folder": "skillet",
+    "title": "One Real Thing",
+    "size": "8.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/08.One.Real.Thing.mp3",
+    "file_id": "one-real-thing"
+  },
+  {
+    "folder": "skillet",
+    "title": "Out of Hell",
+    "size": "8.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/08.Out.of.Hell.mp3",
+    "file_id": "out-of-hell"
+  },
+  {
+    "folder": "skillet",
+    "title": "One Real Thing",
+    "size": "9.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/02.-.One.Real.Thing.mp3",
+    "file_id": "one-real-thing"
+  },
+  {
+    "folder": "skillet",
+    "title": "Gasoline",
+    "size": "9.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/02.Gasoline.mp3",
+    "file_id": "gasoline"
+  },
+  {
+    "folder": "skillet",
+    "title": "Whirlwind",
+    "size": "9.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/10.Whirlwind.mp3",
+    "file_id": "whirlwind"
+  },
+  {
+    "folder": "skillet",
+    "title": "Safe With You",
+    "size": "11.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/09.Safe.With.You.mp3",
+    "file_id": "safe-with-you"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Don't Wake Me (Pull Remix)",
+    "artist": "Skillet",
+    "size": "12.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.Don.t.Wake.Me.Pull.Remix.mp3",
+    "file_id": "dont-wake-me-pull-remix"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Forsaken",
+    "artist": "Skillet",
+    "size": "15.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/05.-.Forsaken.mp3",
+    "file_id": "forsaken"
+  },
+  {
+    "folder": "skillet",
+    "title": "Burn It Down",
+    "size": "7.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/09.Burn.It.Down.mp3",
+    "file_id": "burn-it-down"
+  },
+  {
+    "folder": "Skillet",
+    "title": "The Older I Get",
+    "artist": "Skillet",
+    "size": "8.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/06.-.The.Older.I.Get.mp3",
+    "file_id": "the-older-i-get"
+  },
+  {
+    "folder": "skillet",
+    "title": "Vapor",
+    "size": "8.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/02.Vapor.mp3",
+    "file_id": "vapor"
+  },
+  {
+    "folder": "skillet",
+    "title": "My Beautiful Robe",
+    "size": "8.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.My.Beautiful.Robe.mp3",
+    "file_id": "my-beautiful-robe"
+  },
+  {
+    "folder": "skillet",
+    "title": "Eating Me Away",
+    "size": "8.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/05.Eating.Me.Away.mp3",
+    "file_id": "eating-me-away"
+  },
+  {
+    "folder": "skillet",
+    "title": "I Trust You",
+    "size": "8.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/07.I.Trust.You.mp3",
+    "file_id": "i-trust-you"
   },
   {
     "folder": "Skillet",
     "title": "The Last Night (iTunes Session)",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Last%20Night%20%28iTunes%20Session%29.mp3",
+    "size": "9.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/05.The.Last.Night.iTunes.Session.mp3",
     "file_id": "the-last-night-itunes-session"
   },
   {
     "folder": "Skillet",
     "title": "The Last Night",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Last%20Night.mp3",
+    "size": "9.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/07.-.The.Last.Night.mp3",
     "file_id": "the-last-night"
   },
   {
     "folder": "Skillet",
-    "title": "The Older I Get (Acoustic)",
+    "title": "Best Kept Secret",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Older%20I%20Get%20%28Acoustic%29.mp3",
-    "file_id": "the-older-i-get-acoustic"
+    "size": "10.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/15.-.Best.Kept.Secret.mp3",
+    "file_id": "best-kept-secret"
   },
   {
     "folder": "Skillet",
-    "title": "The Older I Get",
+    "title": "Comatose (iTunes Session)",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/The%20Older%20I%20Get.mp3",
-    "file_id": "the-older-i-get"
+    "size": "11.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/07.Comatose.iTunes.Session.mp3",
+    "file_id": "comatose-itunes-session"
+  },
+  {
+    "folder": "skillet",
+    "title": "Sing To The Lord",
+    "size": "14.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/07.Sing.To.The.Lord.mp3",
+    "file_id": "sing-to-the-lord"
   },
   {
     "folder": "Skillet",
-    "title": "Those Nights",
+    "title": "Forgiven",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Those%20Nights.mp3",
-    "file_id": "those-nights"
+    "size": "8.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/09.Forgiven.mp3",
+    "file_id": "forgiven"
+  },
+  {
+    "folder": "skillet",
+    "title": "You Thought",
+    "size": "8.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/08.You.Thought.mp3",
+    "file_id": "you-thought"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Hero (The Legion of Doom Remix)",
+    "artist": "Skillet",
+    "size": "9.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/02.Hero.The.Legion.of.Doom.Remix.mp3",
+    "file_id": "hero-the-legion-of-doom-remix"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Imperfection",
+    "artist": "Skillet",
+    "size": "9.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/08.Imperfection.mp3",
+    "file_id": "imperfection"
   },
   {
     "folder": "Skillet",
     "title": "Under My Skin",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Under%20My%20Skin.mp3",
+    "size": "9.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/09.Under.My.Skin.mp3",
     "file_id": "under-my-skin"
+  },
+  {
+    "folder": "skillet",
+    "title": "Always The Same",
+    "size": "9.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/02.Always.The.Same.mp3",
+    "file_id": "always-the-same"
+  },
+  {
+    "folder": "skillet",
+    "title": "Kill Me Heal Me",
+    "size": "9.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.-.Kill.Me.Heal.Me.mp3",
+    "file_id": "kill-me-heal-me"
+  },
+  {
+    "folder": "skillet",
+    "title": "Boundaries",
+    "size": "9.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/09.Boundaries.mp3",
+    "file_id": "boundaries"
+  },
+  {
+    "folder": "skillet",
+    "title": "Stronger",
+    "size": "9.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/09.Stronger.mp3",
+    "file_id": "stronger"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Looking For Angels",
+    "artist": "Skillet",
+    "size": "10.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/11.-.Looking.For.Angels.mp3",
+    "file_id": "looking-for-angels"
+  },
+  {
+    "folder": "skillet",
+    "title": "You Take My Rights Away",
+    "size": "10.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/02.You.Take.My.Rights.Away.mp3",
+    "file_id": "you-take-my-rights-away"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Open Wounds",
+    "artist": "Skillet",
+    "size": "7.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.Open.Wounds.mp3",
+    "file_id": "open-wounds"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Awake and Alive (iTunes Session)",
+    "artist": "Skillet",
+    "size": "8.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.Awake.and.Alive.iTunes.Session.mp3",
+    "file_id": "awake-and-alive-itunes-session"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Lucy",
+    "artist": "Skillet",
+    "size": "8.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/12.Lucy.mp3",
+    "file_id": "lucy"
+  },
+  {
+    "folder": "skillet",
+    "title": "Stars",
+    "size": "8.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.Stars.mp3",
+    "file_id": "stars"
+  },
+  {
+    "folder": "skillet",
+    "title": "The Fire Breathers",
+    "size": "8.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/09.The.Fire.Breathers.mp3",
+    "file_id": "the-fire-breathers"
+  },
+  {
+    "folder": "skillet",
+    "title": "Dive Over In",
+    "size": "8.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/11.Dive.Over.In.mp3",
+    "file_id": "dive-over-in"
+  },
+  {
+    "folder": "skillet",
+    "title": "How Deep The Father s Love For Us",
+    "size": "9.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.How.Deep.The.Father.s.Love.For.Us.mp3",
+    "file_id": "how-deep-the-father-s-love-for-us"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Better Than Drugs",
+    "artist": "Skillet",
+    "size": "11.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/08.-.Better.Than.Drugs.mp3",
+    "file_id": "better-than-drugs"
+  },
+  {
+    "folder": "skillet",
+    "title": "Come My Way",
+    "size": "11.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/12.Come.My.Way.mp3",
+    "file_id": "come-my-way"
+  },
+  {
+    "folder": "skillet",
+    "title": "You re in My Brain_Angels Fall Down",
+    "size": "24.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/12.You.re.in.My.Brain_Angels.Fall.Down.mp3",
+    "file_id": "you-re-in-my-brainangels-fall-down"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Hero (iTunes Session)",
+    "artist": "Skillet",
+    "size": "7.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/06.Hero.iTunes.Session.mp3",
+    "file_id": "hero-itunes-session"
+  },
+  {
+    "folder": "skillet",
+    "title": "Famous",
+    "size": "7.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/06.Famous.mp3",
+    "file_id": "famous"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Sometimes (iTunes Session)",
+    "artist": "Skillet",
+    "size": "8.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/02.Sometimes.iTunes.Session.mp3",
+    "file_id": "sometimes-itunes-session"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Yours To Hold (Acoustic)",
+    "artist": "Skillet",
+    "size": "8.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/14.-.Yours.To.Hold.Acoustic.mp3",
+    "file_id": "yours-to-hold-acoustic"
+  },
+  {
+    "folder": "skillet",
+    "title": "More Faithful",
+    "size": "8.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/05.More.Faithful.mp3",
+    "file_id": "more-faithful"
+  },
+  {
+    "folder": "skillet",
+    "title": "Saviors of the World",
+    "size": "8.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/11.Saviors.of.the.World.mp3",
+    "file_id": "saviors-of-the-world"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Rebirthing",
+    "artist": "Skillet",
+    "size": "9.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/11.-.Rebirthing.mp3",
+    "file_id": "rebirthing"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Say Goodbye (Acoustic)",
+    "artist": "Skillet",
+    "size": "9.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/17.-.Say.Goodbye.Acoustic.mp3",
+    "file_id": "say-goodbye-acoustic"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Would It Matter (Bonus Track)",
+    "artist": "Skillet",
+    "size": "9.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/14.Would.It.Matter.Bonus.Track.mp3",
+    "file_id": "would-it-matter-bonus-track"
+  },
+  {
+    "folder": "skillet",
+    "title": "Alien Youth",
+    "size": "9.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.Alien.Youth.mp3",
+    "file_id": "alien-youth"
+  },
+  {
+    "folder": "skillet",
+    "title": "The One",
+    "size": "9.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/11.The.One.mp3",
+    "file_id": "the-one"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Freakshow",
+    "artist": "Skillet",
+    "size": "10.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/15.Freakshow.mp3",
+    "file_id": "freakshow"
+  },
+  {
+    "folder": "skillet",
+    "title": "Jesus Be Glorified",
+    "size": "10.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/06.Jesus.Be.Glorified.mp3",
+    "file_id": "jesus-be-glorified"
+  },
+  {
+    "folder": "Skillet",
+    "title": "My Obsession",
+    "artist": "Skillet",
+    "size": "11.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/12.-.My.Obsession.mp3",
+    "file_id": "my-obsession"
+  },
+  {
+    "folder": "skillet",
+    "title": "Your Name Is Holy",
+    "size": "11.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/02.Your.Name.Is.Holy.mp3",
+    "file_id": "your-name-is-holy"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Dead Inside (Bonus Track)",
+    "artist": "Skillet",
+    "size": "6.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/13.Dead.Inside.Bonus.Track.mp3",
+    "file_id": "dead-inside-bonus-track"
   },
   {
     "folder": "Skillet",
     "title": "What I Believe",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/What%20I%20Believe.mp3",
+    "size": "7.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/12.What.I.Believe.mp3",
     "file_id": "what-i-believe"
+  },
+  {
+    "folder": "skillet",
+    "title": "Paint",
+    "size": "7.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/06.Paint.mp3",
+    "file_id": "paint"
+  },
+  {
+    "folder": "skillet",
+    "title": "Lions",
+    "size": "7.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/07.Lions.mp3",
+    "file_id": "lions"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Believe (iTunes Session)",
+    "artist": "Skillet",
+    "size": "8.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/08.Believe.iTunes.Session.mp3",
+    "file_id": "believe-itunes-session"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Not Gonna Die",
+    "artist": "Skillet",
+    "size": "8.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.Not.Gonna.Die.mp3",
+    "file_id": "not-gonna-die"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Salvation",
+    "artist": "Skillet",
+    "size": "8.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/08.Salvation.mp3",
+    "file_id": "salvation"
+  },
+  {
+    "folder": "skillet",
+    "title": "Feel Invincible",
+    "size": "8.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.Feel.Invincible.mp3",
+    "file_id": "feel-invincible"
+  },
+  {
+    "folder": "skillet",
+    "title": "Deeper",
+    "size": "8.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/02.Deeper.mp3",
+    "file_id": "deeper"
+  },
+  {
+    "folder": "skillet",
+    "title": "Rest",
+    "size": "8.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.Rest.mp3",
+    "file_id": "rest"
+  },
+  {
+    "folder": "Skillet",
+    "title": "My Religion",
+    "artist": "Skillet",
+    "size": "9.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/10.My.Religion.mp3",
+    "file_id": "my-religion"
+  },
+  {
+    "folder": "skillet",
+    "title": "Jesus Jesus Holy And Anointed One",
+    "size": "9.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.Jesus.Jesus.Holy.And.Anointed.One.mp3",
+    "file_id": "jesus-jesus-holy-and-anointed-one"
+  },
+  {
+    "folder": "skillet",
+    "title": "You Are My Hope",
+    "size": "9.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.You.Are.My.Hope.mp3",
+    "file_id": "you-are-my-hope"
+  },
+  {
+    "folder": "skillet",
+    "title": "Take",
+    "size": "9.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/08.Take.mp3",
+    "file_id": "take"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Fingernails",
+    "artist": "Skillet",
+    "size": "11.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/07.Fingernails.mp3",
+    "file_id": "fingernails"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Rebirthing (iTunes Session)",
+    "artist": "Skillet",
+    "size": "11.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.Rebirthing.iTunes.Session.mp3",
+    "file_id": "rebirthing-itunes-session"
+  },
+  {
+    "folder": "skillet",
+    "title": "Coming Down",
+    "size": "11.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/09.Coming.Down.mp3",
+    "file_id": "coming-down"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Angels Fall Down",
+    "artist": "Skillet",
+    "size": "14.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/13.-.Angels.Fall.Down.mp3",
+    "file_id": "angels-fall-down"
+  },
+  {
+    "folder": "skillet",
+    "title": "Explanation Of Alien Youth",
+    "size": "1.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.Explanation.Of.Alien.Youth.mp3",
+    "file_id": "explanation-of-alien-youth"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Monster (Radio Edit) (Bonus Track)",
+    "artist": "Skillet",
+    "size": "6.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/15.Monster.Radio.Edit.Bonus.Track.mp3",
+    "file_id": "monster-radio-edit-bonus-track"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Monster",
+    "artist": "Skillet",
+    "size": "6.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/02.Monster.mp3",
+    "file_id": "monster"
+  },
+  {
+    "folder": "skillet",
+    "title": "Hey You I Love Your Soul",
+    "size": "6.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.Hey.You.I.Love.Your.Soul.mp3",
+    "file_id": "hey-you-i-love-your-soul"
   },
   {
     "folder": "Skillet",
     "title": "Whispers In The Dark",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Whispers%20In%20The%20Dark.mp3",
+    "size": "7.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/10.-.Whispers.in.the.Dark.mp3",
     "file_id": "whispers-in-the-dark"
   },
   {
     "folder": "Skillet",
     "title": "Whispers in the Dark (Acoustic)",
     "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Whispers%20in%20the%20Dark%20%28Acoustic%29.mp3",
+    "size": "7.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/16.-.Whispers.in.the.Dark.Acoustic.mp3",
     "file_id": "whispers-in-the-dark-acoustic"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Comatose",
+    "artist": "Skillet",
+    "size": "8.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/05.-.Comatose.mp3",
+    "file_id": "comatose"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Hard To Find",
+    "artist": "Skillet",
+    "size": "8.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/11.Hard.To.Find.mp3",
+    "file_id": "hard-to-find"
+  },
+  {
+    "folder": "skillet",
+    "title": "Invincible",
+    "size": "8.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.Invincible.mp3",
+    "file_id": "invincible"
+  },
+  {
+    "folder": "skillet",
+    "title": "Safe With You",
+    "size": "8.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/07.Safe.With.You.mp3",
+    "file_id": "safe-with-you"
+  },
+  {
+    "folder": "skillet",
+    "title": "The Resistance",
+    "size": "8.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/12.The.Resistance.mp3",
+    "file_id": "the-resistance"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Say Goodbye",
+    "artist": "Skillet",
+    "size": "9.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/09.-.Say.Goodbye.mp3",
+    "file_id": "say-goodbye"
+  },
+  {
+    "folder": "skillet",
+    "title": "I Can",
+    "size": "9.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.I.Can.mp3",
+    "file_id": "i-can"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Monster (Unleash the Beast)",
+    "artist": "Skillet",
+    "size": "10.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.Monster.Unleash.the.Beast.mp3",
+    "file_id": "monster-unleash-the-beast"
+  },
+  {
+    "folder": "skillet",
+    "title": "Saturn",
+    "size": "11.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.Saturn.mp3",
+    "file_id": "saturn"
+  },
+  {
+    "folder": "skillet",
+    "title": "You Are My Hope",
+    "size": "11.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.-.You.Are.My.Hope.mp3",
+    "file_id": "you-are-my-hope"
+  },
+  {
+    "folder": "skillet",
+    "title": "Will You Be There",
+    "size": "11.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/11.Will.You.Be.There.mp3",
+    "file_id": "will-you-be-there"
+  },
+  {
+    "folder": "skillet",
+    "title": "Shout To The Lord",
+    "size": "14.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/10.Shout.To.The.Lord.mp3",
+    "file_id": "shout-to-the-lord"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Monster (iTunes Session)",
+    "artist": "Skillet",
+    "size": "6.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.Monster.iTunes.Session.mp3",
+    "file_id": "monster-itunes-session"
+  },
+  {
+    "folder": "Skillet",
+    "title": "The Older I Get (Acoustic)",
+    "artist": "Skillet",
+    "size": "7.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/15.-.The.Older.I.Get.Acoustic.mp3",
+    "file_id": "the-older-i-get-acoustic"
+  },
+  {
+    "folder": "skillet",
+    "title": "I Want to Live",
+    "size": "7.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.I.Want.to.Live.mp3",
+    "file_id": "i-want-to-live"
+  },
+  {
+    "folder": "skillet",
+    "title": "You re Powerful",
+    "size": "7.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/06.You.re.Powerful.mp3",
+    "file_id": "you-re-powerful"
+  },
+  {
+    "folder": "skillet",
+    "title": "Each Other",
+    "size": "7.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/08.Each.Other.mp3",
+    "file_id": "each-other"
+  },
+  {
+    "folder": "skillet",
+    "title": "Watching for Comets",
+    "size": "7.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/10.Watching.for.Comets.mp3",
+    "file_id": "watching-for-comets"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Live Free Or Let Me Die",
+    "artist": "Skillet",
+    "size": "8.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/12.-.Live.Free.Or.Let.Me.Die.mp3",
+    "file_id": "live-free-or-let-me-die"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Rebirthing (Acoustic)",
+    "artist": "Skillet",
+    "size": "8.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/13.-.Rebirthing.Acoustic.mp3",
+    "file_id": "rebirthing-acoustic"
+  },
+  {
+    "folder": "skillet",
+    "title": "Come on to the Future",
+    "size": "8.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/05.Come.on.to.the.Future.mp3",
+    "file_id": "come-on-to-the-future"
+  },
+  {
+    "folder": "skillet",
+    "title": "Pour",
+    "size": "9.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/06.Pour.mp3",
+    "file_id": "pour"
+  },
+  {
+    "folder": "skillet",
+    "title": "Scarecrow",
+    "size": "9.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/12.Scarecrow.mp3",
+    "file_id": "scarecrow"
+  },
+  {
+    "folder": "skillet",
+    "title": "Rippin Me Off",
+    "size": "10.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/10.Rippin.Me.Off.mp3",
+    "file_id": "rippin-me-off"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Collide",
+    "artist": "Skillet",
+    "size": "12.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/06.Collide.mp3",
+    "file_id": "collide"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Those Nights",
+    "artist": "Skillet",
+    "size": "14.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/09.-.Those.Nights.mp3",
+    "file_id": "those-nights"
+  },
+  {
+    "folder": "skillet",
+    "title": "cover",
+    "size": "0.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/cover.jpg",
+    "file_id": "cover"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Rise",
+    "artist": "Skillet",
+    "size": "10.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.Rise.mp3",
+    "file_id": "rise"
+  },
+  {
+    "folder": "skillet",
+    "title": "Alien Youth",
+    "size": "10.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.-.Alien.Youth.mp3",
+    "file_id": "alien-youth"
+  },
+  {
+    "folder": "skillet",
+    "title": "Earth Invasion",
+    "size": "11.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.Earth.Invasion.mp3",
+    "file_id": "earth-invasion"
+  },
+  {
+    "folder": "skillet",
+    "title": "Who Is Like Our God",
+    "size": "12.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.Who.Is.Like.Our.God.mp3",
+    "file_id": "who-is-like-our-god"
+  },
+  {
+    "folder": "skillet",
+    "title": "The Thirst Is Taking Over",
+    "size": "15.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/07.The.Thirst.Is.Taking.Over.mp3",
+    "file_id": "the-thirst-is-taking-over"
+  },
+  {
+    "folder": "skillet",
+    "title": "We re Thirsty",
+    "size": "7.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/05.We.re.Thirsty.mp3",
+    "file_id": "we-re-thirsty"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Falling Inside the Black",
+    "artist": "Skillet",
+    "size": "8.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/08.-.Falling.Inside.the.Black.mp3",
+    "file_id": "falling-inside-the-black"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Sometimes",
+    "artist": "Skillet",
+    "size": "8.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/10.Sometimes.mp3",
+    "file_id": "sometimes"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Don't Wake Me",
+    "artist": "Skillet",
+    "size": "9.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.Don.t.Wake.Me.mp3",
+    "file_id": "dont-wake-me"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Energy",
+    "artist": "Skillet",
+    "size": "9.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/10.Energy.mp3",
+    "file_id": "energy"
+  },
+  {
+    "folder": "Skillet",
+    "title": "Yours To Hold",
+    "artist": "Skillet",
+    "size": "9.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/10.-.Yours.To.Hold.mp3",
+    "file_id": "yours-to-hold"
+  },
+  {
+    "folder": "skillet",
+    "title": "Locked In A Cage",
+    "size": "9.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/03.Locked.In.A.Cage.mp3",
+    "file_id": "locked-in-a-cage"
+  },
+  {
+    "folder": "skillet",
+    "title": "Your Love Keeps Me Alive",
+    "size": "9.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/04.Your.Love.Keeps.Me.Alive.mp3",
+    "file_id": "your-love-keeps-me-alive"
+  },
+  {
+    "folder": "skillet",
+    "title": "Promise Blender",
+    "size": "9.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/05.Promise.Blender.mp3",
+    "file_id": "promise-blender"
   },
   {
     "folder": "Skillet",
@@ -918,144 +1676,220 @@
     "file_id": "whispers-in-the-dark"
   },
   {
-    "folder": "Skillet",
-    "title": "Would It Matter (Bonus Track)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Would%20It%20Matter%20%28Bonus%20Track%29.mp3",
-    "file_id": "would-it-matter-bonus-track"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Yours To Hold (Acoustic)",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Yours%20To%20Hold%20%28Acoustic%29.mp3",
-    "file_id": "yours-to-hold-acoustic"
-  },
-  {
-    "folder": "Skillet",
-    "title": "Yours To Hold",
-    "artist": "Skillet",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Skillet/Yours%20To%20Hold.mp3",
-    "file_id": "yours-to-hold"
+    "folder": "Within Temptation",
+    "title": "Silver Moonlight",
+    "artist": "Within Temptation",
+    "size": "12.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Silver.Moonlight.mp3",
+    "file_id": "silver-moonlight"
   },
   {
     "folder": "Within Temptation",
-    "title": "Unofficial Music Video",
-    "artist": "A Demon's Fate",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/A%20Demon%27s%20Fate%20-%20Unofficial%20Music%20Video.mp3",
-    "file_id": "unofficial-music-video"
+    "title": "Faster Music Video",
+    "artist": "Within Temptation",
+    "size": "3.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Faster.Music.Video.mp3",
+    "file_id": "faster-music-video"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Iron Unofficial Music Video (Wonder Woman movie) HD",
+    "artist": "Within Temptation",
+    "size": "5.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Iron.Unofficial.Music.Video.Wonder.Woman.movie.HD.mp3",
+    "file_id": "iron-unofficial-music-video-wonder-woman-movie-hd"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "What-have-you-done-feat-Keith-Caputo",
+    "artist": "Within Temptation",
+    "size": "9.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/What-have-you-done-feat-Keith-Caputo.mp3",
+    "file_id": "what-have-you-done-feat-keith-caputo"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Dangerous (Feat. Howard Jones)",
+    "artist": "Within Temptation",
+    "size": "11.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Dangerous.Feat.Howard.Jones.mp3",
+    "file_id": "dangerous-feat-howard-jones"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Tell Me Why",
+    "artist": "Within Temptation",
+    "size": "14.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Tell.Me.Why.mp3",
+    "file_id": "tell-me-why"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Paradise (What About Us) ft. Tarja",
+    "artist": "Within Temptation",
+    "size": "5.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Paradise.What.About.Us.ft.Tarja.mp3",
+    "file_id": "paradise-what-about-us-ft-tarja"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Whole World Is Watching (Feat. Dave Pirner)",
+    "artist": "Within Temptation",
+    "size": "9.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Whole.World.Is.Watching.Feat.Dave.Pirner.mp3",
+    "file_id": "whole-world-is-watching-feat-dave-pirner"
   },
   {
     "folder": "Within Temptation",
     "title": "All-i-need",
     "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/All-i-need.mp3",
+    "size": "11.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/All-i-need.mp3",
     "file_id": "all-i-need"
   },
   {
     "folder": "Within Temptation",
-    "title": "And We Run (Evolution track)",
+    "title": "Edge Of The World",
     "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/And%20We%20Run%20%28Evolution%20track%29.mp3",
-    "file_id": "and-we-run-evolution-track"
+    "size": "11.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Edge.Of.The.World.mp3",
+    "file_id": "edge-of-the-world"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Radioactive",
+    "artist": "Within Temptation",
+    "size": "7.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Radioactive.mp3",
+    "file_id": "radioactive"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Shot In The Dark (The Great Wall) Video HD",
+    "artist": "Within Temptation",
+    "size": "8.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Shot.In.The.Dark.The.Great.Wall.Video.HD.mp3",
+    "file_id": "shot-in-the-dark-the-great-wall-video-hd"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Summertime Sadness",
+    "artist": "Within Temptation",
+    "size": "9.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Summertime.Sadness.mp3",
+    "file_id": "summertime-sadness"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Let Her Go",
+    "artist": "Within Temptation",
+    "size": "8.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Let.Her.Go.mp3",
+    "file_id": "let-her-go"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Tell Me Why (Evolution track)",
+    "artist": "Within Temptation",
+    "size": "11.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Tell.Me.Why.Evolution.track.mp3",
+    "file_id": "tell-me-why-evolution-track"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Let Us Burn",
+    "artist": "Within Temptation",
+    "size": "12.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Let.Us.Burn.mp3",
+    "file_id": "let-us-burn"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Dirty Dancer",
+    "artist": "Within Temptation",
+    "size": "9.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Dirty.Dancer.mp3",
+    "file_id": "dirty-dancer"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "In the Middle of the night",
+    "artist": "Within Temptation",
+    "size": "4.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/In.the.Middle.of.the.night.mp3",
+    "file_id": "in-the-middle-of-the-night"
+  },
+  {
+    "folder": "Within Temptation",
+    "title": "Endless-War",
+    "artist": "Within Temptation",
+    "size": "7.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Endless-War.mp3",
+    "file_id": "endless-war"
   },
   {
     "folder": "Within Temptation",
     "title": "And We Run (Feat. Xzibit)",
     "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/And%20We%20Run%20%28Feat.%20Xzibit%29.mp3",
+    "size": "8.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/And.We.Run.Feat.Xzibit.mp3",
     "file_id": "and-we-run-feat-xzibit"
   },
   {
     "folder": "Within Temptation",
     "title": "Covered By Roses (Evolution track)",
     "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Covered%20By%20Roses%20%28Evolution%20track%29.mp3",
+    "size": "10.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Covered.By.Roses.Evolution.track.mp3",
     "file_id": "covered-by-roses-evolution-track"
   },
   {
     "folder": "Within Temptation",
     "title": "Covered By Roses",
     "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Covered%20By%20Roses.mp3",
+    "size": "11.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Covered.By.Roses.mp3",
     "file_id": "covered-by-roses"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Dangerous (Feat. Howard Jones)",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Dangerous%20%28Feat.%20Howard%20Jones%29.mp3",
-    "file_id": "dangerous-feat-howard-jones"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Dirty Dancer",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Dirty%20Dancer.mp3",
-    "file_id": "dirty-dancer"
   },
   {
     "folder": "Within Temptation",
     "title": "Dog Days",
     "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Dog%20Days.mp3",
+    "size": "11.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Dog.Days.mp3",
     "file_id": "dog-days"
   },
   {
     "folder": "Within Temptation",
-    "title": "Edge Of The World",
+    "title": "And We Run (Evolution track)",
     "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Edge%20Of%20The%20World.mp3",
-    "file_id": "edge-of-the-world"
+    "size": "13.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/And.We.Run.Evolution.track.mp3",
+    "file_id": "and-we-run-evolution-track"
   },
   {
     "folder": "Within Temptation",
-    "title": "Endless-War",
+    "title": "Silver Moonlight (Evolution track)",
     "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Endless-War.mp3",
-    "file_id": "endless-war"
+    "size": "14.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Silver.Moonlight.Evolution.track.mp3",
+    "file_id": "silver-moonlight-evolution-track"
   },
   {
     "folder": "Within Temptation",
-    "title": "Faster Music Video",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Faster%20Music%20Video.mp3",
-    "file_id": "faster-music-video"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "In the Middle of the night",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/In%20the%20Middle%20of%20the%20night.mp3",
-    "file_id": "in-the-middle-of-the-night"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Iron Unofficial Music Video (Wonder Woman movie) HD",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Iron%20%20%20Unofficial%20Music%20Video%20%28Wonder%20Woman%20movie%29%20HD.mp3",
-    "file_id": "iron-unofficial-music-video-wonder-woman-movie-hd"
+    "title": "Unofficial Music Video",
+    "artist": "A Demon's Fate",
+    "size": "5.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/A.Demon.s.Fate.-.Unofficial.Music.Video.mp3",
+    "file_id": "unofficial-music-video"
   },
   {
     "folder": "Within Temptation",
     "title": "Jacoby-shaddix-The-reckoning",
     "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Jacoby-shaddix-The-reckoning.mp3",
+    "size": "6.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/jacoby-shaddix-The-reckoning.mp3",
     "file_id": "jacoby-shaddix-the-reckoning"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Let Her Go",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Let%20Her%20Go.mp3",
-    "file_id": "let-her-go"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Let Us Burn",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Let%20Us%20Burn.mp3",
-    "file_id": "let-us-burn"
   },
   {
     "folder": "Within Temptation",
@@ -1066,52 +1900,10 @@
   },
   {
     "folder": "Within Temptation",
-    "title": "Paradise (What About Us) ft. Tarja",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Paradise%20%28What%20About%20Us%29%20ft.%20Tarja.mp3",
-    "file_id": "paradise-what-about-us-ft-tarja"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Radioactive",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Radioactive.mp3",
-    "file_id": "radioactive"
-  },
-  {
-    "folder": "Within Temptation",
     "title": "Say my name",
     "artist": "Within Temptation",
     "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Say%20my%20name.mp3",
     "file_id": "say-my-name"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Shot In The Dark (The Great Wall) Video HD",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Shot%20In%20The%20Dark%20%28The%20Great%20Wall%29%20Video%20HD.mp3",
-    "file_id": "shot-in-the-dark-the-great-wall-video-hd"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Silver Moonlight (Evolution track)",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Silver%20Moonlight%20%28Evolution%20track%29.mp3",
-    "file_id": "silver-moonlight-evolution-track"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Silver Moonlight",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Silver%20Moonlight.mp3",
-    "file_id": "silver-moonlight"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Summertime Sadness",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Summertime%20Sadness.mp3",
-    "file_id": "summertime-sadness"
   },
   {
     "folder": "Within Temptation",
@@ -1121,31 +1913,11 @@
     "file_id": "supernova"
   },
   {
-    "folder": "Within Temptation",
-    "title": "Tell Me Why (Evolution track)",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Tell%20Me%20Why%20%28Evolution%20track%29.mp3",
-    "file_id": "tell-me-why-evolution-track"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Tell Me Why",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Tell%20Me%20Why.mp3",
-    "file_id": "tell-me-why"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "What-have-you-done-feat-Keith-Caputo",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/What-have-you-done-feat-Keith-Caputo.mp3",
-    "file_id": "what-have-you-done-feat-keith-caputo"
-  },
-  {
-    "folder": "Within Temptation",
-    "title": "Whole World Is Watching (Feat. Dave Pirner)",
-    "artist": "Within Temptation",
-    "download_link": "https://disk.yandex.ru/d/b4sqSrbsOFtMcA?path=/Within%20Temptation/Whole%20World%20Is%20Watching%20%28Feat.%20Dave%20Pirner%29.mp3",
-    "file_id": "whole-world-is-watching-feat-dave-pirner"
+    "folder": "within-temptation",
+    "title": "Cara and Kahlan",
+    "artist": "Say my name",
+    "size": "3.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/within-temptation/Say.my.name.-.Cara.and.Kahlan.mp3",
+    "file_id": "cara-and-kahlan"
   }
 ]

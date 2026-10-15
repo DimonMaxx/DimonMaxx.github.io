@@ -1,0 +1,14 @@
+{
+  "ts": "2026-10-15T10:39:41.159904Z",
+  "mode": "repo-to-sheets",
+  "repo_to_sheets": {
+    "sections": {},
+    "to_update_rows": [],
+    "new_in_repo_rows": [],
+    "legacy_only_rows": [],
+    "errors": [
+      "[books] Не удалось открыть лист «Книги»: 'Client' object has no attribute 'worksheet'"
+    ]
+  },
+  "sheets_to_json": {}
+}

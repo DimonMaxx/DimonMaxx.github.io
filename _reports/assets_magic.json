@@ -1,0 +1,3467 @@
+{
+  "adobe": [
+    {
+      "name": "adobe-reader-xi",
+      "size": 62175767,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "aeditor": [
+    {
+      "name": "ad-sound-recorder",
+      "size": 3972528,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "aiseesoft-audio-converter",
+      "size": 40752592,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ashampoo-music-studio",
+      "size": 99551177,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "audacity",
+      "size": 36665635,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "audioshell",
+      "size": 3453161,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "cuetools",
+      "size": 14056856,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "dvd-audio-extractor",
+      "size": 12226659,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "everyone-piano",
+      "size": 28992951,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "exact-audio-copy",
+      "size": 5483360,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ez-meta-tag-editor",
+      "size": 34190499,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "free-mp3-cutter-and-editor",
+      "size": 2622289,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "freeac",
+      "size": 26249074,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "gilisoft-audio-recorder-pro",
+      "size": 26504485,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "goldwave",
+      "size": 12219274,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "magix-sound-forge-pro",
+      "size": 105656613,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mediahuman-audio-converter",
+      "size": 40752592,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mediahuman-lyrics-finder",
+      "size": 30030112,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mp3directcut",
+      "size": 9627595,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mp3tag",
+      "size": 6158335,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mp3tag-pro",
+      "size": 5289769,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "music-duplicate-remover",
+      "size": 3979880,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "musicbrainz-picard",
+      "size": 32331256,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ocenaudio",
+      "size": 74634689,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "reaper",
+      "size": 35387069,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "sound-normalizer",
+      "size": 7844622,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "soundop",
+      "size": 25867520,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "tagrename",
+      "size": 7802769,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "tagscanner",
+      "size": 7794415,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "ams": [
+    {
+      "name": "uskoritel-kompyutera",
+      "size": 134954,
+      "magic_hex": "ffd8ffe000104a46",
+      "detected_format": "jpg",
+      "has_extension": false
+    }
+  ],
+  "archive": [
+    {
+      "name": "7-zip",
+      "size": 2518379,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "innoextractor-ultra",
+      "size": 4111288,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "universal-extractor",
+      "size": 22001241,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "winrar",
+      "size": 6830408,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "ascomp": [
+    {
+      "name": "backup-maker-pro",
+      "size": 9551150,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "cleaning-suite-pro",
+      "size": 7788021,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "easy-slideshow",
+      "size": 56390114,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "f-rename-pro",
+      "size": 7383160,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "guardian-of-data",
+      "size": 6486947,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "image-former-pro",
+      "size": 6886930,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "pc-internals-pro",
+      "size": 7452950,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "pdf-conversa-pro",
+      "size": 8280467,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "pdf-imager-pro",
+      "size": 8625919,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "screencapt-pro",
+      "size": 10702899,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "secure-eraser-pro",
+      "size": 7779279,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "secure-pdf-pro",
+      "size": 7606490,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "synchredible-pro",
+      "size": 10664315,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "text-r-pro",
+      "size": 31999674,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "contact": [
+    {
+      "name": "altus",
+      "size": 87577343,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "grids",
+      "size": 64411225,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mailwasher-pro",
+      "size": 11278748,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mozilla-thunderbird",
+      "size": 60721528,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "telegram-desktop",
+      "size": 93953358,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "converter": [
+    {
+      "name": "any-video-converter-ultimate",
+      "size": 87232486,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "bigasoft-audio-converter",
+      "size": 18826515,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "bigasoft-total-video-converter",
+      "size": 22185036,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "coolutils-total-audio-converter",
+      "size": 76747738,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ez-cd-audio-converter",
+      "size": 42167261,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "format-factory",
+      "size": 155666476,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "freemake-audio-converter",
+      "size": 34471539,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "freemake-video-converter",
+      "size": 100341839,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "gilisoft-video-converter-discovery-edition",
+      "size": 65739824,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "handbrake",
+      "size": 25303376,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "icecream-video-converter-pro",
+      "size": 21882622,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "makemkv",
+      "size": 16805326,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "metafox",
+      "size": 18357555,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "movavi-video-converter-premium",
+      "size": 105315265,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "vidcoder",
+      "size": 78133589,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "video-shaper",
+      "size": 37523527,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "vso-convertxtodvd",
+      "size": 35116796,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "vso-convertxtohd",
+      "size": 36454952,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "vso-convertxtovideo-ultimate",
+      "size": 50937274,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "winx-dvd-copy-pro",
+      "size": 14577111,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "winx-dvd-ripper-platinum",
+      "size": 31746471,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "winx-hd-video-converter-deluxe",
+      "size": 53395377,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "wonderfox-dvd-video-converter",
+      "size": 88676365,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "wonderfox-hd-video-converter-factory-pro",
+      "size": 140442876,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "xilisoft-video-converter-ultimate",
+      "size": 32825982,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "xmedia-recode",
+      "size": 34758156,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "xrecode3",
+      "size": 67598724,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "defrag": [
+    {
+      "name": "auslogics-disk-defrag-free",
+      "size": 14861465,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "auslogics-disk-defrag-pro",
+      "size": 20135185,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "auslogics-ssd-optimizer",
+      "size": 25429511,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "iobit-smart-defrag-pro",
+      "size": 10701442,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "raxco-perfectdisk-professional-business",
+      "size": 21225168,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "diagnostics": [
+    {
+      "name": "crystaldiskinfo",
+      "size": 72209110,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "crystaldiskmark-shizuku",
+      "size": 32545318,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "furmark",
+      "size": 34021396,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "hard-disk-sentinel-pro",
+      "size": 31200456,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "hashcheck-shell-extension",
+      "size": 508952,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "hashtab",
+      "size": 1117836,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "hd-tune-pro",
+      "size": 5442900,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mem-reduct",
+      "size": 2126456,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "msi-afterburner",
+      "size": 42663360,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "openhashtab",
+      "size": 8503296,
+      "magic_hex": "d0cf11e0a1b11ae1",
+      "detected_format": null,
+      "has_extension": false
+    },
+    {
+      "name": "ram-saver-professional",
+      "size": 1961933,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "disc": [
+    {
+      "name": "aiseesoft-dvd-creator",
+      "size": 37983406,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "alcohol-120",
+      "size": 8536485,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "alcohol-120-free",
+      "size": 8536485,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "anyburn",
+      "size": 7042105,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "anytoiso-pro",
+      "size": 10850702,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "burnaware-professional",
+      "size": 52504234,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "cddvd-shot",
+      "size": 3449426,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "daemon-tools-lite",
+      "size": 21057891,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "daemon-tools-pro",
+      "size": 25598105,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "daemon-tools-ultra",
+      "size": 30975378,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "dvd-drive-repair",
+      "size": 3281391,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "imgburn",
+      "size": 6695697,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "iso-workshop-professional",
+      "size": 12345079,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "non-stop-copy",
+      "size": 1897624,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "osfmount",
+      "size": 8892588,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "poweriso",
+      "size": 9471876,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "qemu-simple-boot",
+      "size": 2375306,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "sptd",
+      "size": 1110012,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "sptd-dlya-windows-10",
+      "size": 1110012,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "true-burner",
+      "size": 9752024,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ultraiso",
+      "size": 5577346,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "usb-repair",
+      "size": 3190587,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "wintohdd-technician",
+      "size": 22255227,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "wintousb-technician",
+      "size": 24701445,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "download": [
+    {
+      "name": "3d-youtube-downloader",
+      "size": 52467624,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "3d-youtube-downloader-batch",
+      "size": 52467624,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ant-download-manager",
+      "size": 37084646,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "by-click-downloader",
+      "size": 38798023,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "download-master",
+      "size": 72279679,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "extreme-picture-finder",
+      "size": 100675295,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "internet-download-manager",
+      "size": 14599316,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "masstube",
+      "size": 32363963,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mediahuman-youtube-downloader",
+      "size": 52467624,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mediahuman-youtube-to-mp3",
+      "size": 148078192,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mp3jam",
+      "size": 28726166,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "qbittorrent",
+      "size": 41776212,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "torrent",
+      "size": 7137786,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "uptooda",
+      "size": 18289265,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "file": [
+    {
+      "name": "advanced-renamer",
+      "size": 11569430,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "all-file-renamer",
+      "size": 2278807,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "far-manager",
+      "size": 14893056,
+      "magic_hex": "d0cf11e0a1b11ae1",
+      "detected_format": null,
+      "has_extension": false
+    },
+    {
+      "name": "professional-renamer",
+      "size": 1257994,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "rename-expert",
+      "size": 11494176,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "renamer-pro",
+      "size": 5331812,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "resource-hacker",
+      "size": 5189610,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "resource-tuner",
+      "size": 9146064,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "restorator",
+      "size": 7033067,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "settools",
+      "size": 452936,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "total-commander-extended-lite",
+      "size": 177664,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "total-commander-powerpack",
+      "size": 177664,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "total-commander-poweruser",
+      "size": 177664,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "xyplorer",
+      "size": 18323160,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "graphics": [
+    {
+      "name": "4k-image-compressor",
+      "size": 41722358,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "artweaver-plus",
+      "size": 35016461,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "colormania",
+      "size": 1733240,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "coolutils-total-image-converter",
+      "size": 40778579,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "epic-pen-pro",
+      "size": 6947360,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "faststone-capture",
+      "size": 10052070,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "faststone-image-viewer",
+      "size": 12618752,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "faststone-maxview",
+      "size": 9395375,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "faststone-photo-resizer",
+      "size": 3626737,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "firealpaca",
+      "size": 56542668,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "fotosizer",
+      "size": 3288627,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "honeyview",
+      "size": 7971192,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "icecream-image-resizer-pro",
+      "size": 8901963,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "irfanview",
+      "size": 48256216,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "light-image-resizer",
+      "size": 47255281,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "paintnet",
+      "size": 84380680,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "photoscape",
+      "size": 19378589,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "room-arranger",
+      "size": 25603745,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "tsr-watermark-image-pro",
+      "size": 13887451,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "vector-magic",
+      "size": 9203840,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "xnconvert",
+      "size": 26589208,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "xnview-extended",
+      "size": 22189824,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "xnview-mp",
+      "size": 59343944,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "xnview-shell-extension",
+      "size": 22189824,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "hdd": [
+    {
+      "name": "abelssoft-ssd-fresh-2026",
+      "size": 6606757,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "acronis-disk-director-server",
+      "size": 29326869,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "adata-ssd-toolbox",
+      "size": 8405673,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "aomei-partition-assistant-technician",
+      "size": 69348050,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "easeus-partition-master-unlimited",
+      "size": 49010723,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "eassos-diskgenius-professional",
+      "size": 58130875,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "hdd-low-level-format-tool",
+      "size": 2125562,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "kingston-ssd-manager",
+      "size": 55567032,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "macrorit-data-wiper-unlimited",
+      "size": 9945150,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "macrorit-disk-scanner-unlimited",
+      "size": 8966848,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "macrorit-partition-expert-unlimited",
+      "size": 10739166,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "macrorit-partition-extender-unlimited",
+      "size": 10056428,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "niubi-partition-editor",
+      "size": 11260591,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "transcend-elite-data-management",
+      "size": 16337032,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "transcend-ssd-scope",
+      "size": 38611672,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "usb-low-level-format-pro",
+      "size": 3484762,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "western-digital-ssd-dashboard",
+      "size": 85519365,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "interface": [
+    {
+      "name": "8gadgetpack",
+      "size": 18059588,
+      "magic_hex": "d0cf11e0a1b11ae1",
+      "detected_format": null,
+      "has_extension": false
+    },
+    {
+      "name": "atomic-alarm-clock",
+      "size": 7532153,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "battery-mode",
+      "size": 2977544,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "bing-wallpaper",
+      "size": 8757248,
+      "magic_hex": "d0cf11e0a1b11ae1",
+      "detected_format": null,
+      "has_extension": false
+    },
+    {
+      "name": "classic-shell",
+      "size": 7380840,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "clover",
+      "size": 3678606,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "dr-folder",
+      "size": 10299866,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "filemenu-tools",
+      "size": 10372055,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "horloger",
+      "size": 2884748,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "icon-reader",
+      "size": 538962,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mouse-mac",
+      "size": 1548450,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "old-calculator-for-windows-1110",
+      "size": 1306368,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "open-shell",
+      "size": 10107784,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "santa-countdown",
+      "size": 6534307,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "scrollnavigator",
+      "size": 2724862,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "smarter-battery",
+      "size": 2875152,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "stardock-fences",
+      "size": 12039588,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "stardock-start11",
+      "size": 38506651,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "teorex-folderico",
+      "size": 18040640,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ultrauxthemepatcher",
+      "size": 163733,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "volume2",
+      "size": 8864678,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "internet": [
+    {
+      "name": "advanced-ip-scanner",
+      "size": 20230144,
+      "magic_hex": "d0cf11e0a1b11ae1",
+      "detected_format": null,
+      "has_extension": false
+    },
+    {
+      "name": "advanced-port-scanner",
+      "size": 19521536,
+      "magic_hex": "d0cf11e0a1b11ae1",
+      "detected_format": null,
+      "has_extension": false
+    },
+    {
+      "name": "air-explorer-pro",
+      "size": 6053630,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "air-live-drive-pro",
+      "size": 23214194,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "anydesk",
+      "size": 3792136,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "avira-phantom-vpn-pro",
+      "size": 6487672,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "cfosspeed",
+      "size": 5859366,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "change-mac-address",
+      "size": 5069532,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "complete-internet-repair",
+      "size": 3723677,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "du-meter",
+      "size": 10624061,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "find-mac-address",
+      "size": 5254077,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mylanviewer",
+      "size": 6624712,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "netbalancer",
+      "size": 36651821,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "netlimiter",
+      "size": 7136763,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "netspeedmonitor",
+      "size": 4871006,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "networx",
+      "size": 10148721,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "nomachine",
+      "size": 81171440,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "openvpn",
+      "size": 8245392,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "psiphon",
+      "size": 42271387,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "radmin-server",
+      "size": 5357568,
+      "magic_hex": "d0cf11e0a1b11ae1",
+      "detected_format": null,
+      "has_extension": false
+    },
+    {
+      "name": "radmin-viewer",
+      "size": 5103104,
+      "magic_hex": "d0cf11e0a1b11ae1",
+      "detected_format": null,
+      "has_extension": false
+    },
+    {
+      "name": "radmin-vpn",
+      "size": 48650808,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "smartftp-client-enterprise",
+      "size": 8830284,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "speedtest",
+      "size": 52372941,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "teamviewer",
+      "size": 103793593,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "trustviewer",
+      "size": 2601192,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "wi-fi-scanner",
+      "size": 5311985,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "media": [
+    {
+      "name": "aimp",
+      "size": 110717431,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "aiseesoft-blu-ray-player",
+      "size": 43024002,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "bongiovi-dps",
+      "size": 13442741,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "chevolume",
+      "size": 2070502,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "foobar2000",
+      "size": 7595680,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "foobar2000-darkone-duifoon",
+      "size": 56589320,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "fxsound",
+      "size": 3299198,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "helium-premium",
+      "size": 68859956,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "k-lite-codec-pack-mega",
+      "size": 67996028,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "kmplayer",
+      "size": 103677994,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "letasoft-sound-booster",
+      "size": 6895862,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "light-alloy",
+      "size": 15445059,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "media-player-classic-black-edition",
+      "size": 98064080,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "media-player-classic-home-cinema",
+      "size": 98064080,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mediainfo",
+      "size": 15257520,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mediamonkey-gold",
+      "size": 14681422,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mirillis-splash",
+      "size": 26886342,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "musicbee",
+      "size": 9701767,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "vlc-media-player",
+      "size": 44905444,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "winamp",
+      "size": 38883123,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "meditor": [
+    {
+      "name": "4k-video-to-mp3",
+      "size": 55386232,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "aiseesoft-video-editor",
+      "size": 38868096,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "aiseesoft-video-enhancer",
+      "size": 37545272,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "avidemux",
+      "size": 22928774,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "bandicut",
+      "size": 12292850,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "blufftitler-ultimate",
+      "size": 43702233,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "davinci-resolve-studio",
+      "size": 457751,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "fast-video-cutter-joiner",
+      "size": 22234466,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "fixvideo-re-encoder",
+      "size": 49591461,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "icecream-video-editor-pro",
+      "size": 55448963,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "machete",
+      "size": 3611188,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mkvtoolnix-for-windows-7",
+      "size": 74142564,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mkvtoolnix-gmkvextractgui-mkvcleaver",
+      "size": 74142564,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "solveigmm-video-splitter-business",
+      "size": 39521491,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "subtitle-edit",
+      "size": 11341231,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "video-rotator",
+      "size": 27272335,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "virtualdub",
+      "size": 16627855,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "mso": [
+    {
+      "name": "classic-menu-for-office",
+      "size": 17639967,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "classic-menu-for-office-2007",
+      "size": 17639967,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "microsoft-office-installer",
+      "size": 141812984,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "office-tab-enterprise",
+      "size": 26160890,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "softmaker-office",
+      "size": 57511624,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "office": [
+    {
+      "name": "abviewer-enterprise",
+      "size": 74544449,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "acme-cad-converter-2022",
+      "size": 12264885,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "caramba-switcher",
+      "size": 6913507,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "careueyes",
+      "size": 6358937,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "clavier",
+      "size": 1772355,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "clipdiary",
+      "size": 5210173,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "dbf-converter",
+      "size": 3486324,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "dbf-viewer-2000",
+      "size": 4158801,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "google-earth-pro",
+      "size": 89004724,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "hot-keyboard-pro",
+      "size": 4389747,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "mathtype",
+      "size": 32463333,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "nxpowerlite-desktop",
+      "size": 30286847,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "punto-switcher",
+      "size": 3203211,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "radiant-dicom-viewer",
+      "size": 6859039,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "simplemind-pro",
+      "size": 12316992,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "smath-studio",
+      "size": 3521536,
+      "magic_hex": "d0cf11e0a1b11ae1",
+      "detected_format": null,
+      "has_extension": false
+    },
+    {
+      "name": "sqlite-expert-professional",
+      "size": 68312626,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "sunsetscreen",
+      "size": 2440945,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "viewcompanion-premium",
+      "size": 51406749,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "winchm-pro",
+      "size": 9383124,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "windjview",
+      "size": 2544084,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "optimizers": [
+    {
+      "name": "7-taskbar-tweaker",
+      "size": 1854512,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ashampoo-winoptimizer",
+      "size": 28126294,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "auslogics-boostspeed",
+      "size": 46497204,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ccenhancer",
+      "size": 2190598,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ccleaner-professional",
+      "size": 64895200,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "cleanmypc",
+      "size": 28592667,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "glary-utilities-pro",
+      "size": 22581407,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "pc-cleaner-pro",
+      "size": 7029725,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "r-wipe-clean",
+      "size": 21748065,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "reviversoft-pc-reviver",
+      "size": 39433067,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "winaero-tweaker",
+      "size": 6108658,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "windows-7-manager",
+      "size": 11569538,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "windows-manager",
+      "size": 14288478,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "wintoolsnet-premium",
+      "size": 3437672,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "winutilities-professional",
+      "size": 8129504,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "wise-care-365",
+      "size": 48047502,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "pdf": [
+    {
+      "name": "alterpdf-pro",
+      "size": 17678031,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "icecream-pdf-editor-pro",
+      "size": 22968965,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "infix-pdf-editor-professional",
+      "size": 35268936,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "master-pdf-editor",
+      "size": 45886566,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "movavi-pdf-editor",
+      "size": 73050016,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "orpalis-pdf-reducer-professional",
+      "size": 35202983,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "pdf-eraser",
+      "size": 9427442,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "pdf-shaper-ultimate",
+      "size": 33956368,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "pdf-xchange-printer-standard",
+      "size": 251865438,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "pdf-xchange-viewer-pro",
+      "size": 251865438,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "pdfsign",
+      "size": 9064183,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "stdu-viewer",
+      "size": 2380207,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "sumatrapdf",
+      "size": 15884932,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "phone": [
+    {
+      "name": "aiseesoft-data-recovery",
+      "size": 21350899,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "aiseesoft-fonelab-for-android",
+      "size": 61969771,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "aiseesoft-heic-converter",
+      "size": 17458099,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "aiseesoft-phone-mirror",
+      "size": 71772221,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "coolmuster-android-assistant",
+      "size": 26148234,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "photo": [
+    {
+      "name": "acdsee-photo-studio-ultimate-2023",
+      "size": 402177101,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ashampoo-photo-commander",
+      "size": 67807125,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ashampoo-photo-optimizer",
+      "size": 100566517,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "benvista-photozoom",
+      "size": 99859883,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "codijy-colorizer-pro",
+      "size": 49736503,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "fotosketcher",
+      "size": 31421270,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "funny-photo-maker",
+      "size": 51605318,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "icecream-photo-editor-pro",
+      "size": 27547269,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "luminar-neo",
+      "size": 915741,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "photofiltre",
+      "size": 17893711,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "photoinstrument",
+      "size": 12284885,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "picasa",
+      "size": 12054224,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "picture-colorizer-pro",
+      "size": 56092523,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "teorex-batchinpaint",
+      "size": 9614142,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "teorex-iresizer",
+      "size": 9166330,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "teorex-multi-view-inpaint",
+      "size": 10424552,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "print": [
+    {
+      "name": "a4scandoc",
+      "size": 7940749,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "fineprint",
+      "size": 23427602,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "priprinter-professional",
+      "size": 8511866,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "scanitto-pro",
+      "size": 11903638,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "vuescan-professional",
+      "size": 60641362,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "radiotv": [
+    {
+      "name": "ip-tv-player",
+      "size": 37584685,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "pcradio",
+      "size": 26101139,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "radiocent",
+      "size": 4277938,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "radiomaximus",
+      "size": 84245605,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "radiosure",
+      "size": 18353541,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "rarmaradio-pro",
+      "size": 14893548,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "tapinradio",
+      "size": 76133811,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "recovery": [
+    {
+      "name": "cardrecovery",
+      "size": 2706190,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "diskdigger",
+      "size": 3758153,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "hetman-partition-recovery",
+      "size": 67804118,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ibeesoft-data-recovery",
+      "size": 11799048,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ontrack-easyrecovery-technician",
+      "size": 40191941,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "r-studio-network",
+      "size": 79197557,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "stellar-data-recovery-professional",
+      "size": 25059459,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "usb-drive-factory-reset-tool",
+      "size": 968585,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "wondershare-recoverit-ultimate",
+      "size": 78298074,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "recscreen": [
+    {
+      "name": "apowerrec",
+      "size": 56197285,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "apowersoft-screen-capture-pro",
+      "size": 29525266,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ashampoo-snap",
+      "size": 178551932,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "bandicam",
+      "size": 29996939,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "fast-screen-recorder",
+      "size": 18308575,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "gif-recorder-and-animated-gif-editor",
+      "size": 2565696,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "icecream-screen-recorder-pro",
+      "size": 27682838,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ocam-screen-recorder",
+      "size": 9743569,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "screenpresso-pro",
+      "size": 57343958,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "video-thumbnails-maker-platinum",
+      "size": 30607709,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "webcam-surveyor",
+      "size": 11395982,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "wincam",
+      "size": 5822201,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "winsnap",
+      "size": 5167196,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "zd-soft-screen-recorder",
+      "size": 14126670,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "registry": [
+    {
+      "name": "reg-organizer",
+      "size": 24887679,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "regcool",
+      "size": 4740413,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "registry-life",
+      "size": 16867889,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "registry-trash-keys-finder",
+      "size": 2413065,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "registry-workshop",
+      "size": 2745018,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "reviversoft-registry-reviver",
+      "size": 9771709,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "vit-registry-fix-professional",
+      "size": 3619838,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "search": [
+    {
+      "name": "beyond-compare-pro",
+      "size": 25293875,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "directory-lister-enterprise",
+      "size": 17507319,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "duplicate-audio-finder",
+      "size": 20686463,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "duplicate-cleaner-pro",
+      "size": 45932953,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "duplicate-file-detective-enterprise",
+      "size": 31570819,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "duplicate-files-search-link",
+      "size": 5737288,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "duplicate-picture-finder",
+      "size": 18759699,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "easy-duplicate-finder",
+      "size": 16587849,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "everything",
+      "size": 4516721,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "examdiff-pro",
+      "size": 36252061,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "filesearchex",
+      "size": 5022814,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "fileseek-pro",
+      "size": 24926009,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "foldersizes-enterprise",
+      "size": 30446141,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "image-comparer",
+      "size": 4349505,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "total-directory-report",
+      "size": 2847877,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "treesize-professional",
+      "size": 28099834,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ultrasearch-professional",
+      "size": 18862973,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "windirstat",
+      "size": 645729,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "wizfile",
+      "size": 5333600,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "wiztree",
+      "size": 5148752,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "security": [
+    {
+      "name": "adguard",
+      "size": 41765167,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "defenderui-pro",
+      "size": 2609104,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "eset-endpoint-security",
+      "size": 46172211,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "eset-internet-security",
+      "size": 204154999,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "eset-server-security",
+      "size": 46567862,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "malwarebytes-windows-firewall-control",
+      "size": 2766441,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "shadow-defender",
+      "size": 4674644,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "unchecky",
+      "size": 1363496,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "usb-disk-security",
+      "size": 5160746,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "w10privacy",
+      "size": 2709200,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "service": [
+    {
+      "name": "anvir-task-manager",
+      "size": 6228709,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "auslogics-driver-updater",
+      "size": 22785178,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "autorun-organizer",
+      "size": 16908243,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "cacheman",
+      "size": 6976049,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "clipboardfusion-pro",
+      "size": 27364011,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "driver-easy-professional",
+      "size": 6709119,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "drivermax",
+      "size": 5102102,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "easyuefi",
+      "size": 12705949,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "extremecopy-pro",
+      "size": 3457300,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "iobit-driver-booster-pro",
+      "size": 27770159,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "pc-helpsoft-driver-updater",
+      "size": 6341990,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "privacy-eraser-pro",
+      "size": 7201294,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "privazer",
+      "size": 9783665,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "process-lasso-pro",
+      "size": 5384812,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "reviversoft-driver-reviver",
+      "size": 13953569,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "right-click-enhancer-professional",
+      "size": 4816513,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "smart-driver-manager",
+      "size": 5266827,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "softperfect-ram-disk",
+      "size": 7494728,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "teracopy-pro",
+      "size": 8898051,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "traystatus-pro",
+      "size": 19960555,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "usb-safely-remove",
+      "size": 7519757,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "zentimo-xstorage-manager",
+      "size": 7439125,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "system": [
+    {
+      "name": "java-se-jre-8-x64",
+      "size": 72361120,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "java-se-jre-8-x86",
+      "size": 68628128,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "microsoft-aspnet-core-runtime-x64",
+      "size": 11299280,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "microsoft-aspnet-core-runtime-x86",
+      "size": 10795744,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "microsoft-edge-webview2-runtime-online",
+      "size": 1699256,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "microsoft-net-desktop-runtime-x64",
+      "size": 60029960,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "microsoft-net-desktop-runtime-x86",
+      "size": 55685016,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "microsoft-net-framework-35-dlya-windows-10",
+      "size": 38795219,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "microsoft-net-framework-481-windows-108x7",
+      "size": 63610344,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "microsoft-visual-c-2015-2022-x64",
+      "size": 18779992,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "microsoft-visual-c-2015-2022-x86",
+      "size": 6990696,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "nvidia-physx",
+      "size": 29417888,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "runtimepack-lite",
+      "size": 4348564,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "text": [
+    {
+      "name": "akelpad",
+      "size": 4705472,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "alreader",
+      "size": 5090267,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "atlantis-word-processor",
+      "size": 15193687,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "cool-reader",
+      "size": 13183873,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "emeditor-professional",
+      "size": 44692446,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "font-explorer-lm",
+      "size": 4940958,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "fontcreator-professional",
+      "size": 36610873,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "fontexpert",
+      "size": 14315792,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "ice-book-reader-professional",
+      "size": 33435521,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "icecream-ebook-reader-pro",
+      "size": 32640560,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "notepad",
+      "size": 6889816,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "notepad3",
+      "size": 4810064,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "popchar",
+      "size": 4388476,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "qtranslate",
+      "size": 930739,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "x-fonter",
+      "size": 8891842,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ],
+  "uninstall": [
+    {
+      "name": "ashampoo-uninstaller",
+      "size": 32743162,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "files-inspector-pro",
+      "size": 17010675,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "hibit-uninstaller",
+      "size": 5989376,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "iobit-uninstaller-pro",
+      "size": 27223968,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "iobit-unlocker",
+      "size": 3360792,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "lockhunter",
+      "size": 4142709,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "revo-uninstaller-pro",
+      "size": 25782532,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "soft-organizer-pro",
+      "size": 16551924,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "system-ninja",
+      "size": 3874526,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "total-uninstall-professional",
+      "size": 15782382,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "uninstall-tool",
+      "size": 5635795,
+      "magic_hex": "4d5a500002000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "unlocker",
+      "size": 255040,
+      "magic_hex": "4d5a600001000000",
+      "detected_format": "exe",
+      "has_extension": false
+    },
+    {
+      "name": "your-uninstaller-pro",
+      "size": 6100304,
+      "magic_hex": "4d5a900003000000",
+      "detected_format": "exe",
+      "has_extension": false
+    }
+  ]
+}

@@ -174,6 +174,65 @@ SECTION_TO_SHEET_FALLBACK = {
     "misc":     "Разное",
 }
 
+# Полная конфигурация секций (когда Supabase недоступен).
+# columns — реальные колонки из Google Sheets.
+SECTION_CONFIG_FALLBACK = {
+    "books": {
+        "label": "Книги",
+        "icon": "fa-book",
+        "sheet_name": "Книги",
+        "json_path": "_content/books.json",
+        "container": "books-container",
+        "folderable": True,
+        "columns": ["folder", "cover", "title", "author", "description", "format", "size", "download_link"],
+    },
+    "programs": {
+        "label": "Программы",
+        "icon": "fa-code",
+        "sheet_name": "Программы",
+        "json_path": "_content/programs.json",
+        "container": "programs-container",
+        "folderable": True,
+        "columns": ["folder", "title", "description", "version", "size", "download_link"],
+    },
+    "music": {
+        "label": "Музыка",
+        "icon": "fa-music",
+        "sheet_name": "Музыка",
+        "json_path": "_content/music.json",
+        "container": "music-container",
+        "folderable": True,
+        "columns": ["folder", "title", "artist", "year", "size", "download_link"],
+    },
+    "games": {
+        "label": "Игры",
+        "icon": "fa-gamepad",
+        "sheet_name": "Игры",
+        "json_path": "_content/games.json",
+        "container": "games-container",
+        "folderable": False,
+        "columns": ["title", "platform", "year", "description", "download_link"],
+    },
+    "movies": {
+        "label": "Фильмы",
+        "icon": "fa-film",
+        "sheet_name": "Фильмы",
+        "json_path": "_content/movies.json",
+        "container": "movies-container",
+        "folderable": False,
+        "columns": ["title", "year", "description", "download_link"],
+    },
+    "misc": {
+        "label": "Разное",
+        "icon": "fa-ellipsis-h",
+        "sheet_name": "Разное",
+        "json_path": "_content/misc.json",
+        "container": "misc-container",
+        "folderable": False,
+        "columns": ["title", "description", "download_link"],
+    },
+}
+
 # Маппинг русских заголовков колонок → англ. ключам в JSON.
 RU_TO_EN = {
     "Название":              "title",
@@ -260,6 +319,109 @@ EXT_TO_SECTION = {
 
 # Порог, при котором считаем секцию определённой уверенно.
 SECTION_VOTE_THRESHOLD = 0.5
+
+# ============================================================
+# МАППИНГ TAG → SECTION
+# ------------------------------------------------------------
+# Захардкожено вручную, потому что в некоторых тегах
+# (особенно программах) файлы без расширений, и голосование
+# по расширениям не работает.
+#
+# Используется в detect_section_by_assets() как первый шаг.
+# ============================================================
+TAG_TO_SECTION = {
+    "ajzek-azimov":                  "books",
+    "aksenov-daniil":                "books",
+    "aleksandr-rudazov":             "books",
+    "alekseeva-yana":                "books",
+    "aliya-ya":                      "books",
+    "andre-norton":                  "books",
+    "andrej-kruz":                   "books",
+    "andrej-lazarchuk":              "books",
+    "andzhej-sapkovskij":            "books",
+    "andzhej-yasinskij":             "books",
+    "arina-alison":                  "books",
+    "arkadij-strugackij":            "books",
+    "badej":                         "books",
+    "bastars-roda-demonov":          "books",
+    "batcher-dzhim":                 "books",
+    "dmitrij-ra":                    "books",
+    "dmitrij-serebryakov-novaya-zhizn": "books",
+    "drugoj-mir":                    "books",
+    "dzh-lokhard":                   "books",
+    "dzhon-karter":                  "books",
+    "egida":                         "books",
+    "ezdovoj-gnom":                  "books",
+    "glushanovskij-aleksej":         "books",
+    "gordon-dikson":                 "books",
+    "inoj":                          "books",
+    "legenda":                       "books",
+    "lesovik":                       "books",
+    "lisina":                        "books",
+    "lorel-gamilton":                "books",
+    "mir-karika":                    "books",
+    "nashi-tam":                     "books",
+    "naslednik-dyavola":             "books",
+    "nepravilnyj-lekar":             "books",
+    "nik-perunov":                   "books",
+    "olga-gromyko":                  "books",
+    "pivko-aleksandr":               "books",
+    "porri-gatter":                  "books",
+    "sergej-lukyanenko":             "books",
+    "serzh-vinterkej-egida-15-knig": "books",
+    "shumil-pavel":                  "books",
+    "sistema":                       "books",
+    "stalker":                       "books",
+    "sumerechnaya-saga":             "books",
+    "tanya-haff":                    "books",
+    "temnaya-bashnya":               "books",
+    "temnyj-angel":                  "books",
+    "vadim-panov":                   "books",
+    "viktor-viktorov":               "books",
+    "linkin-park":                   "music",
+    "skillet":                       "music",
+    "within-temptation":             "music",
+    "adobe":                         "programs",
+    "aeditor":                       "programs",
+    "ams":                           "programs",
+    "archive":                       "programs",
+    "ascomp":                        "programs",
+    "contact":                       "programs",
+    "converter":                     "programs",
+    "defrag":                        "programs",
+    "diagnostics":                   "programs",
+    "disc":                          "programs",
+    "dlya-windows-svoi":             "programs",
+    "download":                      "programs",
+    "file":                          "programs",
+    "graphics":                      "programs",
+    "hdd":                           "programs",
+    "interface":                     "programs",
+    "internet":                      "programs",
+    "makrosy":                       "programs",
+    "media":                         "programs",
+    "meditor":                       "programs",
+    "mso":                           "programs",
+    "office":                        "programs",
+    "optimizers":                    "programs",
+    "pdf":                           "programs",
+    "phone":                         "programs",
+    "photo":                         "programs",
+    "plaginy":                       "programs",
+    "print":                         "programs",
+    "radiotv":                       "programs",
+    "recovery":                      "programs",
+    "recscreen":                     "programs",
+    "registry":                      "programs",
+    "search":                        "programs",
+    "security":                      "programs",
+    "service":                       "programs",
+    "skripty":                       "programs",
+    "system":                        "programs",
+    "text":                          "programs",
+    "uninstall":                     "programs",
+}
+
 
 
 # ============================================================
@@ -360,11 +522,21 @@ def build_asset_url(tag: str, filename: str) -> str:
 # ОПРЕДЕЛЕНИЕ СЕКЦИИ ПО АССЕТАМ
 # ============================================================
 
-def detect_section_by_assets(assets: list[dict]) -> str | None:
+def detect_section_by_assets(assets: list[dict], tag: str = "") -> str | None:
     """
-    Определяет секцию тега по расширениям файлов внутри.
+    Определяет секцию тега.
+
+    Приоритет:
+      1. TAG_TO_SECTION (захардкоженный маппинг) — если tag известен.
+      2. Голосование по расширениям.
+      3. Fallback для .txt.
+
     Возвращает 'books' / 'music' / 'programs' / 'games' / 'movies' / None.
     """
+    # ─── 1. Маппинг tag → section ───
+    if tag and tag in TAG_TO_SECTION:
+        return TAG_TO_SECTION[tag]
+
     if not assets:
         return None
 
@@ -601,6 +773,53 @@ def normalize_slug_for_match(text: str) -> str:
     return t.strip("-")
 
 
+# ============================================================
+# ТРАНСЛИТ РУС → ЛАТ (для матчинга asset ↔ row)
+# ------------------------------------------------------------
+# Гибридная схема (ISO 9 + польская):
+#   ц→c, ч→ch, ш→sh, щ→sch, ж→zh, х→h, й→i, я→ya, ю→yu
+# Этого достаточно, чтобы:
+#   «Дело принципа» ↔ «delo-principa»
+#   «Галатея»       ↔ «galateya»
+#   «Я – робот»     ↔ «ya-robot»
+# ============================================================
+
+_TRANSLIT_MAP = {
+    "а": "a", "б": "b", "в": "v", "г": "g", "д": "d",
+    "е": "e", "ё": "e", "ж": "zh", "з": "z", "и": "i",
+    "й": "i", "к": "k", "л": "l", "м": "m", "н": "n",
+    "о": "o", "п": "p", "р": "r", "с": "s", "т": "t",
+    "у": "u", "ф": "f", "х": "h", "ц": "c", "ч": "ch",
+    "ш": "sh", "щ": "sch", "ъ": "", "ы": "y", "ь": "",
+    "э": "e", "ю": "yu", "я": "ya",
+}
+
+
+def _translit_ru_to_en(text: str) -> str:
+    """Транслитерирует кириллицу в латиницу (гибридная схема)."""
+    if not text:
+        return ""
+    result = []
+    for ch in str(text).lower():
+        if ch in _TRANSLIT_MAP:
+            result.append(_TRANSLIT_MAP[ch])
+        elif ch.isascii() and (ch.isalnum() or ch == " "):
+            result.append(ch)
+        elif ch in " -–—.,:;!?()[]{}":
+            result.append(" ")
+    return re.sub(r"\s+", " ", "".join(result)).strip()
+
+
+def _words_set(text: str) -> set[str]:
+    """Множество значимых слов (>= 3 символов)."""
+    if not text:
+        return set()
+    return set(
+        w for w in re.split(r"[^\w]+", text.lower())
+        if len(w) >= 3 and w not in _STOP_WORDS
+    )
+
+
 def match_asset_to_row(
     asset_name: str,
     rows: list[dict],
@@ -649,7 +868,33 @@ def match_asset_to_row(
         if slugify(r.get("title", "")) == asset_slug:
             return r
 
-    # 4. Частичное совпадение по словам (Jaccard)
+    # 3.5. По транслиту кириллица → латиница
+    asset_words = _words_set(asset_norm)
+    for r in rows:
+        row_title = r.get("title", "") or ""
+        row_translit = _translit_ru_to_en(row_title)
+        row_words = _words_set(row_translit)
+        if not row_words or not asset_words:
+            continue
+        # Полное совпадение наборов слов
+        if row_words == asset_words:
+            return r
+
+    # 3.6. По транслиту — частичное совпадение (>= 60% слов)
+    for r in rows:
+        row_title = r.get("title", "") or ""
+        row_translit = _translit_ru_to_en(row_title)
+        row_words = _words_set(row_translit)
+        if not row_words or not asset_words:
+            continue
+        inter = row_words & asset_words
+        if not inter:
+            continue
+        ratio = len(inter) / max(len(asset_words), len(row_words))
+        if ratio >= 0.6:
+            return r
+
+    # 4. Частичное совпадение по словам (Jaccard, кириллица)
     best, best_score = None, 0.0
     for r in rows:
         row_words = set(
@@ -1378,7 +1623,7 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool,
         assets = rel.get("assets") or []
         if not tag or not assets:
             continue
-        section = detect_section_by_assets(assets)
+        section = detect_section_by_assets(assets, tag)
         if section:
             tag_to_section[tag] = section
 
@@ -1396,6 +1641,16 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool,
 
     # ─── 4. Обрабатываем каждую секцию ───
     print("\n[3/5] Сопоставление с Sheets...")
+
+    # ─── Открываем Google-таблицу один раз ───
+    try:
+        sh = open_spreadsheet(gs_client)
+    except Exception as e:
+        msg = f"Не удалось открыть Google-таблицу: {e}"
+        print(f"[!] {msg}")
+        stats["errors"].append(msg)
+        return stats
+
     for section in sections:
         key = section.get("key") or "?"
         label = section.get("label") or key
@@ -1412,14 +1667,18 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool,
         print(f"     Лист: {sheet_name}")
 
         try:
-            sheet = get_or_create_sheet(gs_client, sheet_name)
+            sheet = get_or_create_sheet(sh, sheet_name)
         except Exception as e:
             msg = f"[{key}] Не удалось открыть лист «{sheet_name}»: {e}"
             print(f"     [!] {msg}")
             stats["errors"].append(msg)
             continue
 
-        ensure_headers(sheet, headers)
+        if dry_run:
+            print(f"     [DRY-RUN] Заголовки НЕ обновляются")
+            print(f"               Ожидаемые: {headers}")
+        else:
+            ensure_headers(sheet, headers)
 
         try:
             all_values, existing_by_link = load_sheet_snapshot(sheet)
@@ -1568,9 +1827,7 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool,
 
         # Бэкап перед записью
         if (updates or to_add) and BACKUP_BEFORE_SYNC:
-            backup_sheet(gs_client.open_by_key(SPREADSHEET_ID) if SPREADSHEET_ID
-                         else gs_client.open(SPREADSHEET_NAME),
-                         sheet, key, all_values)
+            backup_sheet(sh, sheet, key, all_values)
 
         if updates:
             batch_update_rows(sheet, updates)
@@ -2093,16 +2350,18 @@ def _resolve_sections_for_run(
 ) -> list[dict]:
     """Фильтрует секции по списку ключей."""
     if not all_sections:
-        all_sections = [
-            {
+        all_sections = []
+        for k, cfg in SECTION_CONFIG_FALLBACK.items():
+            all_sections.append({
                 "key": k,
-                "label": k,
-                "sheet_name": v,
-                "json_path": f"_content/{k}.json",
-                "columns": ["title", "description", "download_link"],
-            }
-            for k, v in SECTION_TO_SHEET_FALLBACK.items()
-        ]
+                "label": cfg["label"],
+                "icon": cfg.get("icon", "fa-folder"),
+                "sheet_name": cfg["sheet_name"],
+                "json_path": cfg["json_path"],
+                "container": cfg["container"],
+                "folderable": cfg.get("folderable", False),
+                "columns": cfg["columns"],
+            })
 
     if filter_keys:
         wanted = set(filter_keys)
