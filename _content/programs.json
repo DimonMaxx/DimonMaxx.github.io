@@ -2592,8 +2592,8 @@
     "title": "CleanMVD",
     "description": "Скрипт для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
     "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/cleanmvd.rar",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/cleanmvd.ods",
     "file_id": "cleanmvd"
   },
   {
@@ -4404,66 +4404,66 @@
     "file_id": "поисквакансий"
   },
   {
-    "folder": "Скрипты",
+    "folder": "Для windows свои",
+    "title": "ProtocolScanner",
+    "size": "196.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dlya-windows-svoi/ProtocolScanner.rar",
+    "file_id": "protocolscanner"
+  },
+  {
+    "folder": "skripty",
     "title": "snyatzashhutuslistavxlsx",
     "size": "0.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/snyatzashhutuslistavxlsx.rar",
     "file_id": "snyatzashhutuslistavxlsx"
   },
   {
-    "folder": "Плагины",
+    "folder": "plaginy",
     "title": "avtomatpoiskapobazeizfajla",
     "size": "0.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/avtomatpoiskapobazeizfajla.rar",
     "file_id": "avtomatpoiskapobazeizfajla"
   },
   {
-    "folder": "Плагины",
+    "folder": "plaginy",
     "title": "Avtosbor_sobitii_s_chygimi_i_sobitii_s_odnoi_datoi",
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/Avtosbor_sobitii_s_chygimi_i_sobitii_s_odnoi_datoi.rar",
     "file_id": "avtosborsobitiischygimiisobitiisodnoidatoi"
   },
   {
-    "folder": "Плагины",
+    "folder": "plaginy",
     "title": "Poisk_Vakansii",
     "size": "0.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/Poisk_Vakansii.rar",
     "file_id": "poiskvakansii"
   },
   {
-    "folder": "Макросы",
+    "folder": "makrosy",
     "title": "otbor-tekstovyj-rajon",
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
     "file_id": "otbor-tekstovyj-rajon"
   },
   {
-    "folder": "Макросы",
+    "folder": "makrosy",
     "title": "otbor-tekstovyj",
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
     "file_id": "otbor-tekstovyj"
   },
   {
-    "folder": "Макросы",
+    "folder": "makrosy",
     "title": "ruipvspriur16032026-versiya-5",
     "size": "0.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/ruipvspriur16032026-versiya-5.xlsm",
     "file_id": "ruipvspriur16032026-versiya-5"
   },
   {
-    "folder": "Макросы",
+    "folder": "makrosy",
     "title": "sravnenie-stat52iruip167polej-poisk-dvojnikov",
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/sravnenie-stat52iruip167polej-poisk-dvojnikov.xlsm",
     "file_id": "sravnenie-stat52iruip167polej-poisk-dvojnikov"
-  },
-  {
-    "folder": "Для windows свои",
-    "title": "ProtocolScanner",
-    "size": "196.3",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dlya-windows-svoi/ProtocolScanner.rar",
-    "file_id": "protocolscanner"
   }
 ]
