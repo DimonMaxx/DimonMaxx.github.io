@@ -226,21 +226,41 @@
     // ============================================================
     // Прокси-ссылки для скачивания
     // ------------------------------------------------------------
-    // ВАЖНО: и Яндекс, и TeraBox проксируем через Supabase.
+    // Логика по источникам ссылки:
     //
-    // Yandex dlink оказалась привязана к IP того, кто её запросил
-    // (Supabase = AWS IP). Пользователь с российского IP получает
-    // ошибку "file IO failure: no more reliable hosts". Прямые
-    // ссылки не работают без прокси на российском IP.
+    //  1. gh-release-proxy.macsimenkodima.workers.dev
+    //     → ССЫЛКА УЖЕ ГОТОВА, возвращаем как есть.
+    //     Файлы хранятся в приватном репо DimonMaxx/files,
+    //     Cloudflare Worker стримит их через свой GITHUB_TOKEN.
+    //     Supabase НЕ участвует → egress = 0.
     //
-    // TeraBox аналогично: dlink привязана к IP + cookie ndus.
+    //  2. terabox / 1024tera / 4funbox / d.terabox.app
+    //     → legacy, заворачиваем в Supabase-прокси
+    //     (это старые ссылки, которые ещё не мигрировали в релизы).
+    //
+    //  3. disk.yandex / yadi.sk
+    //     → legacy, заворачиваем в Supabase-прокси.
+    //
+    //  4. что-то другое (прямые ссылки)
+    //     → возвращаем как есть.
+    //
+    // ВАЖНО: если ссылка на gh-release-proxy — не трогаем.
     // ============================================================
     function buildProxyUrl(downloadUrl, fileName) {
         if (!downloadUrl) return '';
+
+        const urlStr = String(downloadUrl);
+
+        // ─── 1. Уже готовый release-прокси → возвращаем как есть ───
+        if (/^https:\/\/gh-release-proxy\.[^/]+\//i.test(urlStr)) {
+            return urlStr;
+        }
+
+        // ─── 2-3. Legacy: TeraBox / Яндекс → через Supabase ───
         try {
             const cfg = window.APP_CONFIG;
             const SUPABASE_URL = cfg && cfg.SUPABASE_URL ? cfg.SUPABASE_URL : '';
-            const parsed = new URL(downloadUrl);
+            const parsed = new URL(urlStr);
             const host = parsed.hostname.toLowerCase();
 
             // ─── TeraBox ───
@@ -258,18 +278,25 @@
                 }
                 if (!/\.[a-z0-9]{1,6}$/i.test(fname)) fname += '.bin';
                 return `${SUPABASE_URL}/functions/v1/terabox-download`
-                     + `?url=${encodeURIComponent(downloadUrl)}`
+                     + `?url=${encodeURIComponent(urlStr)}`
                      + `&name=${encodeURIComponent(fname)}`;
             }
 
             // ─── Яндекс.Диск ───
-            const folder = `${parsed.origin}${parsed.pathname}`;
-            const path = parsed.searchParams.get('path');
-            if (!folder || !path) return downloadUrl;
-            return `${SUPABASE_URL}/functions/v1/yandex-download`
-                 + `?folder=${encodeURIComponent(folder)}`
-                 + `&path=${encodeURIComponent(path)}`;
-        } catch (e) { return downloadUrl; }
+            if (host.includes('disk.yandex') || host.includes('yadi.sk')) {
+                const folder = `${parsed.origin}${parsed.pathname}`;
+                const path = parsed.searchParams.get('path');
+                if (!folder || !path) return urlStr;
+                return `${SUPABASE_URL}/functions/v1/yandex-download`
+                     + `?folder=${encodeURIComponent(folder)}`
+                     + `&path=${encodeURIComponent(path)}`;
+            }
+        } catch (e) {
+            return urlStr;
+        }
+
+        // ─── 4. Всё остальное — как есть ───
+        return urlStr;
     }
 
     // ============================================================
