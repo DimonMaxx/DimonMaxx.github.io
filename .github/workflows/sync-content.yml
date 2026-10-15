@@ -1,0 +1,224 @@
+name: Sync content (releases → sheets → json)
+
+# ────────────────────────────────────────────────────────────
+# Что делает:
+#   1. Читает релизы из приватного репо DimonMaxx/files
+#      (через STORAGE_TOKEN — classic PAT со scope `repo`).
+#   2. Сопоставляет их со строками Google Sheets.
+#   3. Обновляет ссылки (заменяет Яндекс/TeraBox на release-proxy).
+#   4. Добавляет новые строки, которых ещё нет в Sheets.
+#   5. Помечает legacy-строки (не нашли в репо) — для ручного решения.
+#   6. Генерирует _content/*.json + sitemap.xml.
+#   7. Коммитит изменения в репозиторий.
+#   8. Отправляет отчёт в Telegram.
+#
+# Триггеры:
+#   • schedule  — раз в сутки в 03:00 UTC
+#   • workflow_dispatch — вручную из GitHub UI или из админки
+#     (через Edge Function github-dispatch)
+# ────────────────────────────────────────────────────────────
+
+on:
+  workflow_dispatch:
+    inputs:
+      sections:
+        description: 'Разделы через запятую (пусто = все). Например: books,music'
+        required: false
+        default: ''
+        type: string
+      mode:
+        description: 'Режим (all | repo-to-sheets | sheets-to-json | report-only)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - repo-to-sheets
+          - sheets-to-json
+          - report-only
+      dry_run:
+        description: 'Dry-run (не писать в Sheets/JSON, только отчёт)'
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    # Раз в сутки в 03:00 UTC
+    - cron: '0 3 * * *'
+
+permissions:
+  contents: write
+
+# Не запускать параллельно с другими sync-workflow (delete-content,
+# sync-yandex, sync-terabox) — чтобы не было гонок при git push.
+concurrency:
+  group: sync-content
+  cancel-in-progress: false
+
+jobs:
+  sync-content:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ─── 1. Checkout ───
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # ─── 2. Python ───
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      # ─── 3. Зависимости ───
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ─── 4. Кэш обогащений (для ENRICH_BOOKS=1) ───
+      - name: Restore enrichment cache
+        uses: actions/cache@v4
+        with:
+          path: _cache
+          key: enrichment-${{ github.ref }}-${{ hashFiles('_content/*.json') }}
+          restore-keys: |
+            enrichment-${{ github.ref }}-
+            enrichment-
+
+      - name: Ensure cache dir exists
+        run: mkdir -p _cache
+
+      # ─── 5. Основной скрипт ───
+      - name: Run update_content_json.py
+        id: sync
+        env:
+          # GitHub Releases (хранилище, приватный репо)
+          STORAGE_OWNER:              ${{ secrets.STORAGE_OWNER || 'DimonMaxx' }}
+          STORAGE_REPO:               ${{ secrets.STORAGE_REPO  || 'files' }}
+          STORAGE_TOKEN:              ${{ secrets.STORAGE_TOKEN }}
+
+          # Cloudflare Worker — CDN-прокси релизов
+          RELEASE_PROXY_BASE:         ${{ secrets.RELEASE_PROXY_BASE || 'https://gh-release-proxy.macsimenkodima.workers.dev' }}
+
+          # Google Sheets
+          GOOGLE_CREDENTIALS_JSON:    ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+          SPREADSHEET_ID:             ${{ secrets.SPREADSHEET_ID }}
+          SPREADSHEET_NAME:           "НаполнениеСайта"
+
+          # Supabase (site_sections, hidden_items)
+          SUPABASE_URL:               "https://rmoonebbvpmvthvpcmpt.supabase.co"
+          SUPABASE_SERVICE_ROLE_KEY:  ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+          # Сайт (для sitemap)
+          SITE_BASE_URL:              "https://dimonmaxx.github.io"
+
+          # Google Books (для ENRICH_BOOKS=1)
+          GOOGLE_BOOKS_API_KEY:       ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+
+          # Флаги поведения
+          PRESERVE_USER_EDITS:        "1"
+          BACKUP_BEFORE_SYNC:         "1"
+          BACKUP_KEEP_COUNT:          "3"
+          MIN_DESCRIPTION_LENGTH:     "20"
+          ENRICH_BOOKS:               "0"
+          PARSE_FILE_DESCRIPTIONS:    "0"
+
+          # Отчёты в Telegram
+          TELEGRAM_BOT_TOKEN:         ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:           ${{ secrets.TELEGRAM_CHAT_ID }}
+
+          # Параметры запуска
+          SYNC_SECTIONS:              ${{ github.event.inputs.sections || '' }}
+        run: |
+          MODE="${{ github.event.inputs.mode || 'all' }}"
+          DRY="${{ github.event.inputs.dry_run }}"
+
+          ARGS="--mode=$MODE --repo-dir=."
+
+          if [ "$DRY" = "true" ]; then
+            echo "=== DRY-RUN режим ==="
+            ARGS="$ARGS --dry-run"
+          else
+            echo "=== IN-PLACE режим (запись в Sheets и JSON) ==="
+            ARGS="$ARGS --in-place"
+          fi
+
+          if [ -n "$SYNC_SECTIONS" ]; then
+            ARGS="$ARGS --sections=$SYNC_SECTIONS"
+          fi
+
+          echo "Запуск: python update_content_json.py $ARGS"
+          python update_content_json.py $ARGS
+
+      # ─── 6. Commit & push ───
+      - name: Commit and push changes
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add _content/ || true
+          git add sitemap.xml || true
+          git add _reports/ || true
+          if [ -d _cache ]; then
+            git add _cache/ || true
+          fi
+
+          if git diff --staged --quiet; then
+            echo "Нет изменений для коммита."
+            exit 0
+          fi
+
+          git commit -m "Auto-sync content $(date -u +'%Y-%m-%d %H:%M UTC')"
+
+          # На случай параллельного push — rebase и повторить
+          git pull --rebase origin main || {
+            echo "Rebase conflict — оставляем свежую генерацию"
+            git checkout --theirs _content/ 2>/dev/null || true
+            git add _content/ || true
+            git add sitemap.xml || true
+            git add _reports/ || true
+            GIT_EDITOR=true git rebase --continue || git rebase --skip || true
+          }
+
+          git push
+
+      # ─── 7. Upload отчёта как артефакт ───
+      - name: Upload migration report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migration-report-${{ github.run_id }}
+          path: |
+            _reports/*.json
+          retention-days: 14
+          if-no-files-found: ignore
+
+      # ─── 8. Telegram on failure ───
+      - name: Notify Telegram on failure
+        if: failure() || cancelled()
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "cancelled" ]; then
+            EMOJI="⚠️"
+          else
+            EMOJI="❌"
+          fi
+
+          TEXT="$EMOJI Sync content — $STATUS"
+          TEXT="$TEXT
+          Запуск: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+          curl -s -X POST \
+            "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            -d text="$TEXT" \
+            -d disable_web_page_preview=true \
+            > /dev/null || true
