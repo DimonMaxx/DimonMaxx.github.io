@@ -171,7 +171,7 @@
     "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
     "version": "1",
     "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%9E%D0%A2%D0%91%D0%9E%D0%A0%20%D0%A2%D0%B5%D0%BA%D1%81%D1%82%D0%BE%D0%B2%D1%8B%D0%B9.xlsm",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
     "file_id": "отбор-текстовый"
   },
   {
@@ -180,7 +180,7 @@
     "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП район",
     "version": "1",
     "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%9E%D0%A2%D0%91%D0%9E%D0%A0%20%D0%A2%D0%B5%D0%BA%D1%81%D1%82%D0%BE%D0%B2%D1%8B%D0%B9%20%D0%A0%D0%B0%D0%B9%D0%BE%D0%BD.xlsm",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
     "file_id": "отбор-текстовый-район"
   },
   {
@@ -198,7 +198,7 @@
     "description": "Сравнение стат52 и РУИП 167 полей и поиск двойников",
     "version": "1",
     "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/%D0%A1%D1%80%D0%B0%D0%B2%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5%20%D1%81%D1%82%D0%B0%D1%8252%D0%B8%D0%A0%D0%A3%D0%98%D0%9F167%D0%BF%D0%BE%D0%BB%D0%B5%D0%B9%20%D0%9F%D0%BE%D0%B8%D1%81%D0%BA%20%D0%94%D0%B2%D0%BE%D0%B9%D0%BD%D0%B8%D0%BA%D0%BE%D0%B2.xlsm",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/sravnenie-stat52iruip167polej-poisk-dvojnikov.xlsm",
     "file_id": "сравнение-стат52ируип167полей-поиск-двойников"
   },
   {
@@ -209,15 +209,6 @@
     "size": "0.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/stat52uikkommentarii.xlsm",
     "file_id": "стат52уиккомментарии"
-  },
-  {
-    "folder": "Макросы",
-    "title": "Clean_MVD",
-    "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
-    "version": "1",
-    "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/Clean_MVD.ods",
-    "file_id": "cleanmvd"
   },
   {
     "folder": "RadioTV",
@@ -250,7 +241,7 @@
     "description": "Различные сравнения выгрузок РУИП и ПРИУР. РУИП и РУИП разных вариантов",
     "version": "5",
     "size": "0.4",
-    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%9C%D0%B0%D0%BA%D1%80%D0%BE%D1%81%D1%8B/RUIPvsPRIUR_16.03.2026%20%D0%B2%D0%B5%D1%80%D1%81%D0%B8%D1%8F%205.xlsm",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/ruipvspriur16032026-versiya-5.xlsm",
     "file_id": "ruipvspriur16032026-версия-5"
   },
   {
@@ -259,7 +250,7 @@
     "description": "Поиск по базе из файла и сохранение в накопительную таблицу",
     "version": "1",
     "size": "0.3",
-    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%9F%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D1%8B/%D0%90%D0%B2%D1%82%D0%BE%D0%BC%D0%B0%D1%82%D0%9F%D0%BE%D0%B8%D1%81%D0%BA%D0%B0%D0%9F%D0%BE%D0%91%D0%B0%D0%B7%D0%B5%D0%98%D0%B7%D0%A4%D0%B0%D0%B9%D0%BB%D0%B0.rar",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/avtomatpoiskapobazeizfajla.rar",
     "file_id": "автоматпоискапобазеизфайла"
   },
   {
@@ -1055,7 +1046,7 @@
     "description": "Скрипт для снятия защиты с листа",
     "version": "1",
     "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%A1%D0%BA%D1%80%D0%B8%D0%BF%D1%82%D1%8B/%D0%A1%D0%BD%D1%8F%D1%82%D1%8C%D0%97%D0%B0%D1%89%D1%83%D1%82%D1%83%D0%A1%D0%9B%D0%B8%D1%81%D1%82%D0%B0%D0%92xlsx.rar",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/snyatzashhutuslistavxlsx.rar",
     "file_id": "снятьзащутуслиставxlsx"
   },
   {
@@ -2592,8 +2583,8 @@
     "title": "CleanMVD",
     "description": "Скрипт для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
     "version": "1",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/cleanmvd.ods",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/cleanmvd.rar",
     "file_id": "cleanmvd"
   },
   {
@@ -4387,28 +4378,28 @@
   },
   {
     "folder": "Плагины",
-    "title": "Автосбор событий с чужими событиями или карточек с одной датой 30.17",
-    "description": "Автоматический сборщик событий с чужими событиями во всем карточкам или карточек с одной датой",
-    "version": "30.17",
-    "size": "0.1",
-    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%9F%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D1%8B/%D0%90%D0%B2%D1%82%D0%BE%D1%81%D0%B1%D0%BE%D1%80%20%D1%81%D0%BE%D0%B1%D1%8B%D1%82%D0%B8%D0%B9%20%D1%81%20%D1%87%D1%83%D0%B6%D0%B8%D0%BC%D0%B8%20%D1%81%D0%BE%D0%B1%D1%8B%D1%82%D0%B8%D1%8F%D0%BC%D0%B8%20%D0%B8%D0%BB%D0%B8%20%D0%BA%D0%B0%D1%80%D1%82%D0%BE%D1%87%D0%B5%D0%BA%20%D1%81%20%D0%BE%D0%B4%D0%BD%D0%BE%D0%B9%20%D0%B4%D0%B0%D1%82%D0%BE%D0%B9%2030.17.rar",
-    "file_id": "автосбор-событий-с-чужими-событиями-или-карточек-с-одной-датой-3017"
-  },
-  {
-    "folder": "Плагины",
     "title": "ПоискВакансий",
     "description": "Собирает информацию со страниц о фактическом количественном составе комиссии и эталонном составе комисси и на основе этих данных определяет сколько вакансий есть в каждой из комиссий",
     "version": "2.8",
     "size": "0.0",
-    "download_link": "https://disk.yandex.ru/d/ycBA8W3S3oACTg?path=/%D0%9F%D0%BB%D0%B0%D0%B3%D0%B8%D0%BD%D1%8B/%D0%9F%D0%BE%D0%B8%D1%81%D0%BA%D0%92%D0%B0%D0%BA%D0%B0%D0%BD%D1%81%D0%B8%D0%B9.rar",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/Poisk_Vakansii.rar",
     "file_id": "поисквакансий"
   },
   {
     "folder": "Для windows свои",
     "title": "ProtocolScanner",
+    "version": "1.0",
     "size": "196.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dlya-windows-svoi/ProtocolScanner.rar",
     "file_id": "protocolscanner"
+  },
+  {
+    "folder": "Плагины",
+    "title": "Автосбор событий с чужими событиями или карточек с одной датой",
+    "description": "Автоматический сборщик событий с чужими событиями во всем карточкам или карточек с одной датой",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/Avtosbor_sobitii_s_chygimi_i_sobitii_s_odnoi_datoi.rar",
+    "file_id": "автосбор-событий-с-чужими-событиями-или-карточек-с-одной-датой"
   },
   {
     "folder": "skripty",
