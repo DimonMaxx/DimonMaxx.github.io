@@ -1,0 +1,33 @@
+name: Build Vadim Panov Tree
+
+on:
+  workflow_dispatch: # Запускается вручную кнопкой
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          
+      - name: Install requests
+        run: pip install requests
+        
+      - name: Generate Tree JSON
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python .github/scripts/build_tree.py
+        
+      - name: Commit changes
+        run: |
+          git config --global user.name "GitHub Action"
+          git config --global user.email "action@github.com"
+          git add _content/vadim_panov_tree.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update Vadim Panov Tree JSON" && git push)
