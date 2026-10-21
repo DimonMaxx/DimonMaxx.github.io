@@ -492,12 +492,20 @@ def match_asset_to_row(asset_name: str, rows: list[dict], section: str, folder: 
     for r in rows:
         if _compact_match_str(r.get("title", "")) == asset_compact: return r
 
-    # 3.7. ПО НЕЧЁТКОМУ СОВПАДЕНИЮ (difflib) — защита от опечаток и x/х
+    # 3.7. По нечёткому совпадению (difflib)
     for r in rows:
         row_compact = _compact_match_str(r.get("title", ""))
         if not row_compact: continue
-        if difflib.SequenceMatcher(None, asset_compact, row_compact).ratio() >= 0.75:
+        if difflib.SequenceMatcher(None, asset_compact, row_compact).ratio() >= 0.65: 
             return r
+
+    # 3.8. Совпадение по началу названия (первые 7 символов без пробелов)
+    # Это спасает ситуацию, когда Avtosbor_sobitii... и Автосбор событий... не совпадают по difflib
+    for r in rows:
+        row_compact = _compact_match_str(r.get("title", ""))
+        if len(asset_compact) >= 7 and len(row_compact) >= 7:
+            if asset_compact[:7] == row_compact[:7]:
+                return r
 
     # 4. Частичное совпадение по словам (Jaccard)
     best, best_score = None, 0.0
@@ -860,18 +868,19 @@ def clean_sheet_duplicates(sh, sections, dry_run=False):
         rows_to_delete = []
         
         for empty_row in empty_desc_rows:
-            compact_empty = _compact_match_str(empty_row["title"])
-            if not compact_empty: continue
-            
+            # match_asset_to_row теперь умеет сопоставлять Avtosbor... с Автосбор...
             matched = match_asset_to_row(empty_row["title"], valid_rows, key, folder=empty_row["folder"])
             
             if matched:
                 rows_to_delete.append(empty_row["_row"])
                 continue
             
+            # Резервная проверка difflib (если match_asset_to_row не справился)
+            compact_empty = _compact_match_str(empty_row["title"])
+            if not compact_empty: continue
             for v_row in valid_rows:
                 compact_valid = _compact_match_str(v_row["title"])
-                if difflib.SequenceMatcher(None, compact_empty, compact_valid).ratio() > 0.75:
+                if difflib.SequenceMatcher(None, compact_empty, compact_valid).ratio() > 0.65:
                     rows_to_delete.append(empty_row["_row"])
                     break
                     
