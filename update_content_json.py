@@ -492,16 +492,13 @@ def match_asset_to_row(asset_name: str, rows: list[dict], section: str, folder: 
     for r in rows:
         if _compact_match_str(r.get("title", "")) == asset_compact: return r
 
-    # 3.7. По транслиту — частичное совпадение (>= 60% слов)
+    # 3.7. ПО НЕЧЁТКОМУ СОВПАДЕНИЮ (difflib) — защита от опечаток и x/х
     for r in rows:
-        row_title = r.get("title", "") or ""
-        row_translit = _translit_ru_to_en(row_title)
-        row_words = _words_set(row_translit)
-        if not row_words or not asset_words: continue
-        inter = row_words & asset_words
-        if not inter: continue
-        ratio = len(inter) / max(len(asset_words), len(row_words))
-        if ratio >= 0.6: return r
+        row_compact = _compact_match_str(r.get("title", ""))
+        if not row_compact: continue
+        # Если строки совпадают на 75% и более
+        if difflib.SequenceMatcher(None, asset_compact, row_compact).ratio() >= 0.75:
+            return r
 
     # 4. Частичное совпадение по словам (Jaccard)
     best, best_score = None, 0.0
@@ -799,7 +796,7 @@ def print_sheets_health(health: dict) -> None:
 
 
 # ============================================================
-# НОВАЯ ФУНКЦИЯ ОЧИСТКИ ДУБЛИКАТОВ
+# НОВАЯ ФУНКЦИЯ ОЧИСТКИ ДУБЛИКАТОВ (в таблице)
 # ============================================================
 def clean_sheet_duplicates(sh, sections, dry_run=False):
     print("\n" + "=" * 60)
@@ -866,7 +863,7 @@ def clean_sheet_duplicates(sh, sections, dry_run=False):
             # 2. Если не нашли, используем SequenceMatcher (для опечаток x vs х)
             for v_row in valid_rows:
                 compact_valid = _compact_match_str(v_row["title"])
-                if difflib.SequenceMatcher(None, compact_empty, compact_valid).ratio() > 0.85:
+                if difflib.SequenceMatcher(None, compact_empty, compact_valid).ratio() > 0.75:
                     rows_to_delete.append(empty_row["_row"])
                     break
                     
@@ -1141,7 +1138,7 @@ def generate_json_for_section(worksheet, json_path: str, columns: list[str] | No
     json_data: list[dict] = []
     skipped_no_title, skipped_hidden, short_descs = 0, 0, []
     
-    # ─── УМНАЯ ЗАЩИТА ОТ ДУБЛИКАТОВ ───
+    # ─── УМНАЯ ЗАЩИТА ОТ ДУБЛИКАТОВ (ПО КОМПАКТНОМУ НАЗВАНИЮ) ───
     unique_items_dict = {}
     skipped_duplicates = 0
 
@@ -1153,19 +1150,27 @@ def generate_json_for_section(worksheet, json_path: str, columns: list[str] | No
             folder_val, title_val = (item.get("folder") or "").strip().lower(), (item.get("title") or "").strip().lower()
             if (folder_val, title_val) in hidden_set: skipped_hidden += 1; continue
 
-        link_val = (item.get("download_link") or "").strip()
-        unique_key = link_val if link_val else f"{item.get('folder','')}|{item.get('title','')}"
+        # Ключ — компактная строка (транслит, без пробелов и спецсимволов)
+        compact_key = _compact_match_str(item["title"])
 
-        if unique_key in unique_items_dict:
+        if compact_key in unique_items_dict:
             skipped_duplicates += 1
-            existing_item = unique_items_dict[unique_key]
-            current_is_ru = has_cyrillic(item.get("folder", ""))
-            existing_is_ru = has_cyrillic(existing_item.get("folder", ""))
-            # Оставляем русскую папку
-            if current_is_ru and not existing_is_ru:
-                unique_items_dict[unique_key] = item
+            existing = unique_items_dict[compact_key]
+            
+            has_desc_new = len(str(item.get("description", "")).strip()) > 0
+            has_desc_old = len(str(existing.get("description", "")).strip()) > 0
+            
+            # Приоритет 1: у кого есть описание
+            if has_desc_new and not has_desc_old:
+                unique_items_dict[compact_key] = item
+            elif has_desc_new == has_desc_old:
+                # Приоритет 2: у кого ссылка на github
+                link_new = detect_link_source(item.get("download_link", "")) == "release"
+                link_old = detect_link_source(existing.get("download_link", "")) == "release"
+                if link_new and not link_old:
+                    unique_items_dict[compact_key] = item
         else:
-            unique_items_dict[unique_key] = item
+            unique_items_dict[compact_key] = item
 
     # Валидация для уникальных записей
     for item in unique_items_dict.values():
@@ -1183,7 +1188,7 @@ def generate_json_for_section(worksheet, json_path: str, columns: list[str] | No
     extras = []
     if skipped_no_title: extras.append(f"без title: {skipped_no_title}")
     if skipped_hidden: extras.append(f"скрытых: {skipped_hidden}")
-    if skipped_duplicates: extras.append(f"найдено дублей: {skipped_duplicates}")
+    if skipped_duplicates: extras.append(f"удалено дублей (в JSON): {skipped_duplicates}")
     if short_descs: extras.append(f"коротких описаний: {len(short_descs)}")
     if extras: msg += " (пропущено — " + ", ".join(extras) + ")"
     print(msg)
