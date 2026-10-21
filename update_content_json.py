@@ -17,7 +17,7 @@ import hashlib
 import datetime
 import argparse
 import traceback
-import difflib # ─── ДОБАВЛЕНО ДЛЯ УМНОЙ ОЧИСТКИ ───
+import difflib
 from typing import Any
 
 import requests
@@ -496,7 +496,6 @@ def match_asset_to_row(asset_name: str, rows: list[dict], section: str, folder: 
     for r in rows:
         row_compact = _compact_match_str(r.get("title", ""))
         if not row_compact: continue
-        # Если строки совпадают на 75% и более
         if difflib.SequenceMatcher(None, asset_compact, row_compact).ratio() >= 0.75:
             return r
 
@@ -637,11 +636,22 @@ def backup_sheet(sh, worksheet, section_key: str, all_values: list[list[str]], m
     max_cols = max((len(r) for r in all_values), default=1)
     max_rows = len(all_values)
     try:
-        backup = sh.add_worksheet(title=backup_name, rows=max(max_rows + 10, 100), cols=max(max_cols + 2, 10))
-        backup.update(values=all_values, range_name="A1", value_input_option="USER_ENTERED")
+        # Добавляем паузу и ретрай для бэкапа
+        for attempt in range(3):
+            try:
+                time.sleep(2)
+                backup = sh.add_worksheet(title=backup_name, rows=max(max_rows + 10, 100), cols=max(max_cols + 2, 10))
+                backup.update(values=all_values, range_name="A1", value_input_option="USER_ENTERED")
+                break
+            except Exception as e:
+                if "429" in str(e) and attempt < 2:
+                    time.sleep(5)
+                    continue
+                raise e
     except Exception as e:
         print(f"    [!] Backup: ошибка создания: {e}")
         return None
+    
     try:
         prefix = f"_backup_{section_key}_"
         backups = [ws for ws in sh.worksheets() if ws.title.startswith(prefix)]
@@ -660,11 +670,11 @@ def batch_update_rows(sheet, updates: list[dict]) -> int:
     for i in range(0, total, chunk):
         part = updates[i:i + chunk]
         try:
+            time.sleep(2) # Пауза перед обновлением
             sheet.batch_update(part, value_input_option="USER_ENTERED")
             updated += len(part)
         except Exception as e:
             print(f"    [!] batch_update chunk {i // chunk}: {e}")
-        time.sleep(0.5)
     return updated
 
 def append_rows_safe(sheet, rows: list[list[str]], batch_size: int = 200) -> tuple[int, int]:
@@ -675,14 +685,14 @@ def append_rows_safe(sheet, rows: list[list[str]], batch_size: int = 200) -> tup
         success = False
         for attempt in range(3):
             try:
+                time.sleep(2)
                 sheet.append_rows(batch, value_input_option="USER_ENTERED")
                 added += len(batch)
                 success = True
                 break
             except Exception as e:
-                time.sleep(2 * (attempt + 1))
+                time.sleep(5)
         if not success: failed += len(batch)
-        time.sleep(1)
     return added, failed
 
 def headers_from_columns(columns: list[str]) -> list[str]:
@@ -796,7 +806,7 @@ def print_sheets_health(health: dict) -> None:
 
 
 # ============================================================
-# НОВАЯ ФУНКЦИЯ ОЧИСТКИ ДУБЛИКАТОВ (в таблице)
+# НОВАЯ ФУНКЦИЯ ОЧИСТКИ ДУБЛИКАТОВ (БЕЗ ПРЕВЫШЕНИЯ ЛИМИТОВ)
 # ============================================================
 def clean_sheet_duplicates(sh, sections, dry_run=False):
     print("\n" + "=" * 60)
@@ -853,14 +863,12 @@ def clean_sheet_duplicates(sh, sections, dry_run=False):
             compact_empty = _compact_match_str(empty_row["title"])
             if not compact_empty: continue
             
-            # 1. Ищем точное/транслит совпадение через match_asset_to_row
             matched = match_asset_to_row(empty_row["title"], valid_rows, key, folder=empty_row["folder"])
             
             if matched:
                 rows_to_delete.append(empty_row["_row"])
                 continue
             
-            # 2. Если не нашли, используем SequenceMatcher (для опечаток x vs х)
             for v_row in valid_rows:
                 compact_valid = _compact_match_str(v_row["title"])
                 if difflib.SequenceMatcher(None, compact_empty, compact_valid).ratio() > 0.75:
@@ -868,17 +876,34 @@ def clean_sheet_duplicates(sh, sections, dry_run=False):
                     break
                     
         if rows_to_delete:
-            rows_to_delete.sort(reverse=True)
-            for row_num in rows_to_delete:
-                if not dry_run:
+            rows_to_delete.sort() # по возрастанию
+            if not dry_run:
+                # Группируем в непрерывные блоки, чтобы не делать 500 запросов к API
+                blocks = []
+                start = rows_to_delete[0]
+                prev = start
+                for r in rows_to_delete[1:]:
+                    if r == prev + 1:
+                        prev = r
+                    else:
+                        blocks.append((start, prev))
+                        start = r
+                        prev = r
+                blocks.append((start, prev))
+                
+                # Удаляем блоки СНИЗУ ВВЕРХ
+                blocks.reverse()
+                
+                for start, end in blocks:
                     try:
-                        sheet.delete_rows(row_num)
-                        print(f"    [-] [{key}] Удалена строка {row_num} (дубль без описания)")
-                        total_deleted += 1
+                        sheet.delete_rows(start, end)
+                        print(f"    [-] [{key}] Удален блок строк {start}-{end} ({end - start + 1} шт.)")
+                        total_deleted += (end - start + 1)
+                        time.sleep(2) # Пауза для защиты от 429
                     except Exception as e:
-                        print(f"    [!] Ошибка удаления строки {row_num}: {e}")
-                else:
-                    print(f"    [DRY-RUN] [{key}] Будет удалена строка {row_num}")
+                        print(f"    [!] Ошибка удаления блока {start}-{end}: {e}")
+            else:
+                print(f"    [DRY-RUN] [{key}] Будет удалено строк: {len(rows_to_delete)}")
     
     if total_deleted > 0:
         print(f"\n  ✓ Очистка завершена. Удалено строк: {total_deleted}")
@@ -1138,7 +1163,7 @@ def generate_json_for_section(worksheet, json_path: str, columns: list[str] | No
     json_data: list[dict] = []
     skipped_no_title, skipped_hidden, short_descs = 0, 0, []
     
-    # ─── УМНАЯ ЗАЩИТА ОТ ДУБЛИКАТОВ (ПО КОМПАКТНОМУ НАЗВАНИЮ) ───
+    # ─── УМНАЯ ЗАЩИТА ОТ ДУБЛИКАТОВ ───
     unique_items_dict = {}
     skipped_duplicates = 0
 
@@ -1150,7 +1175,6 @@ def generate_json_for_section(worksheet, json_path: str, columns: list[str] | No
             folder_val, title_val = (item.get("folder") or "").strip().lower(), (item.get("title") or "").strip().lower()
             if (folder_val, title_val) in hidden_set: skipped_hidden += 1; continue
 
-        # Ключ — компактная строка (транслит, без пробелов и спецсимволов)
         compact_key = _compact_match_str(item["title"])
 
         if compact_key in unique_items_dict:
@@ -1160,11 +1184,9 @@ def generate_json_for_section(worksheet, json_path: str, columns: list[str] | No
             has_desc_new = len(str(item.get("description", "")).strip()) > 0
             has_desc_old = len(str(existing.get("description", "")).strip()) > 0
             
-            # Приоритет 1: у кого есть описание
             if has_desc_new and not has_desc_old:
                 unique_items_dict[compact_key] = item
             elif has_desc_new == has_desc_old:
-                # Приоритет 2: у кого ссылка на github
                 link_new = detect_link_source(item.get("download_link", "")) == "release"
                 link_old = detect_link_source(existing.get("download_link", "")) == "release"
                 if link_new and not link_old:
