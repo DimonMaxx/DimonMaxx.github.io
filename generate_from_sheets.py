@@ -69,8 +69,6 @@ SYNC_SECTIONS_FILTER = [
     s.strip() for s in _raw_sync_sections.split(",") if s.strip()
 ] if _raw_sync_sections else []
 
-# Порог длины описания для предупреждения (символов).
-# 0 = отключить проверку.
 try:
     MIN_DESCRIPTION_LENGTH = int(os.environ.get("MIN_DESCRIPTION_LENGTH", "20"))
 except ValueError:
@@ -79,6 +77,23 @@ if MIN_DESCRIPTION_LENGTH < 0:
     MIN_DESCRIPTION_LENGTH = 0
 
 GITHUB_STEP_SUMMARY = os.environ.get("GITHUB_STEP_SUMMARY", "")
+
+
+# ============================================================
+# СЛОВАРЬ ПЕРЕВОДОВ ПАПОК (RU ← EN)
+# ============================================================
+# Сюда добавляем английские названия папок, которые генерирует
+# скрипт синхронизации, и их правильные русские аналоги для сайта.
+
+FOLDER_TRANSLATIONS = {
+    "plaginy": "Плагины",
+    "skripty": "Скрипты",
+    "makrosy": "Макросы",
+    "dlya-windows-svoi": "Для windows свои",
+    # Если появятся другие английские папки от синхронизации, добавьте их сюда:
+    # "books": "Книги",
+    # "music": "Музыка",
+}
 
 
 # ============================================================
@@ -251,6 +266,7 @@ def row_to_item(row, columns=None):
     """
     Преобразует строку Sheets (RU-заголовки) в JSON-объект (EN-ключи).
     Добавляет стабильный file_id = slugify(title).
+    Применяет словарь переводов к папкам.
     """
     item = {}
     target_keys = [k for k in (columns or []) if k]
@@ -275,6 +291,14 @@ def row_to_item(row, columns=None):
     if item.get("title"):
         item["file_id"] = slugify(item["title"])
 
+    # ─── ПЕРЕВОД ПАПОК (RU ← EN) ───
+    folder_val = item.get("folder", "")
+    if folder_val:
+        # Проверяем по словарю без учета регистра
+        lower_folder = folder_val.strip().lower()
+        if lower_folder in FOLDER_TRANSLATIONS:
+            item["folder"] = FOLDER_TRANSLATIONS[lower_folder]
+
     return item
 
 
@@ -283,13 +307,8 @@ def row_to_item(row, columns=None):
 # ============================================================
 
 def _check_description_length(item):
-    """
-    Возвращает длину описания (символов, без учёта крайних пробелов).
-    Если description отсутствует — 0.
-    """
     desc = item.get("description")
     if not desc:
-        # Проверяем также body и text (в редких разделах используется body)
         desc = item.get("body") or item.get("text") or ""
     return len(str(desc).strip())
 
@@ -300,17 +319,6 @@ def _check_description_length(item):
 
 def generate_json_for_section(worksheet, json_path, columns=None,
                               headers=None, hidden_set=None):
-    """
-    Возвращает dict:
-      {
-        "count": <int>,                # сколько записей записано
-        "short_descs": [               # записи с коротким описанием
-            {"title": "...", "length": 8, "file_id": "..."},
-            ...
-        ],
-      }
-    или None при критической ошибке.
-    """
     if hidden_set is None:
         hidden_set = set()
 
@@ -351,9 +359,7 @@ def generate_json_for_section(worksheet, json_path, columns=None,
     skipped_hidden = 0
     short_descs = []
     
-    # ─── УМНАЯ ЗАЩИТА ОТ ДУБЛИКАТОВ ───
-    # Используем словарь для хранения уникальных записей по ключу (ссылке).
-    # Это позволит нам заменить английский вариант на русский при необходимости.
+    # Умная защита от дублей по уникальному ключу (ссылке)
     unique_items_dict = {}
     skipped_duplicates = 0
 
@@ -370,7 +376,6 @@ def generate_json_for_section(worksheet, json_path, columns=None,
                 skipped_hidden += 1
                 continue
 
-        # Ключом уникальности выступает ссылка. Если её нет — связка папка+название.
         link_val = (item.get("download_link") or "").strip()
         unique_key = link_val if link_val else f"{item.get('folder','')}|{item.get('title','')}"
 
@@ -378,24 +383,20 @@ def generate_json_for_section(worksheet, json_path, columns=None,
             skipped_duplicates += 1
             existing_item = unique_items_dict[unique_key]
             
-            # Проверяем, какая папка "лучше" — русская или нет
             current_folder = item.get("folder", "")
             existing_folder = existing_item.get("folder", "")
             
+            # Оставляем ту папку, которая на русском
             current_is_ru = has_cyrillic(current_folder)
             existing_is_ru = has_cyrillic(existing_folder)
             
-            # Если новый дубль имеет русскую папку, а старый — английскую,
-            # то заменяем старый на новый.
             if current_is_ru and not existing_is_ru:
                 unique_items_dict[unique_key] = item
         else:
             unique_items_dict[unique_key] = item
 
-    # Теперь проходим по уже очищенному от дублей словарю
-    # для валидации описаний и формирования итогового списка.
+    # Валидация описаний для уникальных записей
     for item in unique_items_dict.values():
-        # ─── Валидация описания ───
         if MIN_DESCRIPTION_LENGTH > 0:
             desc_len = _check_description_length(item)
             if desc_len < MIN_DESCRIPTION_LENGTH:
@@ -491,10 +492,6 @@ def generate_sitemap(sections):
 # ============================================================
 
 def _append_github_summary(text):
-    """
-    Пишет текст в $GITHUB_STEP_SUMMARY (если задан).
-    Используется для отображения отчёта прямо в GitHub Actions.
-    """
     if not GITHUB_STEP_SUMMARY:
         return
     try:
@@ -505,10 +502,6 @@ def _append_github_summary(text):
 
 
 def print_short_desc_report(sections_stats):
-    """
-    :param sections_stats: список dict:
-        {"key": str, "label": str, "short_descs": [{"title", "length", "file_id"}]}
-    """
     total_short = sum(len(s["short_descs"]) for s in sections_stats)
     if total_short == 0:
         return
@@ -662,7 +655,6 @@ def main():
         print(f"[!] Ошибка генерации sitemap: {e}")
         traceback.print_exc()
 
-    # ─── Отчёт по коротким описаниям ───
     print_short_desc_report(sections_stats)
 
     print("\n" + "=" * 60)
