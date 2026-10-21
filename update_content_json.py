@@ -451,7 +451,6 @@ def _words_set(text: str) -> set[str]:
     return set(w for w in re.split(r"[^\w]+", text.lower()) if len(w) >= 3 and w not in _STOP_WORDS)
 
 def _compact_match_str(text: str) -> str:
-    """Сравнение без пробелов и с транслитом (Poisk_Vakansii == ПоискВакансии)."""
     t = normalize_for_match(text)
     t = _translit_ru_to_en(t)
     return t.replace(" ", "")
@@ -932,7 +931,9 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
                 sec_stats["to_update"] += 1
             else:
                 to_add.append(_row_from_record(record, headers))
-                stats["new_in_repo_rows"].append({"section": key, "tag": tag, "file": fname, "title": title, "link": new_link, "size": size_mb})
+                # ВЫВОДИМ ПАПКУ В ОТЧЕТЕ ДЛЯ TELEGRAM
+                display_title = f"{folder_name} - {title}"
+                stats["new_in_repo_rows"].append({"section": key, "tag": tag, "file": fname, "title": display_title, "link": new_link, "size": size_mb})
                 sec_stats["new_in_repo"] += 1
 
         for r in rows_for_match:
