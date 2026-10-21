@@ -17,6 +17,7 @@ import hashlib
 import datetime
 import argparse
 import traceback
+import difflib # ─── ДОБАВЛЕНО ДЛЯ УМНОЙ ОЧИСТКИ ───
 from typing import Any
 
 import requests
@@ -798,6 +799,97 @@ def print_sheets_health(health: dict) -> None:
 
 
 # ============================================================
+# НОВАЯ ФУНКЦИЯ ОЧИСТКИ ДУБЛИКАТОВ
+# ============================================================
+def clean_sheet_duplicates(sh, sections, dry_run=False):
+    print("\n" + "=" * 60)
+    print("=== ПРЕДВАРИТЕЛЬНАЯ ОЧИСТКА ДУБЛИКАТОВ (ОСТАВЛЯЕМ С ОПИСАНИЕМ) ===")
+    print("=" * 60)
+    total_deleted = 0
+    
+    for section in sections:
+        key = section.get("key")
+        sheet_name = section.get("sheet_name")
+        if not sheet_name: continue
+        
+        try: 
+            sheet = sh.worksheet(sheet_name)
+        except Exception: 
+            continue
+        
+        all_values = sheet.get_all_values()
+        if len(all_values) < 2: continue
+        
+        header = [(h or "").strip().lower() for h in all_values[0]]
+        def get_idx(names):
+            for n in names:
+                if n in header: return header.index(n)
+            return -1
+            
+        idx_folder = get_idx(["папка", "folder"])
+        idx_title = get_idx(["название", "title"])
+        idx_desc = get_idx(["описание", "description"])
+        
+        if idx_title == -1 or idx_desc == -1: 
+            continue
+        
+        valid_rows = []
+        empty_desc_rows = []
+        
+        for i, r in enumerate(all_values[1:], start=2):
+            folder = r[idx_folder] if idx_folder != -1 and idx_folder < len(r) else ""
+            title = r[idx_title] if idx_title < len(r) else ""
+            desc = r[idx_desc] if idx_desc < len(r) else ""
+            
+            if not title.strip(): continue
+            
+            row_dict = {"_row": i, "_raw": r, "folder": folder, "title": title, "description": desc.strip()}
+            
+            if row_dict["description"]:
+                valid_rows.append(row_dict)
+            else:
+                empty_desc_rows.append(row_dict)
+                
+        rows_to_delete = []
+        
+        for empty_row in empty_desc_rows:
+            compact_empty = _compact_match_str(empty_row["title"])
+            if not compact_empty: continue
+            
+            # 1. Ищем точное/транслит совпадение через match_asset_to_row
+            matched = match_asset_to_row(empty_row["title"], valid_rows, key, folder=empty_row["folder"])
+            
+            if matched:
+                rows_to_delete.append(empty_row["_row"])
+                continue
+            
+            # 2. Если не нашли, используем SequenceMatcher (для опечаток x vs х)
+            for v_row in valid_rows:
+                compact_valid = _compact_match_str(v_row["title"])
+                if difflib.SequenceMatcher(None, compact_empty, compact_valid).ratio() > 0.85:
+                    rows_to_delete.append(empty_row["_row"])
+                    break
+                    
+        if rows_to_delete:
+            rows_to_delete.sort(reverse=True)
+            for row_num in rows_to_delete:
+                if not dry_run:
+                    try:
+                        sheet.delete_rows(row_num)
+                        print(f"    [-] [{key}] Удалена строка {row_num} (дубль без описания)")
+                        total_deleted += 1
+                    except Exception as e:
+                        print(f"    [!] Ошибка удаления строки {row_num}: {e}")
+                else:
+                    print(f"    [DRY-RUN] [{key}] Будет удалена строка {row_num}")
+    
+    if total_deleted > 0:
+        print(f"\n  ✓ Очистка завершена. Удалено строк: {total_deleted}")
+    else:
+        print("\n  ✓ Дублей без описания не найдено.")
+
+
+# ============================================================
 # ШАГ A: GitHub Releases → Google Sheets
 # ============================================================
 def _is_release_link(link: str) -> bool:
@@ -843,6 +935,9 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
     except Exception as e:
         stats["errors"].append(f"Не удалось открыть Google-таблицу: {e}")
         return stats
+
+    # ─── ВЫЗОВ ОЧИСТКИ ДУБЛИКАТОВ ───
+    clean_sheet_duplicates(sh, sections, dry_run)
 
     for section in sections:
         key = section.get("key") or "?"
