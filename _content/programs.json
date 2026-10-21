@@ -4373,12 +4373,28 @@
     "file_id": "avtosborsobitiischygimiisobitiisodnoidatoi"
   },
   {
+    "folder": "Плагины",
+    "title": "Автосбор событий с чужими событиями или карточек с одной датой",
+    "description": "Автоматический сборщик событий с чужими событиями во всем карточкам или карточек с одной датой",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/Avtosbor_sobitii_s_chygimi_i_sobitii_s_odnoi_datoi.rar",
+    "file_id": "автосбор-событий-с-чужими-событиями-или-карточек-с-одной-датой"
+  },
+  {
     "folder": "Макросы",
     "title": "ОТБОР Текстовый Район",
     "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП район",
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
     "file_id": "отбор-текстовый-район"
+  },
+  {
+    "folder": "Макросы",
+    "title": "ОТБОР Текстовый",
+    "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
+    "file_id": "отбор-текстовый"
   },
   {
     "folder": "Макросы",
@@ -4389,10 +4405,38 @@
     "file_id": "сравнение-стат52ируип167полей-поиск-двойников"
   },
   {
+    "folder": "Скрипты",
+    "title": "snyatzashhutuslistavxlsx",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/snyatzashhutuslistavxlsx.rar",
+    "file_id": "snyatzashhutuslistavxlsx"
+  },
+  {
+    "folder": "Плагины",
+    "title": "avtomatpoiskapobazeizfajla",
+    "size": "0.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/avtomatpoiskapobazeizfajla.rar",
+    "file_id": "avtomatpoiskapobazeizfajla"
+  },
+  {
     "folder": "Макросы",
     "title": "otbor-tekstovyj-rajon",
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
     "file_id": "otbor-tekstovyj-rajon"
+  },
+  {
+    "folder": "Макросы",
+    "title": "otbor-tekstovyj",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
+    "file_id": "otbor-tekstovyj"
+  },
+  {
+    "folder": "Макросы",
+    "title": "sravnenie-stat52iruip167polej-poisk-dvojnikov",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/sravnenie-stat52iruip167polej-poisk-dvojnikov.xlsm",
+    "file_id": "sravnenie-stat52iruip167polej-poisk-dvojnikov"
   }
 ]
