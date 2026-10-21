@@ -123,6 +123,13 @@ def slugify(text):
     return s
 
 
+def has_cyrillic(text):
+    """Проверяет, содержит ли строка кириллические символы."""
+    if not text:
+        return False
+    return bool(re.search(r'[а-яА-ЯёЁ]', str(text)))
+
+
 # ============================================================
 # SUPABASE
 # ============================================================
@@ -343,6 +350,12 @@ def generate_json_for_section(worksheet, json_path, columns=None,
     skipped_no_title = 0
     skipped_hidden = 0
     short_descs = []
+    
+    # ─── УМНАЯ ЗАЩИТА ОТ ДУБЛИКАТОВ ───
+    # Используем словарь для хранения уникальных записей по ключу (ссылке).
+    # Это позволит нам заменить английский вариант на русский при необходимости.
+    unique_items_dict = {}
+    skipped_duplicates = 0
 
     for row in records:
         item = row_to_item(row, columns)
@@ -357,6 +370,31 @@ def generate_json_for_section(worksheet, json_path, columns=None,
                 skipped_hidden += 1
                 continue
 
+        # Ключом уникальности выступает ссылка. Если её нет — связка папка+название.
+        link_val = (item.get("download_link") or "").strip()
+        unique_key = link_val if link_val else f"{item.get('folder','')}|{item.get('title','')}"
+
+        if unique_key in unique_items_dict:
+            skipped_duplicates += 1
+            existing_item = unique_items_dict[unique_key]
+            
+            # Проверяем, какая папка "лучше" — русская или нет
+            current_folder = item.get("folder", "")
+            existing_folder = existing_item.get("folder", "")
+            
+            current_is_ru = has_cyrillic(current_folder)
+            existing_is_ru = has_cyrillic(existing_folder)
+            
+            # Если новый дубль имеет русскую папку, а старый — английскую,
+            # то заменяем старый на новый.
+            if current_is_ru and not existing_is_ru:
+                unique_items_dict[unique_key] = item
+        else:
+            unique_items_dict[unique_key] = item
+
+    # Теперь проходим по уже очищенному от дублей словарю
+    # для валидации описаний и формирования итогового списка.
+    for item in unique_items_dict.values():
         # ─── Валидация описания ───
         if MIN_DESCRIPTION_LENGTH > 0:
             desc_len = _check_description_length(item)
@@ -382,6 +420,8 @@ def generate_json_for_section(worksheet, json_path, columns=None,
         extras.append(f"без title: {skipped_no_title}")
     if skipped_hidden:
         extras.append(f"скрытых: {skipped_hidden}")
+    if skipped_duplicates:
+        extras.append(f"найдено дублей: {skipped_duplicates}")
     if short_descs:
         extras.append(f"коротких описаний: {len(short_descs)}")
     if extras:
