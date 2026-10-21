@@ -136,15 +136,6 @@
   },
   {
     "folder": "Скрипты",
-    "title": "СнятьЗащутуСЛистаВxlsx",
-    "description": "Скрипт для снятия защиты с листа",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/snyatzashhutuslistavxlsx.rar",
-    "file_id": "снятьзащутуслиставxlsx"
-  },
-  {
-    "folder": "Скрипты",
     "title": "Чужой без убытия",
     "description": "Определение карточек последнее событие произошло уже не на своей территории но от вас нет события убытия",
     "version": "1",
@@ -157,8 +148,8 @@
     "title": "CleanMVD",
     "description": "Скрипт для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
     "version": "1",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/cleanmvd.ods",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/cleanmvd.rar",
     "file_id": "cleanmvd"
   },
   {
@@ -4358,6 +4349,15 @@
     "file_id": "protocolscanner"
   },
   {
+    "folder": "Скрипты",
+    "title": "СнятьЗащутуСЛистаВxlsx",
+    "description": "Скрипт для снятия защиты с листа",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/snyatzashhutuslistavxlsx.rar",
+    "file_id": "снятьзащутуслиставxlsx"
+  },
+  {
     "folder": "Плагины",
     "title": "АвтоматПоискаПоБазеИзФайла",
     "description": "Поиск по базе из файла и сохранение в накопительную таблицу",
@@ -4367,11 +4367,10 @@
   },
   {
     "folder": "Плагины",
-    "title": "Автосбор событий с чужими событиями или карточек с одной датой",
-    "description": "Автоматический сборщик событий с чужими событиями во всем карточкам или карточек с одной датой",
+    "title": "Avtosbor_sobitii_s_chygimi_i_sobitii_s_odnoi_datoi",
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/Avtosbor_sobitii_s_chygimi_i_sobitii_s_odnoi_datoi.rar",
-    "file_id": "автосбор-событий-с-чужими-событиями-или-карточек-с-одной-датой"
+    "file_id": "avtosborsobitiischygimiisobitiisodnoidatoi"
   },
   {
     "folder": "Макросы",
