@@ -55,15 +55,6 @@
   },
   {
     "folder": "Макросы",
-    "title": "ОТБОР Текстовый Район",
-    "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП район",
-    "version": "1",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
-    "file_id": "отбор-текстовый-район"
-  },
-  {
-    "folder": "Макросы",
     "title": "Просмотреть, редактировать, выгрузить версия 6",
     "description": "Различные просмотры выгрузок 167 полей для последущей работы с базой",
     "version": "6",
@@ -97,15 +88,6 @@
     "size": "0.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/ruipvspriur16032026-versiya-5.xlsm",
     "file_id": "ruipvspriur16032026-версия-5"
-  },
-  {
-    "folder": "Плагины",
-    "title": "АвтоматПоискаПоБазеИзФайла",
-    "description": "Поиск по базе из файла и сохранение в накопительную таблицу",
-    "version": "1",
-    "size": "0.3",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/avtomatpoiskapobazeizfajla.rar",
-    "file_id": "автоматпоискапобазеизфайла"
   },
   {
     "folder": "Плагины",
@@ -175,8 +157,8 @@
     "title": "CleanMVD",
     "description": "Скрипт для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
     "version": "1",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/cleanmvd.ods",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/cleanmvd.rar",
     "file_id": "cleanmvd"
   },
   {
@@ -4377,6 +4359,14 @@
   },
   {
     "folder": "Плагины",
+    "title": "АвтоматПоискаПоБазеИзФайла",
+    "description": "Поиск по базе из файла и сохранение в накопительную таблицу",
+    "size": "0.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/avtomatpoiskapobazeizfajla.rar",
+    "file_id": "автоматпоискапобазеизфайла"
+  },
+  {
+    "folder": "Плагины",
     "title": "Автосбор событий с чужими событиями или карточек с одной датой",
     "description": "Автоматический сборщик событий с чужими событиями во всем карточкам или карточек с одной датой",
     "size": "0.1",
@@ -4385,10 +4375,11 @@
   },
   {
     "folder": "Макросы",
-    "title": "otbor-tekstovyj-rajon",
+    "title": "ОТБОР Текстовый Район",
+    "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП район",
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
-    "file_id": "otbor-tekstovyj-rajon"
+    "file_id": "отбор-текстовый-район"
   },
   {
     "folder": "Макросы",
@@ -4397,5 +4388,12 @@
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/sravnenie-stat52iruip167polej-poisk-dvojnikov.xlsm",
     "file_id": "сравнение-стат52ируип167полей-поиск-двойников"
+  },
+  {
+    "folder": "Макросы",
+    "title": "otbor-tekstovyj-rajon",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
+    "file_id": "otbor-tekstovyj-rajon"
   }
 ]
