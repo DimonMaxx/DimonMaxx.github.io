@@ -40,8 +40,8 @@
     "title": "отбор из других районов XLSX Версия 2",
     "description": "Записи из месячной выгрузки из других районов но с событиями на своей территории",
     "version": "2",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-iz-drugih-rajonov-xlsx-versiya-2.xlsm",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-iz-drugih-rajonov-xlsx-versiya-2-dlya-libra-ofisa.ods",
     "file_id": "отбор-из-других-районов-xlsx-версия-2"
   },
   {
@@ -148,8 +148,8 @@
     "title": "CleanMVD",
     "description": "Скрипт для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
     "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/cleanmvd.rar",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/cleanmvd.ods",
     "file_id": "cleanmvd"
   },
   {
@@ -4385,7 +4385,7 @@
     "title": "ОТБОР Текстовый Район",
     "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП район",
     "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
     "file_id": "отбор-текстовый-район"
   },
   {
@@ -4403,40 +4403,5 @@
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/sravnenie-stat52iruip167polej-poisk-dvojnikov.xlsm",
     "file_id": "сравнение-стат52ируип167полей-поиск-двойников"
-  },
-  {
-    "folder": "Скрипты",
-    "title": "snyatzashhutuslistavxlsx",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/snyatzashhutuslistavxlsx.rar",
-    "file_id": "snyatzashhutuslistavxlsx"
-  },
-  {
-    "folder": "Плагины",
-    "title": "avtomatpoiskapobazeizfajla",
-    "size": "0.3",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/avtomatpoiskapobazeizfajla.rar",
-    "file_id": "avtomatpoiskapobazeizfajla"
-  },
-  {
-    "folder": "Макросы",
-    "title": "otbor-tekstovyj-rajon",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
-    "file_id": "otbor-tekstovyj-rajon"
-  },
-  {
-    "folder": "Макросы",
-    "title": "otbor-tekstovyj",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
-    "file_id": "otbor-tekstovyj"
-  },
-  {
-    "folder": "Макросы",
-    "title": "sravnenie-stat52iruip167polej-poisk-dvojnikov",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/sravnenie-stat52iruip167polej-poisk-dvojnikov.xlsm",
-    "file_id": "sravnenie-stat52iruip167polej-poisk-dvojnikov"
   }
 ]
