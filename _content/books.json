@@ -1264,13 +1264,12 @@
   },
   {
     "folder": "Серж Винтеркей. Эгида",
-    "title": "Месть нуба",
-    "author": "Серж Винтеркей",
-    "description": "Третья книга серии. Агры из клана «Черных соколов», оказавшись не в силах поймать Троя, убивают его девушку. Разозленный убийством, Трой выходит на тропу войны против всего клана. Как отомстить клану, в котором больше тысячи игроков, превосходящих тебя по уровню? Удастся ли найти союзников, и должны ли они знать настоящие причины разожженной у них неприязни к клану «Черные соколы»? Какие способы мести наиболее эффективны?",
+    "title": "mest-nuba",
+    "author": "Серж Винтеркей. Эгида",
     "format": "fb2",
     "size": "1.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/serzh-vinterkej-egida-15-knig/mest-nuba.fb2",
-    "file_id": "месть-нуба"
+    "file_id": "mest-nuba"
   },
   {
     "folder": "Серж Винтеркей. Эгида",
@@ -1652,15 +1651,6 @@
   },
   {
     "folder": "Сергей Лукьяненко",
-    "title": "dver-vo-tmu-sbornik",
-    "author": "Сергей Лукьяненко",
-    "format": "fb2",
-    "size": "1.2",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sergej-lukyanenko/dver-vo-tmu-sbornik.fb2",
-    "file_id": "dver-vo-tmu-sbornik"
-  },
-  {
-    "folder": "Сергей Лукьяненко",
     "title": "Двести первый шаг",
     "author": "Сергей Лукьяненко",
     "description": "Эпидемия ковид-19 серьезно и не в лучшую сторону изменила нашу жизнь. Но уже скоро она будет возвращаться в нормальное русло. Надеюсь, мы учтём уроки эпидемии и станем лучше. И очень важно для всех нас будет не зацикливаться на прошлом и не тащить его за собой в будущее. Об этом – и рассказ…",
@@ -1798,13 +1788,12 @@
   },
   {
     "folder": "Сергей Лукьяненко",
-    "title": "«Если», 2002 № 08",
-    "author": "Журнал «Если»",
-    "description": "Кевин АНДЕРСОН. МАСКАРАД-КЛУБ",
+    "title": "esli-2002-08",
+    "author": "Сергей Лукьяненко",
     "format": "fb2",
     "size": "1.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sergej-lukyanenko/esli-2002-08.fb2",
-    "file_id": "если-2002-08"
+    "file_id": "esli-2002-08"
   },
   {
     "folder": "Сергей Лукьяненко",
@@ -1934,12 +1923,12 @@
   },
   {
     "folder": "Сергей Лукьяненко",
-    "title": "esli-2009-04",
-    "author": "Сергей Лукьяненко",
+    "title": ", 2009  04",
+    "description": " ,  ",
     "format": "fb2",
     "size": "1.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sergej-lukyanenko/esli-2009-04.fb2",
-    "file_id": "esli-2009-04"
+    "file_id": "2009-04"
   },
   {
     "folder": "Сергей Лукьяненко",
@@ -4878,12 +4867,13 @@
   },
   {
     "folder": "Наши там",
-    "title": "erik",
-    "author": "Наши там",
+    "title": "Эрик",
+    "author": "Михаил Ланцов",
+    "description": "Артем Жилин - преуспевающий молодой человек, живет полной разносторонней жизнью, увлекается средневековой историей. Но, ввязавшись в авантюру своего старого приятеля, в одночасье теряет... жизнь и тело. Теперь он Эрик фон Ленцбург, четырнадцатилетний подросток, единственный сын одного из мелких швейцарских баронов. Все бы хорошо, но на дворе - конец XII века, а его семью только что убили люди родни. И он - последний, кто стоит на пути \"любимого\" дядюшки Карла...",
     "format": "fb2",
     "size": "1.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nashi-tam/erik.fb2",
-    "file_id": "erik"
+    "file_id": "эрик"
   },
   {
     "folder": "Наши там",
@@ -7054,13 +7044,12 @@
   },
   {
     "folder": "Дмитрий Ра",
-    "title": "Гильдия Злодеев. Том 2",
+    "title": "gildiya-zlodeev-tom-2",
     "author": "Дмитрий Ра",
-    "description": "Я — коллекционер. И собираю отнюдь не марки…",
     "format": "fb2",
     "size": "0.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dmitrij-ra/gildiya-zlodeev-tom-2.fb2",
-    "file_id": "гильдия-злодеев-том-2"
+    "file_id": "gildiya-zlodeev-tom-2"
   },
   {
     "folder": "Дмитрий Ра",

@@ -197,6 +197,7 @@
   {
     "folder": "Uninstall",
     "title": "lockhunter",
+    "description": "LockHunter - утилита для удаления файлов, которые, по непонятным вам причинам, блокируются какими-то другими приложениями, в том числе может быть результатом действия какого-нибудь malware или другого вредоносного приложения. В таких ситуациях LockHunter позволяет разблокировать находящиеся в использовании файлы с последующей возможностью удаления, копирования или переименования.",
     "size": "4.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/uninstall/lockhunter.exe",
     "file_id": "lockhunter"
@@ -239,6 +240,7 @@
   {
     "folder": "Uninstall",
     "title": "unlocker",
+    "description": "Unlocker - небольшая утилита, которая помогает удалить, разблокировать или переместить занятый системой файл. Программа добавляет в контекстное меню Windows новую функцию, использовав которую вы снимаете запрет на работу с подобными файлами.",
     "size": "0.2",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/uninstall/unlocker.exe",
     "file_id": "unlocker"
@@ -253,6 +255,7 @@
   {
     "folder": "Text",
     "title": "akelpad",
+    "description": "AkelPad - многофункциональный текстовый редактор.",
     "size": "4.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/text/akelpad.exe",
     "file_id": "akelpad"
@@ -260,6 +263,7 @@
   {
     "folder": "Text",
     "title": "alreader",
+    "description": "AlReader - удобная программа для чтения электронных книг и различных текстов в полноэкранном режиме. Поддерживается множество популярных форматов файлов, такие как HTML, CHM, FB2, TXT, RTF, PDB/PRC, DOC, DOCX, ODT, SXW, ABW и другие.",
     "size": "4.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/text/alreader.exe",
     "file_id": "alreader"
@@ -302,6 +306,7 @@
   {
     "folder": "Text",
     "title": "fontexpert",
+    "description": "Fontexpert - полнофункциональная программа для просмотра шрифтов, печати, поиска, загрузки и управлением коллекциями шрифтов. Вы также сможете обнаруживать и решать проблемы со шрифтами форматов TrueType, OpenType, PostScript.",
     "size": "13.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/text/fontexpert.exe",
     "file_id": "fontexpert"
@@ -330,6 +335,7 @@
   {
     "folder": "Text",
     "title": "notepad3",
+    "description": "Notepad3 - удобный текстовый редактор с подсветкой синтаксиса для популярных языков программирования и различными опциями. Этот редактор будет хорошей заменой стандартному Блокноту встроенному в Windows. В нем есть много различных функций которых не хватает обычному Notepad. Интерфейс Notepad3 интуитивно понятный, все опции четко структурированы. Поддерживается подсветка синтаксиса для BAT, VBS, CSS, AutoHotkey, AutoIt3, LaTeX, Ruby, Perl, Inno Setup, NSIS и других языков.",
     "size": "4.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/text/notepad3.exe",
     "file_id": "notepad3"
@@ -337,6 +343,7 @@
   {
     "folder": "Text",
     "title": "popchar",
+    "description": "PopChar упрощает поиск необычных символов без необходимости запоминать комбинации клавиш. Всякий раз, когда вам нужен специальный символ вызовите PopChar, чтобы отобразить таблицу символов. Выберите нужный символ, и он мгновенно вставится в ваш документ. PopChar работает со всеми современными приложениями, поддерживающими Unicode, он упрощает навигацию и поиск внутри шрифтов, содержащих тысячи символов. Найдите символы по их именам или форме, найдите шрифты, которые содержат определенные символы, исследуйте набор символов шрифта, собирайте ваши любимые символы в избранном, вставляйте символы как HTML. PopChar упрощает все задачи, связанные с шрифтами.",
     "size": "4.2",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/text/popchar.exe",
     "file_id": "popchar"
@@ -344,6 +351,7 @@
   {
     "folder": "Text",
     "title": "qtranslate",
+    "description": "QTranslate - Онлайн переводчик.",
     "size": "0.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/text/qtranslate.exe",
     "file_id": "qtranslate"
@@ -351,6 +359,7 @@
   {
     "folder": "Text",
     "title": "x-fonter",
+    "description": "X-Fonter - программа для управления всеми вашими шрифтами, установка и деинсталляция, загрузка и сравнение, просмотр, печать и прочее. X-Fonter позволяет просматривать шрифты в 3D представлении и применять к ним различные эфекты (тень, градиентные цвета, обводка, размытие). В дальнейшем можно сохранить получившееся 3D-изображение и использовать его, например, для своих веб-страниц. Важной особенностью программы, является возможность временной установки наборов шрифтов (Коллекции - Загрузить/Выгрузить).",
     "size": "8.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/text/x-fonter.exe",
     "file_id": "x-fonter"
@@ -463,6 +472,7 @@
   {
     "folder": "Скрипты",
     "title": "cleanmvd",
+    "description": "Скрипт для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
     "size": "0.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/cleanmvd.rar",
     "file_id": "cleanmvd"
@@ -491,6 +501,7 @@
   {
     "folder": "Скрипты",
     "title": "script-zags",
+    "description": "Работа с выгрузкой из администрации по смерти за месяц",
     "size": "0.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/script-zags.rar",
     "file_id": "script-zags"
@@ -547,6 +558,7 @@
   {
     "folder": "Service",
     "title": "cacheman",
+    "description": "Cacheman - утилита для оптимизации Windows, которая увеличивает скорость и стабильность работы ПК, оптимизируя кэши, освобождая оперативную память и тонко настраивая множество параметров системы.",
     "size": "6.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/service/cacheman.exe",
     "file_id": "cacheman"
@@ -568,6 +580,7 @@
   {
     "folder": "Service",
     "title": "drivermax",
+    "description": "DriverMax поможет легко и быстро переустановить все драйверы Windows. Она собирает информацию об установленных в системе драйверах и выводит список устройств, которые их используют. Приводится информация о версии драйвера, дате создания, разработчике, количестве файлов и наличии цифровой подписи. После этого достаточно экспортировать их в отдельную папку или упаковать в ZIP-архив, и после переустановки Windows устанавливать все необходимое из одного источника.",
     "size": "4.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/service/drivermax.exe",
     "file_id": "drivermax"
@@ -575,6 +588,7 @@
   {
     "folder": "Service",
     "title": "easyuefi",
+    "description": "EasyUEFI - утилита для редактирования загрузочного меню операционных систем Windows на основе EFI/UEFI.",
     "size": "12.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/service/easyuefi.exe",
     "file_id": "easyuefi"
@@ -610,6 +624,7 @@
   {
     "folder": "Service",
     "title": "privazer",
+    "description": "PrivaZer - утилита, которая поможет вам очистить компьютер от следов конфиденциальной информации. Она подготовит детальный отчет со списком всех обнаруженных следов, обнаруженных в реестре, истории посещений сайтов, cookies и т.п.",
     "size": "9.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/service/privazer.exe",
     "file_id": "privazer"
@@ -680,6 +695,7 @@
   {
     "folder": "Security",
     "title": "adguard",
+    "description": "AdGuard включает функции антифишинг, антитрекинг, родительский контроль и антибаннер. Интернет-фильтр предназначен для блокировки вредоносных и мошеннических сайтов (веб-защита) и всех возможных видов нежелательной рекламы (Adblock) в Интернете. \nЧерез 3 дня после сброса триала вам будет предложено активировать дополнительные 180, введите любой реальный адрес почты. Например, можно использовать временную почту mail.tm.",
     "size": "39.8",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/security/adguard.exe",
     "file_id": "adguard"
@@ -729,6 +745,7 @@
   {
     "folder": "Security",
     "title": "unchecky",
+    "description": "Unchecky - полезная утилита, которая автоматически снимает галочки или предупреждает об установке нежелательного рекламного ПО и тулбаров при установке необходимых программ.",
     "size": "1.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/security/unchecky.exe",
     "file_id": "unchecky"
@@ -743,6 +760,7 @@
   {
     "folder": "Security",
     "title": "w10privacy",
+    "description": "W10Privacy - программа для изменения настроек системы Windows 10 и минимизации сбора данных пользователя. Предлагает серьезный набор защиты данных и настроек конфиденциальности, главное не ошибиться в выборе. Программа четко отображает доступные для изменения параметры, разделенные на 12 разделов, в которых вы самостоятельно выбираете настройки, которые следует включить/отключить.",
     "size": "2.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/security/w10privacy.exe",
     "file_id": "w10privacy"
@@ -806,6 +824,7 @@
   {
     "folder": "Search",
     "title": "everything",
+    "description": "Everything - мгновенный поиск файлов и папок по их именам.",
     "size": "4.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/search/everything.exe",
     "file_id": "everything"
@@ -820,6 +839,7 @@
   {
     "folder": "Search",
     "title": "filesearchex",
+    "description": "FileSearchEX - программа для поиска файлов с классическим и упрощенным интерфейсом поиска, что делает поиск файлов и поиск по их содержимому менее утомительным. Благодаря низким системным требованиям, простому развертыванию в сети и совместимости заблокированных учетных записей пользователей, FileSearchEX является заменой поискового инструмента Windows, которую вы искали.",
     "size": "4.8",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/search/filesearchex.exe",
     "file_id": "filesearchex"
@@ -869,6 +889,7 @@
   {
     "folder": "Search",
     "title": "windirstat",
+    "description": "WinDirStat (Windows Directory Statistics) - просмотр статистики использования дискового пространства и его очистка. Программа сканирует дерево каталога и предоставляет статистику в трех полезных видах: Список каталогов, имеет сходство с видом проводника Winodows, но сортировка существляется по размеру каталога (файла); Карта каталогов, которая отображает полное содержание дерева каталогов в графической форме; Список расширений, который служит в качестве легенды и показывает статистику о типах файлов.",
     "size": "0.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/search/windirstat.exe",
     "file_id": "windirstat"
@@ -876,6 +897,7 @@
   {
     "folder": "Search",
     "title": "wizfile",
+    "description": "WizFile - простая программа для поиска файлов, которая также пригодится, чтобы выяснить, какие файлы и папки занимают больше всего места на диске, и навести порядок на жестком диске. Основные возможности: Мгновенный поиск файлов на диске по названию; Быстрая индексация файлов на диске; Поиск файлов по названию или полному пути; Составление поисковых запросов с использованием метасимволов; Использование настраиваемых фильтров по типу файлов; Мониторинг изменений на диске и обновление результатов поиска в реальном времени; Отслеживание размера папок; Не требует отдельной базы файлов, вся информация храниться в памяти.",
     "size": "5.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/search/wizfile.exe",
     "file_id": "wizfile"
@@ -883,6 +905,7 @@
   {
     "folder": "Search",
     "title": "wiztree",
+    "description": "WizTree - шустрая программка для поиска на жестком диске и отображения наиболее объемных файлов и папок.",
     "size": "4.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/search/wiztree.exe",
     "file_id": "wiztree"
@@ -897,6 +920,7 @@
   {
     "folder": "Registry",
     "title": "regcool",
+    "description": "RegCool - редактор системного реестра с простым и удобным интерфейсом в стиле Проводника Windows и несколькими дополнительными возможностями, которые позволяют работать быстрее и эффективнее  выполнять задачи, связанные с обслуживанием реестра. При этом, главное отличие от штатного RegEdit это возможность сравнивания двух реестров с показом всех отличий между ними.",
     "size": "4.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/registry/regcool.exe",
     "file_id": "regcool"
@@ -939,6 +963,7 @@
   {
     "folder": "RecScreen",
     "title": "apowerrec",
+    "description": "ApowerREC - многофункциональная программа для видеозаписи активности экрана, с возможностью комментировать записи, создавать задания записи, выгружать созданные видеоролики в сеть и делать скриншоты. Вы можете использовать её для создания видеоуроков или коротких домашних видео с помощью веб-камеры.",
     "size": "53.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/recscreen/apowerrec.exe",
     "file_id": "apowerrec"
@@ -960,6 +985,7 @@
   {
     "folder": "RecScreen",
     "title": "bandicam",
+    "description": "Bandicam позволяет записать определенную область на экране ПК, или в программе, которая использует графические технологии DirectX/OpenGL. Bandicam поможет вам выполнить видеозапись с высокой степенью сжатия, сохраняя качество видео ближе к оригинальной работе.",
     "size": "28.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/recscreen/bandicam.exe",
     "file_id": "bandicam"
@@ -1016,6 +1042,7 @@
   {
     "folder": "RecScreen",
     "title": "wincam",
+    "description": "NTWind WinCam - приложение для записи экрана в системах Windows. Одинаково качественно программа работает как с целым экраном, так и с его произвольно выбранным сектором либо окном запущенного на ПК приложения. Утилита в буквальном смысле записывает все, что пользователь видит на своем экране.",
     "size": "5.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/recscreen/wincam.exe",
     "file_id": "wincam"
@@ -1023,6 +1050,7 @@
   {
     "folder": "RecScreen",
     "title": "winsnap",
+    "description": "WinSnap представляет собой довольно мощное средство для захвата и обработки снимков экрана. Позволяет просто захватить изображения любого окна любой формы с фоном по выбору пользователя, автоматически проделывает простые операции по трансформации и улучшению цвета, а также накладывает плавные тени в стиле Photoshop. Поддерживается несколько основных форматов для сохранения.",
     "size": "4.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/recscreen/winsnap.exe",
     "file_id": "winsnap"
@@ -1037,6 +1065,7 @@
   {
     "folder": "Recovery",
     "title": "cardrecovery",
+    "description": "CardRecovery - программа для восстановления фотографий с карт памяти цифровых камер или телефонов. Может эффективно восстанавливать утерянные, удаленные, поврежденные или отформатированные фотографии и видеофайлы с различных карт памяти. Поддерживаются практически все типы карт памяти, включая SD Card, MicroSD, SDHC, CF (Compact Flash) Card, xD Picture Card, Memory Stick, Flash Drive и другие.",
     "size": "2.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/recovery/cardrecovery.exe",
     "file_id": "cardrecovery"
@@ -1044,6 +1073,7 @@
   {
     "folder": "Recovery",
     "title": "diskdigger",
+    "description": "DiskDigger - программа, с помощью которой можно восстановить случайно удаленные фотографии, видео, музыку, документы и другие файлы с любого носителя. Программа может сканировать даже поврежденные или плохо отформатированные диски, а также пригодится для восстановления поврежденных файлов и папок в результате вирусной атаки. Может работать со всеми типами внешних и внутренних жестких дисков, USB-накопителями, картами памяти SD, CompactFlash и Memory Stick, а также поддерживает файловые системы FAT12, FAT16, FAT32, exFAT и NTFS.",
     "size": "3.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/recovery/diskdigger.exe",
     "file_id": "diskdigger"
@@ -1107,6 +1137,7 @@
   {
     "folder": "RadioTV",
     "title": "pcradio",
+    "description": "PCRadio - плеер для прослушивания интернет радио. Все каналы в плейлисте автоматически обновляются и добавляются новые самостоятельно после обновления данных о каналах на сайте. Удобная функция записи радиоэфира с разделением на треки. Любимое интернет радио можно заносить в список избранных. Эквалайзер улучшит качество звука радио, а таймер и будильник станут помощниками в жизни пользователей.",
     "size": "24.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/radiotv/pcradio.exe",
     "file_id": "pcradio"
@@ -1114,6 +1145,7 @@
   {
     "folder": "RadioTV",
     "title": "radiocent",
+    "description": "Radiocent позволяет прослушивать онлайн более 50 тысяч радиостанций из России и других стран по жанрам. Возможность записи эфира радиостанций в mp3 с нарезкой на треки с названием.",
     "size": "4.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/radiotv/radiocent.exe",
     "file_id": "radiocent"
@@ -1121,6 +1153,7 @@
   {
     "folder": "RadioTV",
     "title": "radiomaximus",
+    "description": "RaimerSoft RadioMaximus  - удобный инструмент для прослушивания и записи потокового аудио самых различных радиостанций мира. Захват звука возможен сразу с нескольких каналов, для этого пользователю предстоит настроить несколько несложных параметров. Записанные данные легко сохраняются в памяти вашего компьютера в одном из пяти доступных форматах (RAW, MP3, AAC, OGG, WMA).",
     "size": "80.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/radiotv/radiomaximus.exe",
     "file_id": "radiomaximus"
@@ -1128,6 +1161,7 @@
   {
     "folder": "RadioTV",
     "title": "radiosure",
+    "description": "RadioSure - интернет радио, поддерживающее огромное количество радиостанций.",
     "size": "17.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/radiotv/radiosure.exe",
     "file_id": "radiosure"
@@ -1142,6 +1176,7 @@
   {
     "folder": "RadioTV",
     "title": "tapinradio",
+    "description": "RaimerSoft TapinRadio - интернет-радио с огромнейшей базой данных радиостанций со всего мира. Насчитывает около 15000 радиостанций, причем все они отсортированы по стране нахождения и стилю. Существует возможность записи отдельных треков и непрерывной трансляции.",
     "size": "72.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/radiotv/tapinradio.exe",
     "file_id": "tapinradio"
@@ -1149,6 +1184,7 @@
   {
     "folder": "Print",
     "title": "a4scandoc",
+    "description": "A4ScanDoc - программа для сканирования документов на сканерах, начиная от настольных и заканчивая сканерами с автоподачей документов для сканирования. Подойдет как для разового, так и для массового сканирования документов. Дает возможность стандартизировать сканирование документов как в больших организациях, так и дома. Cканирование в BMP, JPEG, PNG, TIFF и PDF.",
     "size": "7.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/print/a4scandoc.exe",
     "file_id": "a4scandoc"
@@ -1156,6 +1192,7 @@
   {
     "folder": "Print",
     "title": "fineprint",
+    "description": "FinePrint - многофункциональный драйвер для принтеров, значительно расширяющий возможности любых принтеров при печати документов: предпросмотр, печать нескольких страниц на одном листе, распечатка брошюр, автовставка заголовка и подвала, создание фирменных бланков, подложек, рамочек и многое другое.",
     "size": "22.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/print/fineprint.exe",
     "file_id": "fineprint"
@@ -1198,6 +1235,7 @@
   {
     "folder": "Плагины",
     "title": "ButtonCollector",
+    "description": "Сборщик селекторов и расположений кнопок на отрытой странице и при переходе на следующую страницу собирает данные о кнопках со второй странцы и последующих.",
     "size": "0.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/ButtonCollector.rar",
     "file_id": "buttoncollector"
@@ -1254,6 +1292,7 @@
   {
     "folder": "Photo",
     "title": "fotosketcher",
+    "description": "FotoSketcher - программа для работы с фотографиями и различными изображениями. Поможет вам автоматически конвертировать ваши цифровые фотографии в произведения искусства. Если вы хотите превратить портрет, фотографии вашего дома или красивый пейзаж в живопись, рисунок или чертеж, программа сделает это в считаные секунды. Благодаря FotoSketcher можно создать потрясающие изображения и сделать оригинальные подарки для ваших друзей или родственников.",
     "size": "30.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/photo/fotosketcher.exe",
     "file_id": "fotosketcher"
@@ -1282,6 +1321,7 @@
   {
     "folder": "Photo",
     "title": "photofiltre",
+    "description": "PhotoFiltre - программа для лёгкого и быстрого создания графических композиций. В её состав входят инструменты, позволяющие как создавать новые работы, так и редактировать уже готовые рисунки. В PhotoFiltre можно регулировать яркость, контрастность, насыщенность, исправлять гамму, пользоваться всевозможными фильтрами (акварель, пастели, чернила и т.д.). Кроме того, в этом редакторе можно работать с декоративным текстом, оптимизировать графику, создавать поздравительные конверты и открытки из готовых шаблонов. Существенно расширить опции программы можно подключив к ней плагины.",
     "size": "17.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/photo/photofiltre.exe",
     "file_id": "photofiltre"
@@ -1289,6 +1329,7 @@
   {
     "folder": "Photo",
     "title": "photoinstrument",
+    "description": "Photoinstrument - простой в освоении редактор для обработки цифровых фотографий, предназначенный, в первую очередь, для ретуширования портретных изображений. Предлагает множество интуитивно понятных инструментов для редактирования фотографий (удаление красных глаз, сглаживание морщин, увеличение чёткости, коррекция цвета и др.) для придания портрету гламурного качества и желаемой привлекательности.",
     "size": "11.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/photo/photoinstrument.exe",
     "file_id": "photoinstrument"
@@ -1296,6 +1337,7 @@
   {
     "folder": "Photo",
     "title": "picasa",
+    "description": "Picasa - программа-органайзер ваших фотографий и видеоматериалов. Вы можете искать, просматривать, редактировать, печатать фотографии и обмениваться ими, превращать фотографии в фильм или коллаж, создавать слайд-шоу и многое другое. Picasa позволяет одним нажатием применять разнообразные визуальные эффекты, а также вносить исправления используя целый набор средств редактирования фотографий - кадрирование, улучшение снимка, удаление эффекта красных глаз, возможность выравнивания изображения, ручная коррекция цветовой температуры, теней, автоматическая коррекция контрастности и цветового баланса, насыщенности и т.п.",
     "size": "11.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/photo/picasa.exe",
     "file_id": "picasa"
@@ -1436,6 +1478,7 @@
   {
     "folder": "PDF",
     "title": "pdfsign",
+    "description": "PDFSign - печать на любой документ за 5 минут. Быстрая подпись документов, Сохранение в формат .PDF, Печать документа из самой программы. Работает с любыми изображениями, есть возможность масштабирования. Как это работает? Открываете в PDFSign нужный вам документ, затем нажимаете кнопку добавить печать или подпись, после чего располагаете ее в нужном месте и готово.",
     "size": "8.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/pdf/pdfsign.exe",
     "file_id": "pdfsign"
@@ -1450,6 +1493,7 @@
   {
     "folder": "PDF",
     "title": "sumatrapdf",
+    "description": "Sumatra PDF - программа просмотра PDF, ePub, MOBI, CHM, XPS, DjVu, CBZ, CBR для Windows.",
     "size": "15.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/pdf/sumatrapdf.exe",
     "file_id": "sumatrapdf"
@@ -1478,6 +1522,7 @@
   {
     "folder": "Optimizers",
     "title": "ccenhancer",
+    "description": "CCEnhancer - утилита, которая позволяет расширить функциональные возможности по очистке системы в программе CCleaner. Расширение способно добавить в CCleaner более чем 1000 новых приложений.",
     "size": "2.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/optimizers/ccenhancer.exe",
     "file_id": "ccenhancer"
@@ -1492,6 +1537,7 @@
   {
     "folder": "Optimizers",
     "title": "cleanmypc",
+    "description": "CleanMyPC поможет вам очистить компьютер от временных файлов, системного мусора, остатков ранее удалённых приложений. Тем самым, освободить место на диске, а также обеспечить более быструю работу Windows. Есть возможность безопасного и без возможности восстановления удаления файлов. Можно управлять расширениями и плагинами браузеров, гаджетами рабочего стола, чистить реестр, очищать личные данные из браузеров, полностью удалять установленные приложения, управлять программами из автозапуска.",
     "size": "27.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/optimizers/cleanmypc.exe",
     "file_id": "cleanmypc"
@@ -1590,6 +1636,7 @@
   {
     "folder": "Office",
     "title": "careueyes",
+    "description": "СareUEyes служит для изменения цветовой температуры и яркости изображения на экране компьютера, а кроме того способна напомнить пользователю о необходимости сделать перерыв и оторвать взгляд от дисплея. Пользователю даётся возможность выбрать подходящую периодичность перерывов для отдыха глаз и их продолжительность, установить нужную цветовую температуру и яркость вручную или при помощи нескольких готовых шаблонов, пригодных для разных сценариев использования компьютера.",
     "size": "6.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/office/careueyes.exe",
     "file_id": "careueyes"
@@ -1604,6 +1651,7 @@
   {
     "folder": "Office",
     "title": "clipdiary",
+    "description": "Clipdiary - незаменимый помощник для ведения истории скопированых данных. Он запоминает все что вы копируете в буфер обмена и вы всегда будете иметь легкий и быстрый доступ к этой информации.",
     "size": "5.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/office/clipdiary.exe",
     "file_id": "clipdiary"
@@ -1639,6 +1687,7 @@
   {
     "folder": "Office",
     "title": "mathtype",
+    "description": "MathType - профессиональный инструмент, позволяющий создавать математические формулы и уравнения в таких программах как Microsoft Word, PowerPoint и некоторых других. MathType содержит огромную коллекцию математических выражений и символов, которые позволят без труда написать даже самое сложное уравнение (более 500 математических символов и шаблонов: дроби, радикалы, суммы, интегралы, произведения, матрицы, различные виды квадратных и фигурных скобок).",
     "size": "31.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/office/mathtype.exe",
     "file_id": "mathtype"
@@ -1688,6 +1737,7 @@
   {
     "folder": "Office",
     "title": "sunsetscreen",
+    "description": "SunsetScreen - программа, с помощью которой можно настроить автоматическое затенение экрана монитора в ночное время работы. Приложение полностью настраивается для любого часового пояса. Здесь можно отрегулировать яркость и интенсивность эмулируемого дневного и ночного света, время начала имитации восхода/заката солнца, длительность переходной фазы для подготовки глаз и др. Тем самым люди с разными ритмами сна и бодрствования смогут полностью адаптировать удобный для себя режим при работе за компьютером.",
     "size": "2.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/office/sunsetscreen.exe",
     "file_id": "sunsetscreen"
@@ -1709,6 +1759,7 @@
   {
     "folder": "Office",
     "title": "windjview",
+    "description": "WinDjView - быстрая и компактная программа для просмотра файлов формата DjVu с вкладками для документов, непрерывной прокруткой страниц и расширенными возможности печати. Формат DjVu позволяет сохранять документы и картинки с высоким качеством в файлы малого размера.",
     "size": "2.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/office/windjview.exe",
     "file_id": "windjview"
@@ -1772,6 +1823,7 @@
   {
     "folder": "MEditor",
     "title": "avidemux",
+    "description": "Avidemux - приложение, предоставляющее возможности для быстрого (и несложного) редактирования видеофайлов (удаления ненужных частей, наложения всевозможных фильтров и последующего кодирования). Поддерживается работа с различными контейнерами (среди которых AVI, MPEG, MP4/MOV, OGM, ASF/WMV, VOB, MKV и FLV), кодеками (H.264, MPEG-4 ASP, MPEG-2, MP3, AC3, DTS, AAC и др.), имеется богатый набор фильтров.",
     "size": "21.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/meditor/avidemux.exe",
     "file_id": "avidemux"
@@ -1779,6 +1831,7 @@
   {
     "folder": "MEditor",
     "title": "bandicut",
+    "description": "Bandicut - видеоредактор, который может вырезать определенные участки видео без потери оригинального качества. Полученный кусок видео можно сохранить в текущем формате, а можно перекодировать и изменить одним из популярных кодеков сжатия - H.264 (поддерживается аппаратное ускорение), Xvid, MPEG-1, Motion JPEG. Удобно, что здесь есть возможность буквально с покадровой точностью или по ключевым кадрам определять начало и конец нужного участка, так что ваше видео не будет содержать ничего лишнего.",
     "size": "11.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/meditor/bandicut.exe",
     "file_id": "bandicut"
@@ -1821,6 +1874,7 @@
   {
     "folder": "MEditor",
     "title": "machete",
+    "description": "Machete - простой в применении редактор аудио и видео, поддерживающий работу с файлами AVI, FLV, WMV, MKV, MP4, MOV, WMA, MP3 и WAV без потери их качества (перекодирование видео или аудио в Machete не выполняется). Поддерживается вырезание, вставка, копирование и удаление фрагментов, сохранение фрагментов в отдельный файл, вставка одного файла в другой того же формата, а также сохранение видео или аудио потока в отдельный файл.",
     "size": "3.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/meditor/machete.exe",
     "file_id": "machete"
@@ -1863,6 +1917,7 @@
   {
     "folder": "MEditor",
     "title": "virtualdub",
+    "description": "VirtualDub - качественный видео редактор. Основные возможности программы: конвертирование видео из одного формата в другой, захват видео, отдельная обработка видео и звукового потока, разделение AVI файлов на части, соединение AVI файлов, вырезание из AVI звука, изменение задержки звука, уменьшение размеров видеофайлов и т.д.",
     "size": "15.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/meditor/virtualdub.exe",
     "file_id": "virtualdub"
@@ -1870,6 +1925,7 @@
   {
     "folder": "Media",
     "title": "aimp",
+    "description": "AIMP - многофункциональный аудио центр. Благодаря встроенным утилитам, вы легко сможете перекодировать музыку из одного формата в другой, записать звук с микрофона или другого звукового устройства, отредактировать тэги музыкальных файлов, а также группой переименовать или отсортировать их. AIMP базируется на известном аудио движке BASS вы с легкостью можете подключить плагины от этой библиотеки к AIMP.",
     "size": "105.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/aimp.exe",
     "file_id": "aimp"
@@ -1891,6 +1947,7 @@
   {
     "folder": "Media",
     "title": "chevolume",
+    "description": "CheVolume поможет назначить звуковой выход каждого приложения в отдельности для всех ваших подключенных аудиоустройств. Каждое приложение может иметь отдельный уровень громкости, независимо друг от друга, на различных аудиоустройствах. Вам не нужно несколько звуковых карт, достаточно только одна карта с различными звуковыми выходами. Начните управление вашим аудио с программой CheVolume. Щелкните правой кнопкой мыши по значку CheVolume в системном трее, чтобы открыть менеджер Quick Audio. С помощью этой небольшого инструмента, вы будете глобально контролировать аудио устройства. Изменяйте громкость, отключайте звук или выбирайте аудио устройство по умолчанию всего за 1 клик!.",
     "size": "2.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/chevolume.exe",
     "file_id": "chevolume"
@@ -1905,6 +1962,7 @@
   {
     "folder": "Media",
     "title": "foobar2000",
+    "description": "foobar2000 - программный аудиопроигрыватель. Минималистичный интерфейс и высокая производительность программы сочетаются с широкими возможностями и расширяемостью.",
     "size": "7.2",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/foobar2000.exe",
     "file_id": "foobar2000"
@@ -1912,6 +1970,7 @@
   {
     "folder": "Media",
     "title": "fxsound",
+    "description": "FxSound - драйвер виртуальной звуковой карты, для улучшения звука, как в различных мультимедийных приложениях, так и в системе в целом. Программа устраняет два основных недостатка - срез высоких частот и недостаточное разделение стереобазы и ее глубины, а также добавляет режимы объемного звучания и супербаса.",
     "size": "3.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/fxsound.exe",
     "file_id": "fxsound"
@@ -1933,6 +1992,7 @@
   {
     "folder": "Media",
     "title": "kmplayer",
+    "description": "KMPlayer - универсальный проигрыватель, который способен проиграть практически любые форматы медиафайлов. Также программа понимает титры на DVD дисках и способна записывать звук, видео или картинки из любой части проигрываемого фрагмента. KMPlayer включает в себя почти все основные кодеки для воспроизведения информации.",
     "size": "98.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/kmplayer.exe",
     "file_id": "kmplayer"
@@ -1968,6 +2028,7 @@
   {
     "folder": "Media",
     "title": "mediainfo",
+    "description": "MediaInfo позволяет получать техническую информацию из видео- или аудио- файлов.",
     "size": "14.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/mediainfo.exe",
     "file_id": "mediainfo"
@@ -1989,6 +2050,7 @@
   {
     "folder": "Media",
     "title": "musicbee",
+    "description": "MusicBee - музыкальный плеер, с широким набором опций. Плеер умеет проигрывать музыку во всех основных аудиоформатах, работают плейлисты и онлайн вещание, причем есть встроенная поддержка крупнейшего каталога сетевых радиостанций Shoutcast. Во время воспроизведения программа автоматически загружает различную информацию из Интернета - обложки альбомов, тексты песен, сведения об артистах из разных источников и даже соответствующие видеоклипы с YouTube. Также имеется поддержка подкастов и аудиокниг.",
     "size": "9.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/musicbee.exe",
     "file_id": "musicbee"
@@ -2003,9 +2065,80 @@
   {
     "folder": "Media",
     "title": "winamp",
+    "description": "Winamp позволяет работать с большинством форматов аудио и видео-файлов, имеет большое количество настроек и параметров, обладает возможностью смены скинов, имеет хороший модуль визуализации, медиа-библиотеку и т.д.",
     "size": "37.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/winamp.exe",
     "file_id": "winamp"
+  },
+  {
+    "folder": "Макросы",
+    "title": "ern-makros",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/ern-makros.xlsm",
+    "file_id": "ern-makros"
+  },
+  {
+    "folder": "Макросы",
+    "title": "mvd-ern-zagsdlyauversalnojproverki-versiya-2",
+    "size": "0.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/mvd-ern-zagsdlyauversalnojproverki-versiya-2.xlsm",
+    "file_id": "mvd-ern-zagsdlyauversalnojproverki-versiya-2"
+  },
+  {
+    "folder": "Макросы",
+    "title": "mvd-makros",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/mvd-makros.xlsm",
+    "file_id": "mvd-makros"
+  },
+  {
+    "folder": "Макросы",
+    "title": "otbor-iz-drugih-rajonov-xlsx-versiya-2",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-iz-drugih-rajonov-xlsx-versiya-2.xlsm",
+    "file_id": "otbor-iz-drugih-rajonov-xlsx-versiya-2"
+  },
+  {
+    "folder": "Макросы",
+    "title": "otbor-tekstovyj-rajon",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
+    "file_id": "otbor-tekstovyj-rajon"
+  },
+  {
+    "folder": "Макросы",
+    "title": "otbor-tekstovyj",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
+    "file_id": "otbor-tekstovyj"
+  },
+  {
+    "folder": "Макросы",
+    "title": "prosmotret-redaktirovat-vygruzit-versiya-6",
+    "size": "0.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/prosmotret-redaktirovat-vygruzit-versiya-6.xlsm",
+    "file_id": "prosmotret-redaktirovat-vygruzit-versiya-6"
+  },
+  {
+    "folder": "Макросы",
+    "title": "ruipvspriur16032026-versiya-5",
+    "size": "0.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/ruipvspriur16032026-versiya-5.xlsm",
+    "file_id": "ruipvspriur16032026-versiya-5"
+  },
+  {
+    "folder": "Макросы",
+    "title": "sravnenie-stat52iruip167polej-poisk-dvojnikov",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/sravnenie-stat52iruip167polej-poisk-dvojnikov.xlsm",
+    "file_id": "sravnenie-stat52iruip167polej-poisk-dvojnikov"
+  },
+  {
+    "folder": "Макросы",
+    "title": "stat52uikkommentarii",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/stat52uikkommentarii.xlsm",
+    "file_id": "stat52uikkommentarii"
   },
   {
     "folder": "Internet",
@@ -2038,6 +2171,7 @@
   {
     "folder": "Internet",
     "title": "anydesk",
+    "description": "AnyDesk обеспечивает надежные и безопасные подключения к удаленному рабочему столу для ИТ-специалистов и индивидуальных пользователей.",
     "size": "3.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/anydesk.exe",
     "file_id": "anydesk"
@@ -2052,6 +2186,7 @@
   {
     "folder": "Internet",
     "title": "cfosspeed",
+    "description": "cFosSpeed - высокопроизводительный сетевой драйвер, предназначенный для разгона широкополосного Интернета посредством технологии Traffic Shaping. Оптимизирует DSL, кабельные и модемные линии, ISDN, мобильные и пиринговые (P2P) сети, работу онлайн-игр, VoIP и потоковое медиа. Работает практически с любым оборудованием.",
     "size": "5.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/cfosspeed.exe",
     "file_id": "cfosspeed"
@@ -2087,6 +2222,7 @@
   {
     "folder": "Internet",
     "title": "mylanviewer",
+    "description": "MyLanViewer сканирует и мониторит компьютеры в сети с возможностью поиска общедоступных файлов. Программа показывает компьютеры в удобном для просмотра виде, который содержит имя компьютера, IP адрес, MAC адрес, общие ресурсы и другие детали для каждого компьютера. С помощью её вы можете следить за компьютерами в сети и получать оповещение, когда состояние одного из них изменится. Также вы можете управлять своими общими ресурсами, запрещать их и закрывать к ним сессии.",
     "size": "6.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/mylanviewer.exe",
     "file_id": "mylanviewer"
@@ -2094,6 +2230,7 @@
   {
     "folder": "Internet",
     "title": "netbalancer",
+    "description": "NetBalancer - утилита для мониторинга сетевой активности и установки приоритетов скорости соединения той или иной программы с интернетом.",
     "size": "35.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/netbalancer.exe",
     "file_id": "netbalancer"
@@ -2101,6 +2238,7 @@
   {
     "folder": "Internet",
     "title": "netlimiter",
+    "description": "NetLimiter - программа, решающая проблему контроля сетевого трафика. Следит за деятельностью каждого приложения, использующего доступ к Интернету, а также активно управляет трафиком, контролируя скорость потока данных. Вы можете самостоятельно настроить скорость загрузки и отправки информации для каждого отдельного приложения или соединения. Таким образом, если какая-то программа в ходе своей работы слишком активно потребляет сетевые ресурсы, то у вас есть реальный шанс умерить ее аппетит. Также программа ведет подробную статистику по всем соединениям, отображая ее в виде графиков или таблиц.",
     "size": "6.8",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/netlimiter.exe",
     "file_id": "netlimiter"
@@ -2108,6 +2246,7 @@
   {
     "folder": "Internet",
     "title": "netspeedmonitor",
+    "description": "NetSpeedMonitor - отличная программа для мониторинга сети. Показывает входящий и исходящий трафик на панели задач, количество передаваемых и принятых данных. Вы также можете увидеть подробные ежедневные и ежемесячные статистики.",
     "size": "4.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/netspeedmonitor.exe",
     "file_id": "netspeedmonitor"
@@ -2115,6 +2254,7 @@
   {
     "folder": "Internet",
     "title": "networx",
+    "description": "SoftPerfect NetWorx - утилита для учета интернет-трафика и мониторинга скорости Интернета на вашем компьютере. Программа работает с любым кабельным или беспроводным подключением, а также модемом, предоставляя удобную статистику, отчеты и графики.",
     "size": "9.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/networx.exe",
     "file_id": "networx"
@@ -2122,6 +2262,7 @@
   {
     "folder": "Internet",
     "title": "nomachine",
+    "description": "NoMachine - программа для удаленного доступа к вашим компьютерам. Быстрый, безопасный и легкий доступ из любой точки мира.",
     "size": "77.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/nomachine.exe",
     "file_id": "nomachine"
@@ -2129,6 +2270,7 @@
   {
     "folder": "Internet",
     "title": "openvpn",
+    "description": "OpenVPN - воспользуйтесь бесплатным доступом на заблокированные сайты с использованием VPN и прокси. В программу добавлены дополнительные файлы конфигурации для подключения: Antizapret.RU (проксируются ТОЛЬКО заблокированные сайты из единого реестра РФ), Zaborona.UA (проксируются ТОЛЬКО заблокированные в Украине сайты) и 4Freedome (смена IP для сброса F-Secure Freedome VPN, если IP страны в бан-листе, например РФ).",
     "size": "7.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/openvpn.exe",
     "file_id": "openvpn"
@@ -2136,6 +2278,7 @@
   {
     "folder": "Internet",
     "title": "psiphon",
+    "description": "Psiphon - инструмент обхода интернет-цензуры. Он использует технологии VPN, SSH и HTTP прокси для решения проблемы доступа к заблокированным ресурсам. Программный клиент Psiphon автоматически получает данные о новых серверах и таким образом увеличивает ваши шансы на обход цензуры.",
     "size": "40.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/psiphon.exe",
     "file_id": "psiphon"
@@ -2171,6 +2314,7 @@
   {
     "folder": "Internet",
     "title": "speedtest",
+    "description": "Speedtest by Ookla - самый быстрый и легкий способ проверить скорость подключения к Интернету одним нажатием кнопки. Следите в реальном времени за тем, как провайдер выполняет свои обещания, и выявляйте тенденции, просматривая следующие данные: Скорость загрузки, Скорость передачи, Пинг, Джиттер, Потеря пакетов.",
     "size": "49.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/speedtest.exe",
     "file_id": "speedtest"
@@ -2178,6 +2322,7 @@
   {
     "folder": "Internet",
     "title": "teamviewer",
+    "description": "TeamViewer - программа для удаленного управления, контроля машин из под Windows. С TeamViewer вы можете передавать файлы, демонстрировать свой рабочий стол другому пользователю или управлять его компьютером дистанционно из любой точки мира используя Интернет.",
     "size": "99.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/teamviewer.exe",
     "file_id": "teamviewer"
@@ -2185,6 +2330,7 @@
   {
     "folder": "Internet",
     "title": "trustviewer",
+    "description": "TrustViewer - комплексное решение для удаленного доступа и поддержки пользователей через интернет. Позволяет демонстрировать свой рабочий стол, управлять удаленным компьютером, обмениваться файлами и совершать видеозвонки. Кроме прямого соединения, возможна работа через брандмауэр и NAT прокси.",
     "size": "2.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/internet/trustviewer.exe",
     "file_id": "trustviewer"
@@ -2234,6 +2380,7 @@
   {
     "folder": "Interface",
     "title": "clover",
+    "description": "Clover - специальная программа для Windows, которая заменяет стандартный Проводник. После установки утилиты системный файловый менеджер становится похож на Google Chrome, только вместо веб-страниц во вкладках открываются каталоги.",
     "size": "3.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/interface/clover.exe",
     "file_id": "clover"
@@ -2255,6 +2402,7 @@
   {
     "folder": "Interface",
     "title": "horloger",
+    "description": "Horloger - автономный гаджет, современные стильные часы в стиле HTC. Часы можно настроить на автозапуск в Windows. Можно выбрать, будут ли отображаться минуты, секунды или миллисекунды и переключить отображение и формат даты. Есть три предустановленных местоположения экрана для выбора часов: верхнее, среднее и нижнее. Можно переключиться в режим ручного позиционирования, чтобы можно было разместить гаджет в любом месте. Можно заблокировать часы, чтобы случайно их не переместить. Доступны скины.",
     "size": "2.8",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/interface/horloger.exe",
     "file_id": "horloger"
@@ -2283,6 +2431,7 @@
   {
     "folder": "Interface",
     "title": "open-shell",
+    "description": "Open-Shell предназначена для включения классического стиля меню Пуск и проводника Windows 7/8.x/10. Имеет поддержку скинов, полностью настраиваемый интерфейс и функциональность. После установки программы стандартное меню Пуск Windows 7 возможно открыть зажав Shift + клик на кнопку Пуск.",
     "size": "9.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/interface/open-shell.exe",
     "file_id": "open-shell"
@@ -2297,6 +2446,7 @@
   {
     "folder": "Interface",
     "title": "scrollnavigator",
+    "description": "ScrollNavigator - программа, которая поможет вам прокручивать по-вертикали и по-горизонтали ваши документы. С помощью этой утилиты достаточно зажать правую кнопку мыши в любом месте страницы и протянуть курсор в нужном направлении. Это поможет вам избежать позиционирование мыши над полосой прокрутки и позволит перемещаться в обоих направлениях одновременно. Кроме того, программа позволяет добавлять динамическое ускорение к колесу вашей мыши.",
     "size": "2.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/interface/scrollnavigator.exe",
     "file_id": "scrollnavigator"
@@ -2332,6 +2482,7 @@
   {
     "folder": "Interface",
     "title": "ultrauxthemepatcher",
+    "description": "UltraUXThemePatcher - установка сторонних тем в Windows. Универсальная утилита, которая позволяет устанавливать неофициальные темы для Windows.",
     "size": "0.2",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/interface/ultrauxthemepatcher.exe",
     "file_id": "ultrauxthemepatcher"
@@ -2339,6 +2490,7 @@
   {
     "folder": "Interface",
     "title": "volume2",
+    "description": "Volume2 - программа для замены стандартного регулятора громкости Windows со множеством полезных функций.",
     "size": "8.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/interface/volume2.exe",
     "file_id": "volume2"
@@ -2479,6 +2631,7 @@
   {
     "folder": "Graphics",
     "title": "colormania",
+    "description": "ColorMania - мощный цветоподборщик, который наверняка пригодится тем, кто более-менее профессионально работает с графикой.",
     "size": "1.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/graphics/colormania.exe",
     "file_id": "colormania"
@@ -2528,6 +2681,7 @@
   {
     "folder": "Graphics",
     "title": "firealpaca",
+    "description": "FireAlpaca - графический редактор для преобразования изображений, фотографий и любых других картинок. В программе присутствуют инструменты кисти, заливки, пера, ластика, волшебной палочки, лассо. Кроме того, можно отредактировать цвета, яркость, контраст, вращать и обрезать картинку, изменять ее размер и т.д. Стоит отметить, что программа поддерживает работу со слоями по аналогии с популярнейшим редактором Photoshop, тем самым открывая достаточно широкие возможности по изменению фотографий и изображений. Что касается используемых в программе графических форматов, то это .psd, .jpg, .png, .bmp, .gif и .mdp (собственный формат FireAlpaca).",
     "size": "53.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/graphics/firealpaca.exe",
     "file_id": "firealpaca"
@@ -2535,6 +2689,7 @@
   {
     "folder": "Graphics",
     "title": "fotosizer",
+    "description": "Fotosizer - программа для пакетного изменения размеров изображения. С ее помощью вы быстро подготовите графические файлы к загрузке в Интернет, передаче по электронной почте и т.п. Вы можете установить ресайзинг в процентах по высоте и ширине или выставить свои показатели. Поддерживает форматы JPG, JPEG, PNG, BMP, GIF.",
     "size": "3.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/graphics/fotosizer.exe",
     "file_id": "fotosizer"
@@ -2542,6 +2697,7 @@
   {
     "folder": "Graphics",
     "title": "honeyview",
+    "description": "Honeyview - легкая и очень быстрая программа просмотра изображений, поддерживающая различные форматы файлов, включая комиксы и манга. Также она позволяет просматривать изображения в архивах без предварительной распаковки.",
     "size": "7.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/graphics/honeyview.exe",
     "file_id": "honeyview"
@@ -2556,6 +2712,7 @@
   {
     "folder": "Graphics",
     "title": "irfanview",
+    "description": "IrfanView - мощная программа для просмотра и конвертации графических файлов с продвинутыми возможностями, поддерживающая множество форматов графики, есть опции редактирования. Кроме работы с графическими файлами, IrfanView понимает многие аудио и видеоформаты.",
     "size": "46.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/graphics/irfanview.exe",
     "file_id": "irfanview"
@@ -2577,6 +2734,7 @@
   {
     "folder": "Graphics",
     "title": "photoscape",
+    "description": "PhotoScape - многофункциональный графический редактор с широчайшими возможностями. Позволяет просматривать изображения, редактировать графику, обрабатывать файлы в пакетном режиме, конвертировать RAW-файлы, создавать анимированные файлы GIF, позволяет делать скриншоты, определять точные цвета пикселей, настраивать яркость, цветовую насыщенность, настраивать баланс белого, проводить коррекцию контрастности. Программа позволяет создавать рамки, добавлять графический текст, фигуры ссылок, рисовать картинки, обрезать изображения, применять различные фильтры, удалять эффект красных глаз, ретушировать и многое другое.",
     "size": "18.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/graphics/photoscape.exe",
     "file_id": "photoscape"
@@ -2605,6 +2763,7 @@
   {
     "folder": "Graphics",
     "title": "xnconvert",
+    "description": "XnConvert - программа для конвертации и обработки цифровых изображений и снимков. Позволяет пользователю работать более с чем 500 графических форматов, включая JPEG, TIFF, PNG, GIF, RAW-форматы, WebP, OpenEXR, а также осуществлять регулировку яркости, контрастности и гаммы изображений, изменять размер, применять фильтры и разнообразные спецэффекты, добавлять водяные знаки и заниматься ретушированием фотографий и многое другое.",
     "size": "25.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/graphics/xnconvert.exe",
     "file_id": "xnconvert"
@@ -2689,6 +2848,7 @@
   {
     "folder": "File",
     "title": "restorator",
+    "description": "Restorator - редактор ресурсов для многих типов файлов, например, файлов exe, dll, ocx, scr и других, что позволяет самоcтоятельно создавать и редактировать стандартные файлы ресурсов .res. Кроме этого, с ее помощью можно рассматривать, извлекать и изменять текст, изображения, значки, меню, диалоги, звуки, и т.п.",
     "size": "6.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/file/restorator.exe",
     "file_id": "restorator"
@@ -2696,6 +2856,7 @@
   {
     "folder": "File",
     "title": "settools",
+    "description": "SetTools - набор инструментов для создателей аддонов.",
     "size": "0.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/file/settools.exe",
     "file_id": "settools"
@@ -2724,6 +2885,7 @@
   {
     "folder": "File",
     "title": "xyplorer",
+    "description": "XYplorer - продвинутый файловый менеджер, который внешне напоминает стандартный Проводник Windows, но имеет множество дополнительных функций и инструментов для удобной работы с файлами.",
     "size": "17.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/file/xyplorer.exe",
     "file_id": "xyplorer"
@@ -2780,6 +2942,7 @@
   {
     "folder": "Download",
     "title": "masstube",
+    "description": "MassTube - очень простая в использовании программа для скачивания видео с YouTube (и не только) с помощью одного клика. Поддерживаются такие форматы, как FLV, MP4, WebM, 3GP, а также разрешения 240p, 360p, 480p, HD 720p, Full HD 1080p и Ultra HD 4096p.",
     "size": "30.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/download/masstube.exe",
     "file_id": "masstube"
@@ -2801,6 +2964,7 @@
   {
     "folder": "Download",
     "title": "mp3jam",
+    "description": "MP3jam - программа, с помощью которой вы сможете искать и загружать любые аудио файлы совершенно бесплатно! Имеется возможность предварительного прослушивания найденных аудио композиций. Также MP3jam предоставляет возможность скачивать музыкальные композиции напрямую с сайта YouTube. Достаточно только скопировать URL c YouTube и вставить в поисковую строку MP3jam. Вы сможете останавливать загрузки и продолжать их с места разъединения. Большая часть аудио файлов доступна в очень хорошем качестве.",
     "size": "27.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/download/mp3jam.exe",
     "file_id": "mp3jam"
@@ -2808,6 +2972,7 @@
   {
     "folder": "Download",
     "title": "qbittorrent",
+    "description": "qBittorrent - мощный и удобный в работе клиент файлообменной сети BitTorrent.",
     "size": "39.8",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/download/qbittorrent.exe",
     "file_id": "qbittorrent"
@@ -2822,6 +2987,7 @@
   {
     "folder": "Download",
     "title": "uptooda",
+    "description": "Uptooda - программа для загрузки изображений, фотографий, кадров из видео в интернет.",
     "size": "17.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/download/uptooda.exe",
     "file_id": "uptooda"
@@ -2829,6 +2995,7 @@
   {
     "folder": "Для windows свои",
     "title": "CertificateParser",
+    "description": "Программа для сканирования и распознавания сертификатов для последующего занесения в ЦП с помощью плагина автозагрузки",
     "size": "479.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dlya-windows-svoi/CertificateParser.rar",
     "file_id": "certificateparser"
@@ -2836,6 +3003,7 @@
   {
     "folder": "Для windows свои",
     "title": "ProtocolScanner",
+    "description": "Сканирование протоколов",
     "size": "196.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dlya-windows-svoi/ProtocolScanner.rar",
     "file_id": "protocolscanner"
@@ -2864,6 +3032,7 @@
   {
     "folder": "Disc",
     "title": "anyburn",
+    "description": "AnyBurn - компактная программа для работы с оптическими дисками и образами CD/DVD/Blu-ray дисков. Создание загрузочных USB-накопителей для Windows и Linux.",
     "size": "6.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/anyburn.exe",
     "file_id": "anyburn"
@@ -2920,6 +3089,7 @@
   {
     "folder": "Disc",
     "title": "imgburn",
+    "description": "ImgBurn - запись CD/DVD/HD DVD/Blu-ray дисков.",
     "size": "6.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/imgburn.exe",
     "file_id": "imgburn"
@@ -2941,6 +3111,7 @@
   {
     "folder": "Disc",
     "title": "osfmount",
+    "description": "PassMark OSFMount предназначена в основном для монтирования уже готовых образов дисков, но также может использоваться для создания RAM-дисков, то есть таких, которые существуют только в оперативной памяти компьютера. При этом пользователь может задать тип виртуального устройства, присвоить ему букву, а также установить нужные атрибуты.",
     "size": "8.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/osfmount.exe",
     "file_id": "osfmount"
@@ -2948,6 +3119,7 @@
   {
     "folder": "Disc",
     "title": "poweriso",
+    "description": "PowerISO позволяет создавать, конвертировать, распаковывать, сжимать, редактировать и шифровать образы CD/DVD, а также открывать их с помощью встроенного эмулятора. Файлы образы можно резать на куски разных размеров и в сжатом виде пересылать с помощью почтовых программ или записывать на другие носители. Поддерживается работа со всеми основными форматами образов: ISO, BIN, NRG, CDI, DAA, MDF, BWI, B5I, LCD, CIF, P01, PDI, NCD, PXI, GI, FCD, VCD, C2D.",
     "size": "9.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/poweriso.exe",
     "file_id": "poweriso"
@@ -2969,6 +3141,7 @@
   {
     "folder": "Disc",
     "title": "sptd",
+    "description": "SPTD (SCSI Pass Through Direct) - драйвер устройства, который обеспечивает новый метод доступа к запоминающим устройствам. SPTD используется в программах DAEMON Tools и Alcohol 120%.",
     "size": "1.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/sptd.exe",
     "file_id": "sptd"
@@ -2983,6 +3156,7 @@
   {
     "folder": "Disc",
     "title": "ultraiso",
+    "description": "UltraISO - создание, конвертирование, редактирование и запись ISO-образов на CD/DVD носители.",
     "size": "5.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/ultraiso.exe",
     "file_id": "ultraiso"
@@ -3011,6 +3185,7 @@
   {
     "folder": "Diagnostics",
     "title": "crystaldiskinfo",
+    "description": "CrystalDiskInfo отображает детальную информацию о жестких дисках, установленных в компьютере, а также выводит параметры атрибутов системы самодиагностики S.M.A.R.T.",
     "size": "68.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/diagnostics/crystaldiskinfo.exe",
     "file_id": "crystaldiskinfo"
@@ -3025,6 +3200,7 @@
   {
     "folder": "Diagnostics",
     "title": "furmark",
+    "description": "Geeks3D FurMark - полезная утилита, позволяющая проводить стресс-тестирование видеокарт совместимых с API OpenGL.",
     "size": "32.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/diagnostics/furmark.exe",
     "file_id": "furmark"
@@ -3046,6 +3222,7 @@
   {
     "folder": "Diagnostics",
     "title": "hashtab",
+    "description": "HashTab - расширение для окна свойств файла вашей системы, которое отображает хеши MD5, SHA1, SHA2, RipeMD, HAVAL и Whirlpool. Очень полезно при проверке  контрольных сумм скачанных файлов.",
     "size": "1.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/diagnostics/hashtab.exe",
     "file_id": "hashtab"
@@ -3074,6 +3251,7 @@
   {
     "folder": "Diagnostics",
     "title": "openhashtab",
+    "description": "OpenHashTab - расширение для окна свойств файла вашей системы, которое отображает хеши. Проверка хэшей на VirusTotal.",
     "size": "8.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/diagnostics/openhashtab.msi",
     "file_id": "openhashtab"
@@ -3186,6 +3364,7 @@
   {
     "folder": "Converter",
     "title": "handbrake",
+    "description": "HandBrake - риппер и конвертер DVD-фильмов в формат MPEG-4. В качестве исходных источников могут использоваться папки VIDEO_TS, образы DVD или просто диски DVD, PAL или NTSC сигналы, аудиотреки AC-3, LPCM и MPEG. В качестве результата будут файлы MP4, AVI или OGM, MPEG-4 или H.264, AAC, MP3, Vorbis или AC-3. Поддерживается работа с субтитрами, имеется калькулятор битрейта, возможности для модификации размеров картинки и т.д.",
     "size": "24.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/converter/handbrake.exe",
     "file_id": "handbrake"
@@ -3200,6 +3379,7 @@
   {
     "folder": "Converter",
     "title": "makemkv",
+    "description": "MakeMKV - программа позволяющая в один клик конвертировать Blu-ray/DVD диск (или папку), в MKV - Remux, всего за 5 минут! Программа прекрасно работает с защищенными дисками, теперь никаких региональных ограничений быть просто не может. Способна сохранить все имеющиеся аудио и видео дорожки на диске, можно полностью сохранить информацию о главах, MakeMKV также сохранит все метаданные.",
     "size": "16.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/converter/makemkv.exe",
     "file_id": "makemkv"
@@ -3207,6 +3387,7 @@
   {
     "folder": "Converter",
     "title": "metafox",
+    "description": "MetaFox - мультиплексор видео в формат MKV. Поддерживает множество популярных типов видеофайлов, включая AVI, MOV, MP4, MPG, FLV, RMVB и HEVC. MetaFox не будет повторно конвертировать видео/аудио, а только сменит контейнер файлов на MKV, поэтому вы не потеряете качество видео/аудио.",
     "size": "17.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/converter/metafox.exe",
     "file_id": "metafox"
@@ -3221,6 +3402,7 @@
   {
     "folder": "Converter",
     "title": "vidcoder",
+    "description": "VidCoder - видеоконвертер с многопоточной и пакетной обработкой файлов. В состав программы входит несколько фильтров, возможен предварительный просмотр видео. VidCoder позволяет настраивать качество итоговых файлов по ряду параметров: битрейту, размеру и т.п. Также есть несколько готовых наборов настроек для оптимизации видео под возможности мобильных устройств.",
     "size": "74.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/converter/vidcoder.exe",
     "file_id": "vidcoder"
@@ -3305,6 +3487,7 @@
   {
     "folder": "Converter",
     "title": "xrecode3",
+    "description": "XRecode3 - аудио конвертер, обладающий удобным интерфейсом и поддерживающий большинство распространенных форматов, который позволяет быстро и без особого труда преобразовывать аудио данные. Поддерживается извлечение аудио дорожки из видео файлов и граббинг многоканальных Audio CD. Возможность создания одного большого аудио файла из нескольких и создание .CUE файла.",
     "size": "64.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/converter/xrecode3.exe",
     "file_id": "xrecode3"
@@ -3312,6 +3495,7 @@
   {
     "folder": "Contact",
     "title": "altus",
+    "description": "Altus - неофициальный Desktop клиент для WhatsApp на платформе Electron x64. Поддерживает темы, несколько учётных записей и другие дополнительные функции.",
     "size": "83.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/contact/altus.exe",
     "file_id": "altus"
@@ -3319,6 +3503,7 @@
   {
     "folder": "Contact",
     "title": "grids",
+    "description": "Grids - один из самых адекватных клиентов на ПК для работы с социальной сетью Instagram.",
     "size": "61.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/contact/grids.exe",
     "file_id": "grids"
@@ -3466,6 +3651,7 @@
   {
     "folder": "Archive",
     "title": "winrar",
+    "description": "WinRAR - мощная утилита для создания и управления архивами, содержащая целый спектр дополнительных полезных функций.",
     "size": "6.5",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/archive/winrar.exe",
     "file_id": "winrar"
@@ -3494,6 +3680,7 @@
   {
     "folder": "AEditor",
     "title": "audacity",
+    "description": "Audacity - звуковой редактор. Программу можно использовать для записи звука, оцифровки аналоговых записей (кассет, грампластинок), редактирования файлов в форматах Ogg Vorbis, MP3 и WAV, физического редактирования нескольких файлов (вырезание, склейка, сведение), изменения скорости и высоты тона записи, и много чего ещё.",
     "size": "35.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/audacity.exe",
     "file_id": "audacity"
@@ -3501,6 +3688,7 @@
   {
     "folder": "AEditor",
     "title": "audioshell",
+    "description": "AudioShell - небольшое расширение, созданное для редактирования тегов. Способно переименовывать файлы благодаря интеграции в контекстное меню Проводник Windows. Позволяет изменять метаданные и название ряда медиа файлов в один миг. AudioShell предлагает поддержку типов аудио: M4A, OGG, MP3, APE, WMA, FLAC, а также ряда видеоданных (например, MP4, WMV, ASF, 3GP). Это расширение может быть полезным тем пользователям, кто проводит бесчисленные часы, организуя информацию ID3 для звуковых дорожек. Программа добавляет редактор и позволяет просматривать теги в Свойствах медиа файлов. Предоставляет детальную информацию о тегах, музыкальных файлах.",
     "size": "3.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/audioshell.exe",
     "file_id": "audioshell"
@@ -3508,6 +3696,7 @@
   {
     "folder": "AEditor",
     "title": "cuetools",
+    "description": "CUETools - инструмент для преобразования lossless аудио и CUE sheet в удобный нам вид. Цель проекта состоит в том, чтобы сохранить не только содержимое аудио треков, но и пауз (в том числе коварного pregap) и информации о них в CUE, и убедиться, что все сохранилось точно, чего аналоги предложить не могут.",
     "size": "13.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/cuetools.exe",
     "file_id": "cuetools"
@@ -3564,6 +3753,7 @@
   {
     "folder": "AEditor",
     "title": "goldwave",
+    "description": "GoldWave - мощный звуковой редактор, предназначенный для проигрывания, редактирования, смешивания и анализа звуковых файлов. Быстро работает с большими файлами, имеет много разных эффектов, умеет конвертировать из одного формата в другой. GoldWave позволяет записывать звук с кассет, пластинок, радио, а также с микрофона. Инструмент CD Reader дает возможность делать точные копии треков аудиодисков.",
     "size": "11.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/goldwave.exe",
     "file_id": "goldwave"
@@ -3592,6 +3782,7 @@
   {
     "folder": "AEditor",
     "title": "mp3directcut",
+    "description": "mp3DirectCut - компактная утилита для редактирования MP3-файлов: позволяет обрезать тишину в начале и конце файла, нормализировать звук, а также плавно убирать его в конце композиции, обьединять файлы, редактировать ID3-тэги и записывать MP3 непосредственно на диск.",
     "size": "9.2",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/mp3directcut.exe",
     "file_id": "mp3directcut"
@@ -3606,6 +3797,7 @@
   {
     "folder": "AEditor",
     "title": "mp3tag",
+    "description": "Mp3tag - программа для быстрого редактирования ID3-тэгов и комментариев в аудио файлах.",
     "size": "5.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/mp3tag.exe",
     "file_id": "mp3tag"
@@ -3627,6 +3819,7 @@
   {
     "folder": "AEditor",
     "title": "ocenaudio",
+    "description": "OcenAudio - быстрый и функциональный звуковой редактор. Программа для людей, которым нужно редактировать и анализировать звуковые файлы без лишних заморочек. OcenAudio также имеет мощные функции, которые будут радовать более продвинутых пользователей.",
     "size": "71.2",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/ocenaudio.exe",
     "file_id": "ocenaudio"
@@ -3634,6 +3827,7 @@
   {
     "folder": "AEditor",
     "title": "reaper",
+    "description": "Reaper - мощная цифровая звуковая рабочая станция (DAW). Позволяет записывать, подготавливать, редактировать и создавать многоканальные аудио треки. Содержит множество полезных функций и эффектов. Поддерживает технологии ASIO, Kernel Streaming, WaveOut и DirectSound воспроизведение и запись. Может работать с файлами в форматах WAV, OGG, MP3, MIDI (чтение) и WAV, MIDI (запись). Имеется возможность индивидуальной обработки каждого трека по отдельности. Поддерживает управление уровнем громкости, границами трека, контролем согласования, проводит многоуровневый откат/повтор действий и многое другое.",
     "size": "33.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/reaper.exe",
     "file_id": "reaper"
@@ -3648,6 +3842,7 @@
   {
     "folder": "AEditor",
     "title": "soundop",
+    "description": "Soundop - универсальный звуковой редактор, который без проблем работает с редактированием звука и многодорожечным микшированием в одном приложении.",
     "size": "24.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/soundop.exe",
     "file_id": "soundop"
@@ -3662,6 +3857,7 @@
   {
     "folder": "AEditor",
     "title": "tagscanner",
+    "description": "TagScanner - многофункциональная программа для организации и управления музыкальными архивами. TagScanner позволяет редактировать тэги большинства современных аудио форматов, умеет переименовывать файлы по информации из тэгов. Также программа позволяет сгенерировать тэг по имени файла/директории или изменить значения необходимых полей в пакетном режиме. Программа имеет широкие возможности для получения информации об альбоме из онлайн баз, таких как freedb, Amazon или Discogs.",
     "size": "7.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/tagscanner.exe",
     "file_id": "tagscanner"
@@ -3682,79 +3878,9 @@
   },
   {
     "folder": "Макросы",
-    "title": "ern-makros",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/ern-makros.xlsm",
-    "file_id": "ern-makros"
-  },
-  {
-    "folder": "Макросы",
-    "title": "mvd-ern-zagsdlyauversalnojproverki-versiya-2",
-    "size": "0.2",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/mvd-ern-zagsdlyauversalnojproverki-versiya-2.xlsm",
-    "file_id": "mvd-ern-zagsdlyauversalnojproverki-versiya-2"
-  },
-  {
-    "folder": "Макросы",
-    "title": "mvd-makros",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/mvd-makros.xlsm",
-    "file_id": "mvd-makros"
-  },
-  {
-    "folder": "Макросы",
     "title": "otbor-iz-drugih-rajonov-xlsx-versiya-2-dlya-libra-ofisa",
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-iz-drugih-rajonov-xlsx-versiya-2-dlya-libra-ofisa.ods",
     "file_id": "otbor-iz-drugih-rajonov-xlsx-versiya-2-dlya-libra-ofisa"
-  },
-  {
-    "folder": "Макросы",
-    "title": "otbor-iz-drugih-rajonov-xlsx-versiya-2",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-iz-drugih-rajonov-xlsx-versiya-2.xlsm",
-    "file_id": "otbor-iz-drugih-rajonov-xlsx-versiya-2"
-  },
-  {
-    "folder": "Макросы",
-    "title": "otbor-tekstovyj-rajon",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
-    "file_id": "otbor-tekstovyj-rajon"
-  },
-  {
-    "folder": "Макросы",
-    "title": "otbor-tekstovyj",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
-    "file_id": "otbor-tekstovyj"
-  },
-  {
-    "folder": "Макросы",
-    "title": "prosmotret-redaktirovat-vygruzit-versiya-6",
-    "size": "0.2",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/prosmotret-redaktirovat-vygruzit-versiya-6.xlsm",
-    "file_id": "prosmotret-redaktirovat-vygruzit-versiya-6"
-  },
-  {
-    "folder": "Макросы",
-    "title": "ruipvspriur16032026-versiya-5",
-    "size": "0.4",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/ruipvspriur16032026-versiya-5.xlsm",
-    "file_id": "ruipvspriur16032026-versiya-5"
-  },
-  {
-    "folder": "Макросы",
-    "title": "sravnenie-stat52iruip167polej-poisk-dvojnikov",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/sravnenie-stat52iruip167polej-poisk-dvojnikov.xlsm",
-    "file_id": "sravnenie-stat52iruip167polej-poisk-dvojnikov"
-  },
-  {
-    "folder": "Макросы",
-    "title": "stat52uikkommentarii",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/stat52uikkommentarii.xlsm",
-    "file_id": "stat52uikkommentarii"
   }
 ]
