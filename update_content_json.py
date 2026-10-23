@@ -1,3 +1,18 @@
+Я понял, в чём проблема! Произошел «замкнутый круг»:
+
+1. Скрипт находит новые файлы в GitHub и добавляет их в таблицу (с пустым описанием и ссылкой на GitHub).
+2. При следующем запуске функция очистки дублей видит эти новые строки (без описания), находит для них пару (старую строку с описанием и ссылкой на Яндекс) и удаляет новые строки.
+3. После этого основной скрипт снова видит, что файлов нет в таблице, и опять их добавляет (потому что append_rows_safe не всегда успевает записать из-за лимитов Google).
+
+Чтобы это исправить, я внес три правки:
+
+1. Очистка дублей больше не будет удалять строки, если в них уже есть рабочая ссылка на GitHub (чтобы не было замкнутого круга).
+2. Я снизил порог «похожести» названий при поиске файлов (с 0.85 до 0.65), чтобы скрипт лучше сопоставлял старые строки с новыми файлами и просто обновлял им ссылки, а не добавлял новые.
+3. Функция добавления новых строк (append_rows_safe) теперь делает это маленькими порциями по 50 штук с большими паузами, чтобы Google API не блокировал запись, и выводит в лог, если записать не удалось.
+
+Замените код update_content_json.py на этот:
+
+```python
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
@@ -337,7 +352,6 @@ def _is_garbage_stem(stem: str) -> bool:
     if re.match(r"^[\*\-_\.\s]+$", s): return True
     if any(ch in s for ch in _CP866_JUNK): return True
     if len(s) < 2: return True
-    # ИСПРАВЛЕНО: теперь разрешаем цифры (например, -.01)
     if not re.search(r"[A-Za-zА-Яа-яЁё0-9]{2,}", s): return True
     return False
 
@@ -469,46 +483,31 @@ def match_asset_to_row(asset_name: str, rows: list[dict], section: str, folder: 
     asset_words = set(w for w in asset_norm.split() if len(w) >= 3 and w not in _STOP_WORDS)
     folder_norm = normalize_for_match(folder) if folder else ""
 
-    # 1. Точное (folder + title)
     for r in rows:
         if folder_norm and normalize_for_match(r.get("folder", "")) != folder_norm: continue
         if normalize_for_match(r.get("title", "")) == asset_norm: return r
-
-    # 2. Точное по title (без folder)
     for r in rows:
         if normalize_for_match(r.get("title", "")) == asset_norm: return r
-
-    # 3. По slug
     for r in rows:
         if slugify(r.get("title", "")) == asset_slug: return r
-
-    # 3.5. По транслиту кириллица → латиница
     for r in rows:
         row_title = r.get("title", "") or ""
         row_translit = _translit_ru_to_en(row_title)
         row_words = _words_set(row_translit)
         if not row_words or not asset_words: continue
         if row_words == asset_words: return r
-
-    # 3.6. По компактной строке (без пробелов)
     for r in rows:
         if _compact_match_str(r.get("title", "")) == asset_compact: return r
-
-    # 3.7. По нечёткому совпадению (difflib)
     for r in rows:
         row_compact = _compact_match_str(r.get("title", ""))
         if not row_compact: continue
         if difflib.SequenceMatcher(None, asset_compact, row_compact).ratio() >= 0.65: 
             return r
-
-    # 3.8. Совпадение по началу названия (первые 7 символов без пробелов)
     for r in rows:
         row_compact = _compact_match_str(r.get("title", ""))
         if len(asset_compact) >= 7 and len(row_compact) >= 7:
             if asset_compact[:7] == row_compact[:7]:
                 return r
-
-    # 4. Частичное совпадение по словам (Jaccard)
     best, best_score = None, 0.0
     for r in rows:
         row_words = set(w for w in normalize_for_match(r.get("title", "")).split() if len(w) >= 3 and w not in _STOP_WORDS)
@@ -517,11 +516,9 @@ def match_asset_to_row(asset_name: str, rows: list[dict], section: str, folder: 
         score = len(inter) / len(union)
         if score >= 0.7 and score > best_score:
             best_score, best = score, r
-
     return best
 
 def parse_release_link(url: str) -> tuple[str, str]:
-    """Извлекает тег и имя файла из ссылки на релиз."""
     if not url: return None, None
     decoded = urllib.parse.unquote(url)
     parts = decoded.split('/download/')
@@ -534,40 +531,29 @@ def parse_release_link(url: str) -> tuple[str, str]:
     return None, None
 
 def _search_asset_in_list(title: str, assets: list[dict]) -> str | None:
-    """Ищет файл в списке ассетов по названию."""
     title_norm = normalize_for_match(title)
     title_slug = slugify(title)
     title_compact = _compact_match_str(title)
 
-    # 1. Точное название
     for a in assets:
         name_no_ext = os.path.splitext(a["name"])[0]
         if normalize_for_match(name_no_ext) == title_norm: return a["name"]
-
-    # 2. По slug
     for a in assets:
         name_no_ext = os.path.splitext(a["name"])[0]
         if slugify(name_no_ext) == title_slug: return a["name"]
-
-    # 3. Строгий нечеткий поиск (>= 0.85)
     for a in assets:
         name_no_ext = os.path.splitext(a["name"])[0]
         asset_compact = _compact_match_str(name_no_ext)
-        if difflib.SequenceMatcher(None, title_compact, asset_compact).ratio() >= 0.85:
+        if difflib.SequenceMatcher(None, title_compact, asset_compact).ratio() >= 0.65:
             return a["name"]
     return None
 
 def find_asset_for_row(title: str, target_tag: str, repo_assets_by_tag: dict) -> tuple[str, str]:
-    """Ищет подходящий файл в GitHub для строки таблицы."""
     if not title: return None, None
-    
-    # 1. Поиск по приоритетному тегу
     if target_tag and target_tag in repo_assets_by_tag:
         assets = repo_assets_by_tag[target_tag]
         res = _search_asset_in_list(title, assets)
         if res: return target_tag, res
-
-    # 2. Поиск по всем остальным тегам
     for tag, assets in repo_assets_by_tag.items():
         if tag == target_tag: continue
         res = _search_asset_in_list(title, assets)
@@ -713,7 +699,6 @@ def backup_sheet(sh, worksheet, section_key: str, all_values: list[list[str]], m
     except Exception as e:
         print(f"    [!] Backup: ошибка создания: {e}")
         return None
-    
     try:
         prefix = f"_backup_{section_key}_"
         backups = [ws for ws in sh.worksheets() if ws.title.startswith(prefix)]
@@ -739,22 +724,24 @@ def batch_update_rows(sheet, updates: list[dict]) -> int:
             print(f"    [!] batch_update chunk {i // chunk}: {e}")
     return updated
 
-def append_rows_safe(sheet, rows: list[list[str]], batch_size: int = 200) -> tuple[int, int]:
+def append_rows_safe(sheet, rows: list[list[str]], batch_size: int = 50) -> tuple[int, int]:
     added, failed = 0, 0
     total = len(rows)
     for i in range(0, total, batch_size):
         batch = rows[i:i + batch_size]
         success = False
-        for attempt in range(3):
+        for attempt in range(5):
             try:
-                time.sleep(2)
+                time.sleep(3)
                 sheet.append_rows(batch, value_input_option="USER_ENTERED")
                 added += len(batch)
                 success = True
                 break
             except Exception as e:
-                time.sleep(5)
-        if not success: failed += len(batch)
+                time.sleep(10)
+        if not success: 
+            failed += len(batch)
+            print(f"    [!] Не удалось добавить {len(batch)} строк после 5 попыток")
     return added, failed
 
 def headers_from_columns(columns: list[str]) -> list[str]:
@@ -868,7 +855,7 @@ def print_sheets_health(health: dict) -> None:
 
 
 # ============================================================
-# ОЧИСТКА ДУБЛИКАТОВ (БЕЗ ПРЕВЫШЕНИЯ ЛИМИТОВ)
+# ОЧИСТКА ДУБЛИКАТОВ (БЕЗ УДАЛЕНИЯ РАБОЧИХ ССЫЛОК)
 # ============================================================
 def clean_sheet_duplicates(sh, sections, dry_run=False):
     print("\n" + "=" * 60)
@@ -896,6 +883,7 @@ def clean_sheet_duplicates(sh, sections, dry_run=False):
         idx_folder = get_idx(["папка", "folder"])
         idx_title = get_idx(["название", "title"])
         idx_desc = get_idx(["описание", "description"])
+        idx_link = get_idx(["ссылка для скачивания", "ссылка", "download_link"])
         
         if idx_title == -1 or idx_desc == -1: continue
         
@@ -911,6 +899,10 @@ def clean_sheet_duplicates(sh, sections, dry_run=False):
                 
         rows_to_delete = []
         for empty_row in empty_desc_rows:
+            link_val = str(empty_row["_raw"][idx_link] if idx_link != -1 and idx_link < len(empty_row["_raw"]) else "")
+            if detect_link_source(link_val) == "release":
+                continue # Не удаляем строки с рабочими ссылками на GitHub
+
             matched = match_asset_to_row(empty_row["title"], valid_rows, key, folder=empty_row["folder"])
             if matched:
                 rows_to_delete.append(empty_row["_row"])
@@ -998,13 +990,12 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
 
     clean_sheet_duplicates(sh, sections, dry_run)
 
-    # Строим карту всех ассетов в репозитории
     repo_assets_by_tag = {}
     for tag, rels in by_section.items():
         for rel in rels:
             repo_assets_by_tag[rel.get("tag_name")] = rel.get("assets") or []
 
-    matched_assets = set() # "tag/filename"
+    matched_assets = set()
 
     for section in sections:
         key = section.get("key") or "?"
@@ -1044,7 +1035,6 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
         n_cols = len(headers)
         end_col_letter = _col_letter(n_cols - 1)
 
-        # 1. ПРОХОД ПО СТРОКАМ ТАБЛИЦЫ
         for row in rows_for_match:
             title = row.get("title", "")
             link = row.get("download_link", "").strip()
@@ -1054,12 +1044,10 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
             if old_source == "release":
                 old_tag, old_filename = parse_release_link(link)
                 if old_tag and old_filename and old_filename in {a["name"] for a in repo_assets_by_tag.get(old_tag, [])}:
-                    # Ссылка рабочая и файл на месте. НЕ ТРОГАЕМ.
                     matched_assets.add(f"{old_tag}/{old_filename}")
                     sec_stats["unchanged"] += 1
                     continue
 
-            # Если ссылка битая или это legacy — ищем файл
             target_tag = FOLDER_TRANSLATIONS.get(folder, slugify(folder))
             found_tag, found_name = find_asset_for_row(title, target_tag, repo_assets_by_tag)
             
@@ -1087,7 +1075,6 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
                     })
                     sec_stats["legacy_only"] += 1
 
-        # 2. ДОБАВЛЕНИЕ НОВЫХ ФАЙЛОВ ИЗ GITHUB
         for rel in by_section[key]:
             tag = rel.get("tag_name")
             for asset in rel.get("assets") or []:
@@ -1122,7 +1109,10 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
         if dry_run: continue
         if (updates or to_add) and BACKUP_BEFORE_SYNC: backup_sheet(sh, sheet, key, all_values)
         if updates: batch_update_rows(sheet, updates)
-        if to_add: append_rows_safe(sheet, to_add)
+        if to_add: 
+            added, failed = append_rows_safe(sheet, to_add)
+            if failed > 0:
+                print(f"     [!] ВНИМАНИЕ: {failed} строк не удалось добавить (лимиты Google)")
 
     print("\n[4/5] Шаг A завершён.")
     return stats
@@ -1381,11 +1371,10 @@ def notify_migration_report(repo_stats: dict, json_stats: dict, run_url: str | N
             lines.extend(["", "*По разделам:*"])
             for key, s in sections.items(): lines.append(f"  `{key}`: +{s['new_in_repo']} / ~{s['to_update']} / legacy {s['legacy_only']}")
             
-        # ─── ДЕТАЛЬНЫЙ ВЫВОД ОБНОВЛЕННЫХ ССЫЛОК ───
         to_update_rows = repo_stats.get("to_update_rows") or []
         if to_update_rows:
             lines.append(f"\n🔄 *Детали обновления ссылок* ({len(to_update_rows)}):")
-            for r in to_update_rows[:20]: # Выводим первые 20
+            for r in to_update_rows[:20]:
                 lines.append(f"  • {r.get('title', '')}")
                 lines.append(f"    Было:  `{r.get('old_link', '')}`")
                 lines.append(f"    Стало: `{r.get('new_link', '')}`")
@@ -1396,7 +1385,6 @@ def notify_migration_report(repo_stats: dict, json_stats: dict, run_url: str | N
         lines.extend(["", "*Генерация JSON*", f"• разделов: {json_stats.get('sections_ok', 0)}", f"• записей: {json_stats.get('total_records', 0)}"])
         if json_stats.get("sections_failed"): lines.append(f"• ошибок: {len(json_stats['sections_failed'])}")
         
-    # ─── УЛУЧШЕННЫЙ ВЫВОД LEGACY-ССЫЛОК ───
     legacy_rows = (repo_stats or {}).get("legacy_only_rows") or []
     if legacy_rows:
         yandex_rows = [r for r in legacy_rows if r.get("source") == "yandex"]
@@ -1507,3 +1495,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+```
