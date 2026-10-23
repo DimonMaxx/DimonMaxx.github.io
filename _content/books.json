@@ -8702,7 +8702,7 @@
     "title": "Андрей Левицкий - Сердце Зоны",
     "author": "STALKER",
     "format": "txt",
-    "size": "0.6",
+    "size": "0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/stalker/andrej-levickij-serdce-zony.txt",
     "file_id": "андрей-левицкий-сердце-зоны"
   },
@@ -10042,5 +10042,373 @@
     "size": "0.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sumerechnaya-saga/100-let-spysty.doc",
     "file_id": "let-spysty"
+  },
+  {
+    "folder": "stalker",
+    "title": "pikniki-na-obochine",
+    "format": "txt",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/stalker/pikniki-na-obochine.txt",
+    "file_id": "pikniki-na-obochine"
+  },
+  {
+    "folder": "stalker",
+    "title": "sergej-nedorub-pesochnye-chasy",
+    "format": "txt",
+    "size": "0.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/stalker/sergej-nedorub-pesochnye-chasy.txt",
+    "file_id": "sergej-nedorub-pesochnye-chasy"
+  },
+  {
+    "folder": "sistema",
+    "title": "devyatyj-uroven-chast-pervaya",
+    "format": "fb2",
+    "size": "2.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sistema/devyatyj-uroven-chast-pervaya.fb2",
+    "file_id": "devyatyj-uroven-chast-pervaya"
+  },
+  {
+    "folder": "sistema",
+    "title": "vosmoj-uroven-chast-pervaya",
+    "format": "fb2",
+    "size": "12.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sistema/vosmoj-uroven-chast-pervaya.fb2",
+    "file_id": "vosmoj-uroven-chast-pervaya"
+  },
+  {
+    "folder": "serzh-vinterkej-egida-15-knig",
+    "title": "ritm-vojny",
+    "format": "fb2",
+    "size": "0.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/serzh-vinterkej-egida-15-knig/ritm-vojny.fb2",
+    "file_id": "ritm-vojny"
+  },
+  {
+    "folder": "sergej-lukyanenko",
+    "title": "cvetnoj-dozor",
+    "format": "fb2",
+    "size": "1.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sergej-lukyanenko/cvetnoj-dozor.fb2",
+    "file_id": "cvetnoj-dozor"
+  },
+  {
+    "folder": "sergej-lukyanenko",
+    "title": "dnevnoj-dozor",
+    "format": "fb2",
+    "size": "1.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sergej-lukyanenko/dnevnoj-dozor.fb2",
+    "file_id": "dnevnoj-dozor"
+  },
+  {
+    "folder": "sergej-lukyanenko",
+    "title": "falshivye-zerkala-kompilyaciya-po-uchebniku-literatury",
+    "format": "fb2",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sergej-lukyanenko/falshivye-zerkala-kompilyaciya-po-uchebniku-literatury.fb2",
+    "file_id": "falshivye-zerkala-kompilyaciya-po-uchebniku-literatury"
+  },
+  {
+    "folder": "sergej-lukyanenko",
+    "title": "ispytatelnyj-srok-luchshaya-fantastika-2025",
+    "format": "fb2",
+    "size": "2.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sergej-lukyanenko/ispytatelnyj-srok-luchshaya-fantastika-2025.fb2",
+    "file_id": "ispytatelnyj-srok-luchshaya-fantastika-2025"
+  },
+  {
+    "folder": "sergej-lukyanenko",
+    "title": "novyj-dozor",
+    "format": "fb2",
+    "size": "1.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sergej-lukyanenko/novyj-dozor.fb2",
+    "file_id": "novyj-dozor"
+  },
+  {
+    "folder": "sergej-lukyanenko",
+    "title": "pristan-zheltyh-korablej-sb",
+    "format": "fb2",
+    "size": "0.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/sergej-lukyanenko/pristan-zheltyh-korablej-sb.fb2",
+    "file_id": "pristan-zheltyh-korablej-sb"
+  },
+  {
+    "folder": "pivko-aleksandr",
+    "title": "almaznyj-kultivator",
+    "format": "fb2",
+    "size": "1.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/pivko-aleksandr/almaznyj-kultivator.fb2",
+    "file_id": "almaznyj-kultivator"
+  },
+  {
+    "folder": "pivko-aleksandr",
+    "title": "derevyannyj-kultivator",
+    "format": "fb2",
+    "size": "0.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/pivko-aleksandr/derevyannyj-kultivator.fb2",
+    "file_id": "derevyannyj-kultivator"
+  },
+  {
+    "folder": "pivko-aleksandr",
+    "title": "vtoroj-syn-tom-2",
+    "format": "fb2",
+    "size": "0.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/pivko-aleksandr/vtoroj-syn-tom-2.fb2",
+    "file_id": "vtoroj-syn-tom-2"
+  },
+  {
+    "folder": "pivko-aleksandr",
+    "title": "vtoroj-syn-tom-3",
+    "format": "fb2",
+    "size": "0.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/pivko-aleksandr/vtoroj-syn-tom-3.fb2",
+    "file_id": "vtoroj-syn-tom-3"
+  },
+  {
+    "folder": "nik-perunov",
+    "title": "hranitel-mechej-odinochestvo-maga-tom-1",
+    "format": "txt",
+    "size": "0.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nik-perunov/hranitel-mechej-odinochestvo-maga-tom-1.txt",
+    "file_id": "hranitel-mechej-odinochestvo-maga-tom-1"
+  },
+  {
+    "folder": "nik-perunov",
+    "title": "hranitel-mechej-odinochestvo-maga-tom-2",
+    "format": "txt",
+    "size": "0.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nik-perunov/hranitel-mechej-odinochestvo-maga-tom-2.txt",
+    "file_id": "hranitel-mechej-odinochestvo-maga-tom-2"
+  },
+  {
+    "folder": "nik-perunov",
+    "title": "hranitel-mechej-rozhdenie-maga",
+    "format": "txt",
+    "size": "0.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nik-perunov/hranitel-mechej-rozhdenie-maga.txt",
+    "file_id": "hranitel-mechej-rozhdenie-maga"
+  },
+  {
+    "folder": "nik-perunov",
+    "title": "hranitel-mechej-stranstvie-maga-tom-2",
+    "format": "txt",
+    "size": "0.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nik-perunov/hranitel-mechej-stranstvie-maga-tom-2.txt",
+    "file_id": "hranitel-mechej-stranstvie-maga-tom-2"
+  },
+  {
+    "folder": "nik-perunov",
+    "title": "hranitel-mechej-vojna-maga-tom-1-debyut",
+    "format": "txt",
+    "size": "1.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nik-perunov/hranitel-mechej-vojna-maga-tom-1-debyut.txt",
+    "file_id": "hranitel-mechej-vojna-maga-tom-1-debyut"
+  },
+  {
+    "folder": "nik-perunov",
+    "title": "hranitel-mechej-vojna-maga-tom-2-mittelshpil",
+    "format": "txt",
+    "size": "1.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nik-perunov/hranitel-mechej-vojna-maga-tom-2-mittelshpil.txt",
+    "file_id": "hranitel-mechej-vojna-maga-tom-2-mittelshpil"
+  },
+  {
+    "folder": "nepravilnyj-lekar",
+    "title": "nepravilnyj-lekar-tom-1-si",
+    "format": "fb2",
+    "size": "0.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nepravilnyj-lekar/nepravilnyj-lekar-tom-1-si.fb2",
+    "file_id": "nepravilnyj-lekar-tom-1-si"
+  },
+  {
+    "folder": "nepravilnyj-lekar",
+    "title": "nepravilnyj-lekar-tom-2",
+    "format": "fb2",
+    "size": "0.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nepravilnyj-lekar/nepravilnyj-lekar-tom-2.fb2",
+    "file_id": "nepravilnyj-lekar-tom-2"
+  },
+  {
+    "folder": "nepravilnyj-lekar",
+    "title": "nepravilnyj-lekar-tom-3",
+    "format": "fb2",
+    "size": "0.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nepravilnyj-lekar/nepravilnyj-lekar-tom-3.fb2",
+    "file_id": "nepravilnyj-lekar-tom-3"
+  },
+  {
+    "folder": "nashi-tam",
+    "title": "geroj-ne-nashego-vremeni-epizod-i",
+    "format": "fb2",
+    "size": "1.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nashi-tam/geroj-ne-nashego-vremeni-epizod-i.fb2",
+    "file_id": "geroj-ne-nashego-vremeni-epizod-i"
+  },
+  {
+    "folder": "nashi-tam",
+    "title": "sajtanshesskaya-roza-epizod-i",
+    "format": "fb2",
+    "size": "1.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nashi-tam/sajtanshesskaya-roza-epizod-i.fb2",
+    "file_id": "sajtanshesskaya-roza-epizod-i"
+  },
+  {
+    "folder": "nashi-tam",
+    "title": "vozvrashhenie",
+    "format": "fb2",
+    "size": "1.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/nashi-tam/vozvrashhenie.fb2",
+    "file_id": "vozvrashhenie"
+  },
+  {
+    "folder": "lisina",
+    "title": "professionalnyj-nekromant-metr-na-svobode",
+    "format": "fb2",
+    "size": "1.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/lisina/professionalnyj-nekromant-metr-na-svobode.fb2",
+    "file_id": "professionalnyj-nekromant-metr-na-svobode"
+  },
+  {
+    "folder": "lisina",
+    "title": "shestoj-znak-kniga-1",
+    "format": "fb2",
+    "size": "1.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/lisina/shestoj-znak-kniga-1.fb2",
+    "file_id": "shestoj-znak-kniga-1"
+  },
+  {
+    "folder": "ezdovoj-gnom",
+    "title": "ezdovoj-gnom-bitva",
+    "format": "fb2",
+    "size": "0.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/ezdovoj-gnom/ezdovoj-gnom-bitva.fb2",
+    "file_id": "ezdovoj-gnom-bitva"
+  },
+  {
+    "folder": "ezdovoj-gnom",
+    "title": "ezdovoj-gnom-sila",
+    "format": "fb2",
+    "size": "0.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/ezdovoj-gnom/ezdovoj-gnom-sila.fb2",
+    "file_id": "ezdovoj-gnom-sila"
+  },
+  {
+    "folder": "ezdovoj-gnom",
+    "title": "ezdovoj-gnom-vozrozhdenie",
+    "format": "fb2",
+    "size": "0.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/ezdovoj-gnom/ezdovoj-gnom-vozrozhdenie.fb2",
+    "file_id": "ezdovoj-gnom-vozrozhdenie"
+  },
+  {
+    "folder": "egida",
+    "title": "krovavyj-koldun-egida-11",
+    "format": "fb2",
+    "size": "0.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/egida/krovavyj-koldun-egida-11.fb2",
+    "file_id": "krovavyj-koldun-egida-11"
+  },
+  {
+    "folder": "dzh-lokhard",
+    "title": "gnev-drakona",
+    "format": "txt",
+    "size": "1.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dzh-lokhard/gnev-drakona.txt",
+    "file_id": "gnev-drakona"
+  },
+  {
+    "folder": "dmitrij-ra",
+    "title": "baganutyj-tom-5",
+    "format": "fb2",
+    "size": "7.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dmitrij-ra/baganutyj-tom-5.fb2",
+    "file_id": "baganutyj-tom-5"
+  },
+  {
+    "folder": "batcher-dzhim",
+    "title": "dose-drezdena-17-pole-bitvy",
+    "format": "docx",
+    "size": "0.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/batcher-dzhim/dose-drezdena-17-pole-bitvy.docx",
+    "file_id": "dose-drezdena-17-pole-bitvy"
+  },
+  {
+    "folder": "badej",
+    "title": "lukomore-kurs-boevogo-maga-knizhnyj-variant",
+    "format": "txt",
+    "size": "0.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/badej/lukomore-kurs-boevogo-maga-knizhnyj-variant.txt",
+    "file_id": "lukomore-kurs-boevogo-maga-knizhnyj-variant"
+  },
+  {
+    "folder": "badej",
+    "title": "poiski-boevogo-maga-si",
+    "format": "fb2",
+    "size": "0.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/badej/poiski-boevogo-maga-si.fb2",
+    "file_id": "poiski-boevogo-maga-si"
+  },
+  {
+    "folder": "badej",
+    "title": "svobodnyj-polet-obshhij",
+    "format": "txt",
+    "size": "0.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/badej/svobodnyj-polet-obshhij.txt",
+    "file_id": "svobodnyj-polet-obshhij"
+  },
+  {
+    "folder": "badej",
+    "title": "volnyj-polet",
+    "format": "fb2",
+    "size": "0.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/badej/volnyj-polet.fb2",
+    "file_id": "volnyj-polet"
+  },
+  {
+    "folder": "arina-alison",
+    "title": "kosmicheskij-nyan",
+    "format": "txt",
+    "size": "0.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/arina-alison/kosmicheskij-nyan.txt",
+    "file_id": "kosmicheskij-nyan"
+  },
+  {
+    "folder": "andzhej-yasinskij",
+    "title": "novogodnyaya-skazka-2-si",
+    "format": "fb2",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/andzhej-yasinskij/novogodnyaya-skazka-2-si.fb2",
+    "file_id": "novogodnyaya-skazka-2-si"
+  },
+  {
+    "folder": "andrej-kruz",
+    "title": "zemlya-lishnih-tom-3",
+    "format": "txt",
+    "size": "0.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/andrej-kruz/zemlya-lishnih-tom-3.txt",
+    "file_id": "zemlya-lishnih-tom-3"
+  },
+  {
+    "folder": "aliya-ya",
+    "title": "volchi-sudby",
+    "format": "txt",
+    "size": "0.5",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aliya-ya/volchi-sudby.txt",
+    "file_id": "volchi-sudby"
+  },
+  {
+    "folder": "alekseeva-yana",
+    "title": "4svetskie-hroniki-goda-sirenevoj-lilii",
+    "format": "txt",
+    "size": "0.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/alekseeva-yana/4svetskie-hroniki-goda-sirenevoj-lilii.txt",
+    "file_id": "4svetskie-hroniki-goda-sirenevoj-lilii"
+  },
+  {
+    "folder": "aksenov-daniil",
+    "title": "ares-chernovik",
+    "format": "txt",
+    "size": "0.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aksenov-daniil/ares-chernovik.txt",
+    "file_id": "ares-chernovik"
   }
 ]

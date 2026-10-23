@@ -776,8 +776,8 @@
     "folder": "Converter",
     "title": "Unchecky 1.2",
     "description": "Unchecky - утилита, которая предназначена для предотвращения установки нежелательного ПО (различные тулбары, рекламные и шпионские программы) на компьютер пользователя, содержащегося в инсталляторах устанавливаемых приложений. Unchecky работает в фоновом режиме (запускается как служба) и автоматически снимает галочки с ненужных элементов, а также информирует с помощью предупреждающего окна, уменьшая шанс случайной установки нежелательной программы.",
-    "size": "34.5",
-    "download_link": "https://d.terabox.app/file/365174d0bd4dc8e1bf78f6eae7fb532d?fid=4398361031480-250528-685413048757690&dstime=1791920008&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-l6OlDU1HIHr%2Fp%2FA%2FNpCqzi4ITkI%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942428796053615443&dp-callid=0&r=913500198&sh=1&region=jp",
+    "size": "0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/security/unchecky.exe",
     "file_id": "unchecky-12"
   },
   {
@@ -4397,5 +4397,12 @@
     "size": "0.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/sravnenie-stat52iruip167polej-poisk-dvojnikov.xlsm",
     "file_id": "сравнение-стат52ируип167полей-поиск-двойников"
+  },
+  {
+    "folder": "Макросы",
+    "title": "otbor-tekstovyj-rajon",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
+    "file_id": "otbor-tekstovyj-rajon"
   }
 ]

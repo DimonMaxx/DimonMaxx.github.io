@@ -1943,5 +1943,21 @@
     "size": "10.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skillet/01.Awake.and.Alive.The.Quickening.mp3",
     "file_id": "awake-and-alive-the-quickening"
+  },
+  {
+    "folder": "linkin-park",
+    "title": "Breaking The Habit Live",
+    "artist": "Linkin Park",
+    "size": "7.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/02.Linkin.Park.-.Breaking.The.Habit.Live.mp3",
+    "file_id": "breaking-the-habit-live"
+  },
+  {
+    "folder": "linkin-park",
+    "title": "04 - Lying From You Piano",
+    "artist": "Linkin Park",
+    "size": "1.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/linkin-park/Linkin.Park.-.04.-.Lying.From.You.Piano.mp3",
+    "file_id": "04-lying-from-you-piano"
   }
 ]
