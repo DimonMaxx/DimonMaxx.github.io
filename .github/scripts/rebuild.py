@@ -19,6 +19,20 @@ SECTIONS = {
     "music": {"sheet": "Музыка", "exts": [".mp3", ".flac", ".wav"]}
 }
 
+TAG_TO_SECTION = {
+    "makrosy": "programs", "plaginy": "programs", "skripty": "programs", "dlya-windows-svoi": "programs",
+    "adobe": "programs", "aeditor": "programs", "ams": "programs", "archive": "programs", "ascomp": "programs",
+    "contact": "programs", "converter": "programs", "defrag": "programs", "diagnostics": "programs",
+    "disc": "programs", "download": "programs", "file": "programs", "graphics": "programs",
+    "hdd": "programs", "interface": "programs", "internet": "programs", "media": "programs",
+    "meditor": "programs", "mso": "programs", "office": "programs", "optimizers": "programs",
+    "pdf": "programs", "phone": "programs", "photo": "programs", "print": "programs",
+    "radiotv": "programs", "recovery": "programs", "recscreen": "programs", "registry": "programs",
+    "search": "programs", "security": "programs", "service": "programs", "system": "programs",
+    "text": "programs", "uninstall": "programs",
+    "linkin-park": "music", "skillet": "music", "within-temptation": "music"
+}
+
 TAG_TRANSLATIONS = {
     "ajzek-azimov": "Айзек Азимов", "aksenov-daniil": "Аксенов Даниил", "aleksandr-rudazov": "Александр Рудазов",
     "alekseeva-yana": "Алексеева Яна", "aliya-ya": "Алия Я", "andre-norton": "Андрэ Нортон",
@@ -56,7 +70,7 @@ def get_gsheet():
 
 def download_text(url):
     try:
-        r = requests.get(url, timeout=15)
+        r = requests.get(url, timeout=20)
         if r.status_code == 200:
             return r.content.decode('utf-8', errors='ignore')
     except Exception:
@@ -67,95 +81,99 @@ def parse_fb2(url):
     try:
         r = requests.get(url, headers={"Range": "bytes=0-250000"}, timeout=20)
         content = r.content.decode('utf-8', errors='ignore')
-        
         title_m = re.search(r'<book-title>(.*?)</book-title>', content, re.IGNORECASE)
         title = title_m.group(1).strip() if title_m else ""
-        
         author_m = re.search(r'<author>.*?<first-name>(.*?)</first-name>.*?<last-name>(.*?)</last-name>.*?</author>', content, re.DOTALL | re.IGNORECASE)
-        if not author_m:
-            author_m = re.search(r'<author>.*?<nickname>(.*?)</nickname>.*?</author>', content, re.DOTALL | re.IGNORECASE)
-        
+        if not author_m: author_m = re.search(r'<author>.*?<nickname>(.*?)</nickname>.*?</author>', content, re.DOTALL | re.IGNORECASE)
         author = ""
         if author_m:
-            if len(author_m.groups()) == 2:
-                author = f"{author_m.group(1).strip()} {author_m.group(2).strip()}"
-            else:
-                author = author_m.group(1).strip()
-                
+            if len(author_m.groups()) == 2: author = f"{author_m.group(1).strip()} {author_m.group(2).strip()}"
+            else: author = author_m.group(1).strip()
         anno_m = re.search(r'<annotation>.*?<p>(.*?)</p>', content, re.DOTALL | re.IGNORECASE)
         desc = anno_m.group(1).strip() if anno_m else ""
-        desc = re.sub(r'<[^>]+>', '', desc)
-        
-        return title, author, desc
+        return title, author, re.sub(r'<[^>]+>', '', desc)
     except Exception:
         return "", "", ""
 
 def main():
     sh = get_gsheet()
+    saved_meta = {}
     
-    # 1. Скачиваем описания из релиза Opisanie
-    print("1. Загрузка описаний из релиза Opisanie...")
+    # 1. СБОР ДАННЫХ ИЗ БЭКАПОВ (Самое важное!)
+    print("1. Поиск описаний в бэкапах таблицы...")
+    all_ws = sh.worksheets()
+    backup_count = 0
+    
+    for ws in all_ws:
+        if ws.title.startswith("_backup_"):
+            backup_count += 1
+            print(f"   Чтение бэкапа: {ws.title}")
+            try:
+                vals = ws.get_all_values()
+                if len(vals) < 2: continue
+                
+                header = vals[0]
+                idx_folder = header.index("Папка") if "Папка" in header else -1
+                idx_title = header.index("Название") if "Название" in header else -1
+                idx_desc = header.index("Описание") if "Описание" in header else -1
+                idx_author = header.index("Автор") if "Автор" in header else -1
+                
+                for row in vals[1:]:
+                    if len(row) == 0: continue
+                    def get_val(idx): return row[idx] if idx != -1 and idx < len(row) else ""
+                    
+                    title, folder = get_val(idx_title), get_val(idx_folder)
+                    desc, author = get_val(idx_desc), get_val(idx_author)
+                    
+                    if not title.strip(): continue
+                    if desc or author:
+                        # Сохраняем по двум ключам: оригинальному и переведенному
+                        norm_key = f"{folder.strip().lower()}|{title.strip().lower()}"
+                        saved_meta[norm_key] = {"desc": desc, "author": author}
+                        
+                        # Добавляем ключ по переведенной папке (если это программа)
+                        translated_folder = TAG_TRANSLATIONS.get(folder.strip().lower(), folder.strip())
+                        if translated_folder != folder:
+                            alt_key = f"{translated_folder.lower()}|{title.strip().lower()}"
+                            saved_meta[alt_key] = {"desc": desc, "author": author}
+            except Exception as e:
+                print(f"   Ошибка чтения бэкапа {ws.title}: {e}")
+                
+    print(f"   Найдено бэкапов: {backup_count}. Сохранено описаний: {len(saved_meta)}")
+
+    # 2. СБОР ДАННЫХ ИЗ РЕЛИЗА OPISANIE
+    print("2. Загрузка описаний из Opisanie...")
     gh_headers = {"Authorization": f"token {STORAGE_TOKEN}", "Accept": "application/vnd.github.v3+json"}
     program_descriptions = {}
     
     try:
         r = requests.get(f"https://api.github.com/repos/{STORAGE_OWNER}/{STORAGE_REPO}/releases/tags/Opisanie", headers=gh_headers)
         if r.status_code == 200:
-            rel = r.json()
-            for asset in rel.get("assets", []):
+            for asset in r.json().get("assets", []):
                 if asset["name"].endswith(".txt"):
-                    print(f"   Чтение {asset['name']}...")
                     content = download_text(asset["browser_download_url"])
-                    # Парсим текст: ищем строки, где есть "Название: Описание"
-                    lines = content.split('\n')
-                    current_prog = None
-                    current_desc = []
-                    
-                    for line in lines:
-                        line = line.strip()
-                        if not line: continue
-                        
-                        # Проверяем, не начинается ли новая программа
-                        # Допустим, программы разделены пустыми строками, а первая строка - название
-                        if len(line) < 100 and (":" in line or len(current_desc) == 0):
-                            # Если мы уже собирали описание, сохраняем его
-                            if current_prog and current_desc:
-                                program_descriptions[current_prog.lower()] = " ".join(current_desc)
-                            
-                            # Начинаем новую
-                            if ":" in line:
-                                parts = line.split(":", 1)
-                                current_prog = parts[0].strip()
-                                current_desc = [parts[1].strip()]
-                            else:
-                                current_prog = line
-                                current_desc = []
-                        else:
-                            # Продолжение описания
-                            current_desc.append(line)
-                            
-                    # Сохраняем последнее
-                    if current_prog and current_desc:
-                        program_descriptions[current_prog.lower()] = " ".join(current_desc)
-        else:
-            print("   Релиз Opisanie не найден.")
-    except Exception as e:
-        print(f"   Ошибка чтения описаний: {e}")
+                    blocks = re.split(r'\n\s*\n', content)
+                    for block in blocks:
+                        if not block.strip(): continue
+                        lines = block.strip().split('\n')
+                        if len(lines) > 1:
+                            prog_name = lines[0].strip()
+                            prog_desc = " ".join([l.strip() for l in lines[1:]])
+                            program_descriptions[prog_name.lower()] = prog_desc
+                        elif len(lines) == 1 and len(lines[0]) < 50:
+                            program_descriptions[lines[0].strip().lower()] = ""
+    except Exception:
+        pass
 
-    print(f"   Загружено описаний для программ: {len(program_descriptions)}")
-
-    # 2. Бэкап старых данных
-    print("2. Бэкап старых данных...")
-    saved_meta = {}
+    # 3. БЭКАП ТЕКУЩИХ ЛЕГАСИ-ССЫЛОК
+    print("3. Сохранение текущих legacy-ссылок (Яндекс/Терабокс)...")
     legacy_rows = {}
     sheet_headers = {}
     
     for section_key, cfg in SECTIONS.items():
         sheet_name = cfg["sheet"]
-        try:
-            ws = sh.worksheet(sheet_name)
-        except:
-            continue
+        try: ws = sh.worksheet(sheet_name)
+        except: continue
             
         all_vals = ws.get_all_values()
         if not all_vals: continue
@@ -163,36 +181,25 @@ def main():
         header = all_vals[0]
         sheet_headers[sheet_name] = header
         
-        idx_folder = header.index("Папка") if "Папка" in header else -1
-        idx_title = header.index("Название") if "Название" in header else -1
-        idx_desc = header.index("Описание") if "Описание" in header else -1
-        idx_author = header.index("Автор") if "Автор" in header else -1
         idx_link = header.index("Ссылка для скачивания") if "Ссылка для скачивания" in header else -1
         
         keep_rows = [header]
-        
         for row in all_vals[1:]:
             if len(row) == 0: continue
-            def get_val(idx): return row[idx] if idx != -1 and idx < len(row) else ""
-            title, folder, link = get_val(idx_title), get_val(idx_folder), get_val(idx_link)
-            desc, author = get_val(idx_desc), get_val(idx_author)
-            
-            if not title.strip(): continue
-            norm_key = f"{folder.strip().lower()}|{title.strip().lower()}"
-            if desc or author: saved_meta[norm_key] = {"desc": desc, "author": author}
+            link = row[idx_link] if idx_link != -1 and idx_link < len(row) else ""
             if "gh-release-proxy" not in link and "github.com" not in link:
                 keep_rows.append(row)
         legacy_rows[sheet_name] = keep_rows
         
-    # 3. Очистка
-    print("3. Очистка листов...")
+    # 4. ОЧИСТКА ЛИСТОВ
+    print("4. Очистка листов...")
     for sheet_name, rows in legacy_rows.items():
         ws = sh.worksheet(sheet_name)
         ws.clear()
         if rows: ws.update(values=rows, range_name="A1")
 
-    # 4. Получаем релизы и заполняем
-    print("4. Чтение GitHub и заполнение...")
+    # 5. ПОЛУЧЕНИЕ РЕЛИЗОВ И ЗАПОЛНЕНИЕ
+    print("5. Генерация новых строк...")
     releases, page = [], 1
     while True:
         r = requests.get(f"https://api.github.com/repos/{STORAGE_OWNER}/{STORAGE_REPO}/releases?per_page=100&page={page}", headers=gh_headers)
@@ -205,11 +212,9 @@ def main():
     
     for rel in releases:
         tag = rel.get("tag_name", "")
-        if tag.lower() == "opisanie": continue # Пропускаем этот служебный тег
+        if tag.lower() == "opisanie": continue
         
-        section_key = None
-        for k in SECTIONS.keys():
-            if k in tag: section_key = k; break
+        section_key = TAG_TO_SECTION.get(tag)
         if not section_key:
             ext = os.path.splitext(rel.get("assets", [{}])[0].get("name", ""))[1].lower() if rel.get("assets") else ""
             for k, v in SECTIONS.items():
@@ -232,22 +237,19 @@ def main():
             
             author, desc = "", ""
             
-            # Пытаемся достать метаданные из самого файла
             if ext == ".fb2":
                 t, a, d = parse_fb2(new_link)
                 if t: clean_title = t
                 author, desc = a, d
             
-            # Для программ ищем описание в скачанных TXT
-            if section_key == "programs":
-                # Ищем по точному названию или частичному совпадению
-                search_title = clean_title.lower().strip()
+            if section_key == "programs" and not desc:
+                search_title = clean_title.lower()
                 for prog_name, prog_desc in program_descriptions.items():
-                    if search_title in prog_name or prog_name in search_title:
+                    if search_title == prog_name or search_title in prog_name or prog_name in search_title:
                         desc = prog_desc
                         break
 
-            # Если пусто, берем из старой таблицы
+            # Поиск в бэкапах (saved_meta)
             if not desc or not author:
                 norm_key = f"{folder_name.lower()}|{clean_title.lower()}"
                 alt_key = f"{tag.lower()}|{clean_title.lower()}"
@@ -276,13 +278,13 @@ def main():
                 elif "формат" in hl: final_row.append(row_dict["format"])
                 elif "размер" in hl: final_row.append(row_dict["size"])
                 elif "ссылка" in hl or "скачивания" in hl: final_row.append(row_dict["link"])
-                elif "значок" in hl or "обложка" in hl: final_row.append("") # Значки пока пустые
+                elif "значок" in hl or "обложка" in hl: final_row.append("")
                 else: final_row.append("")
                 
             new_rows_by_sheet[sheet_name].append(final_row)
 
-    # 5. Запись
-    print("5. Сохранение...")
+    # 6. ЗАПИСЬ РЕЗУЛЬТАТОВ
+    print("6. Сохранение результатов...")
     for sheet_name, new_rows in new_rows_by_sheet.items():
         if not new_rows: continue
         ws = sh.worksheet(sheet_name)
