@@ -337,7 +337,8 @@ def _is_garbage_stem(stem: str) -> bool:
     if re.match(r"^[\*\-_\.\s]+$", s): return True
     if any(ch in s for ch in _CP866_JUNK): return True
     if len(s) < 2: return True
-    if not re.search(r"[A-Za-zА-Яа-яЁё]{2,}", s): return True
+    # ИСПРАВЛЕНО: теперь разрешаем цифры (например, -.01)
+    if not re.search(r"[A-Za-zА-Яа-яЁё0-9]{2,}", s): return True
     return False
 
 _FILENAME_PREFIX_RE = re.compile(r"^\d{1,4}\s*[_\.\-]\s*")
@@ -538,6 +539,14 @@ def detect_link_source(link: str) -> str:
     if "terabox" in s or "1024tera" in s or "4funbox" in s or "teraboxapp" in s:
         return "terabox"
     return "other"
+
+# ─── НОВАЯ ФУНКЦИЯ ДЛЯ СРАВНЕНИЯ ССЫЛОК ───
+def normalize_url(url: str) -> str:
+    if not url: return ""
+    u = urllib.parse.unquote(url).strip().lower()
+    u = u.replace("http://", "https://")
+    u = u.rstrip("/")
+    return u
 
 
 # ============================================================
@@ -1015,10 +1024,10 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
                 old_link = str(matched.get("download_link", "") or "").strip()
                 old_source = detect_link_source(old_link)
                 
-                # ─── УМНОЕ СРАВНЕНИЕ ССЫЛОК (ИГНОРИРУЕМ URL-КОДИРОВАНИЕ) ───
+                # ─── УМНОЕ СРАВНЕНИЕ ССЫЛОК (ИГНОРИРУЕМ URL-КОДИРОВАНИЕ И http/https) ───
                 is_same_link = False
                 if old_source == "release":
-                    if old_link == new_link or urllib.parse.unquote(old_link) == urllib.parse.unquote(new_link):
+                    if normalize_url(old_link) == normalize_url(new_link):
                         is_same_link = True
 
                 if is_same_link:
