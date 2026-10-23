@@ -40,8 +40,8 @@
     "title": "отбор из других районов XLSX Версия 2",
     "description": "Записи из месячной выгрузки из других районов но с событиями на своей территории",
     "version": "2",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-iz-drugih-rajonov-xlsx-versiya-2.xlsm",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-iz-drugih-rajonov-xlsx-versiya-2-dlya-libra-ofisa.ods",
     "file_id": "отбор-из-других-районов-xlsx-версия-2"
   },
   {
@@ -148,8 +148,8 @@
     "title": "CleanMVD",
     "description": "Скрипт для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
     "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/cleanmvd.rar",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/cleanmvd.ods",
     "file_id": "cleanmvd"
   },
   {
@@ -4379,7 +4379,7 @@
     "title": "ОТБОР Текстовый Район",
     "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП район",
     "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
     "file_id": "отбор-текстовый-район"
   },
   {
