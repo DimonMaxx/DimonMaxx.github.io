@@ -458,67 +458,59 @@ def _compact_match_str(text: str) -> str:
     t = _translit_ru_to_en(t)
     return t.replace(" ", "")
 
-def match_asset_to_row(asset_name: str, rows: list[dict], section: str, folder: str = "") -> dict | None:
-    asset_info = parse_filename_by_section(asset_name, section)
-    asset_title = asset_info.get("title", "")
-    if not asset_title: return None
+def parse_release_link(url: str) -> tuple[str, str]:
+    """Извлекает тег и имя файла из ссылки на релиз."""
+    if not url: return None, None
+    decoded = urllib.parse.unquote(url)
+    parts = decoded.split('/download/')
+    if len(parts) == 2:
+        subparts = parts[1].split('/')
+        if len(subparts) >= 2:
+            tag = subparts[0]
+            filename = '/'.join(subparts[1:])
+            return tag, filename
+    return None, None
 
-    asset_norm = normalize_for_match(asset_title)
-    asset_slug = slugify(asset_title)
-    asset_compact = _compact_match_str(asset_title)
-    asset_words = set(w for w in asset_norm.split() if len(w) >= 3 and w not in _STOP_WORDS)
-    folder_norm = normalize_for_match(folder) if folder else ""
+def _search_asset_in_list(title: str, assets: list[dict]) -> str | None:
+    """Ищет файл в списке ассетов по названию."""
+    title_norm = normalize_for_match(title)
+    title_slug = slugify(title)
+    title_compact = _compact_match_str(title)
 
-    # 1. Точное (folder + title)
-    for r in rows:
-        if folder_norm and normalize_for_match(r.get("folder", "")) != folder_norm: continue
-        if normalize_for_match(r.get("title", "")) == asset_norm: return r
+    # 1. Точное название
+    for a in assets:
+        name_no_ext = os.path.splitext(a["name"])[0]
+        if normalize_for_match(name_no_ext) == title_norm: return a["name"]
 
-    # 2. Точное по title (без folder)
-    for r in rows:
-        if normalize_for_match(r.get("title", "")) == asset_norm: return r
+    # 2. По slug
+    for a in assets:
+        name_no_ext = os.path.splitext(a["name"])[0]
+        if slugify(name_no_ext) == title_slug: return a["name"]
 
-    # 3. По slug
-    for r in rows:
-        if slugify(r.get("title", "")) == asset_slug: return r
+    # 3. Строгий нечеткий поиск (>= 0.85)
+    for a in assets:
+        name_no_ext = os.path.splitext(a["name"])[0]
+        asset_compact = _compact_match_str(name_no_ext)
+        if difflib.SequenceMatcher(None, title_compact, asset_compact).ratio() >= 0.85:
+            return a["name"]
+    return None
 
-    # 3.5. По транслиту кириллица → латиница
-    for r in rows:
-        row_title = r.get("title", "") or ""
-        row_translit = _translit_ru_to_en(row_title)
-        row_words = _words_set(row_translit)
-        if not row_words or not asset_words: continue
-        if row_words == asset_words: return r
+def find_asset_for_row(title: str, target_tag: str, repo_assets_by_tag: dict) -> tuple[str, str]:
+    """Ищет подходящий файл в GitHub для строки таблицы."""
+    if not title: return None, None
+    
+    # 1. Поиск по приоритетному тегу
+    if target_tag and target_tag in repo_assets_by_tag:
+        assets = repo_assets_by_tag[target_tag]
+        res = _search_asset_in_list(title, assets)
+        if res: return target_tag, res
 
-    # 3.6. По компактной строке (без пробелов)
-    for r in rows:
-        if _compact_match_str(r.get("title", "")) == asset_compact: return r
-
-    # 3.7. По нечёткому совпадению (difflib)
-    for r in rows:
-        row_compact = _compact_match_str(r.get("title", ""))
-        if not row_compact: continue
-        if difflib.SequenceMatcher(None, asset_compact, row_compact).ratio() >= 0.65: 
-            return r
-
-    # 3.8. Совпадение по началу названия (первые 7 символов без пробелов)
-    for r in rows:
-        row_compact = _compact_match_str(r.get("title", ""))
-        if len(asset_compact) >= 7 and len(row_compact) >= 7:
-            if asset_compact[:7] == row_compact[:7]:
-                return r
-
-    # 4. Частичное совпадение по словам (Jaccard)
-    best, best_score = None, 0.0
-    for r in rows:
-        row_words = set(w for w in normalize_for_match(r.get("title", "")).split() if len(w) >= 3 and w not in _STOP_WORDS)
-        if not row_words or not asset_words: continue
-        inter, union = asset_words & row_words, asset_words | row_words
-        score = len(inter) / len(union)
-        if score >= 0.7 and score > best_score:
-            best_score, best = score, r
-
-    return best
+    # 2. Поиск по всем остальным тегам
+    for tag, assets in repo_assets_by_tag.items():
+        if tag == target_tag: continue
+        res = _search_asset_in_list(title, assets)
+        if res: return tag, res
+    return None, None
 
 
 def bytes_to_mb(size_bytes: int | float | str | None) -> str:
@@ -539,24 +531,6 @@ def detect_link_source(link: str) -> str:
     if "terabox" in s or "1024tera" in s or "4funbox" in s or "teraboxapp" in s:
         return "terabox"
     return "other"
-
-# ─── УЛУЧШЕННАЯ ФУНКЦИЯ ДЛЯ СРАВНЕНИЯ ССЫЛОК ───
-def normalize_url(url: str) -> str:
-    if not url: return ""
-    try:
-        # Приводим к нижнему регистру и убираем пробелы
-        u = str(url).strip().lower()
-        # Заменяем http на https
-        u = u.replace("http://", "https://")
-        # Убираем слэш в конце
-        u = u.rstrip("/")
-        # Декодируем %20 и %D0... (кириллицу) в обычные символы
-        u = urllib.parse.unquote_plus(u)
-        # Игнорируем пробелы, которые могли случайно попасть
-        u = u.replace(" ", "")
-        return u
-    except Exception:
-        return url
 
 
 # ============================================================
@@ -962,6 +936,14 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
 
     clean_sheet_duplicates(sh, sections, dry_run)
 
+    # Строим карту всех ассетов в репозитории
+    repo_assets_by_tag = {}
+    for tag, rels in by_section.items():
+        for rel in rels:
+            repo_assets_by_tag[rel.get("tag_name")] = rel.get("assets") or []
+
+    matched_assets = set() # "tag/filename"
+
     for section in sections:
         key = section.get("key") or "?"
         label = section.get("label") or key
@@ -995,83 +977,78 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
                 row_dict[en] = r[j] if j < len(r) else ""
             rows_for_match.append(row_dict)
 
-        all_assets: list[tuple[str, dict]] = []
-        for rel in by_section[key]:
-            tag = rel.get("tag_name") or ""
-            for a in rel.get("assets") or []:
-                all_assets.append((tag, a))
-
-        matched_row_indices: set[int] = set()
         updates: list[dict] = []
         to_add: list[list[str]] = []
         n_cols = len(headers)
         end_col_letter = _col_letter(n_cols - 1)
 
-        for tag, asset in all_assets:
-            fname = asset.get("name") or ""
-            size = asset.get("size") or 0
-            if not fname: continue
+        # 1. ПРОХОД ПО СТРОКАМ ТАБЛИЦЫ
+        for row in rows_for_match:
+            title = row.get("title", "")
+            link = row.get("download_link", "").strip()
+            folder = row.get("folder", "")
+            old_source = detect_link_source(link)
 
-            new_link = build_asset_url(tag, fname)
-            size_mb = bytes_to_mb(size)
-            info = parse_filename_by_section(fname, key)
-            title = info.get("title", "") or os.path.splitext(fname)[0]
-            file_id = _slug_for_asset(fname, key)
-            folder_name = FOLDER_TRANSLATIONS.get(tag, tag)
-
-            record = {
-                "title": title, "description": "", "format": os.path.splitext(fname)[1].lstrip("."),
-                "size": size_mb, "download_link": new_link, "folder": folder_name,
-                "author": info.get("author", ""), "artist": info.get("artist", ""),
-                "year": info.get("year", ""), "version": info.get("version", ""),
-                "cover": "", "file_id": file_id, "legacy": "",
-            }
-
-            matched = match_asset_to_row(fname, rows_for_match, key, folder=folder_name)
-
-            if matched:
-                matched_row_indices.add(matched["_row"])
-                old_link = str(matched.get("download_link", "") or "").strip()
-                old_source = detect_link_source(old_link)
-                
-                # ─── СРАВНЕНИЕ ССЫЛОК ───
-                is_same_link = False
-                if old_source == "release":
-                    if normalize_url(old_link) == normalize_url(new_link):
-                        is_same_link = True
-
-                if is_same_link:
+            if old_source == "release":
+                old_tag, old_filename = parse_release_link(link)
+                if old_tag and old_filename and old_filename in {a["name"] for a in repo_assets_by_tag.get(old_tag, [])}:
+                    # Ссылка рабочая и файл на месте. НЕ ТРОГАЕМ.
+                    matched_assets.add(f"{old_tag}/{old_filename}")
                     sec_stats["unchanged"] += 1
                     continue
 
-                new_row = _row_from_record(record, headers)
-                merged = merge_row(matched["_raw"], new_row, headers)
-                rng = f"A{matched['_row']}:{end_col_letter}{matched['_row']}"
+            # Если ссылка битая или это legacy — ищем файл
+            target_tag = FOLDER_TRANSLATIONS.get(folder, slugify(folder))
+            found_tag, found_name = find_asset_for_row(title, target_tag, repo_assets_by_tag)
+            
+            if found_tag and found_name:
+                new_link = build_asset_url(found_tag, found_name)
+                record = {
+                    "title": title, "folder": folder,
+                    "size": bytes_to_mb(0), "download_link": new_link
+                }
+                new_row_data = _row_from_record(record, headers)
+                merged = merge_row(row["_raw"], new_row_data, headers)
+                rng = f"A{row['_row']}:{end_col_letter}{row['_row']}"
                 updates.append({"range": rng, "values": [merged]})
                 stats["to_update_rows"].append({
-                    "section": key,
-                    "tag": tag,
-                    "file": fname,
-                    "title": matched.get("title", ""),
-                    "old_link": old_link,
-                    "new_link": new_link,
-                    "old_source": old_source
+                    "section": key, "tag": found_tag, "file": found_name,
+                    "title": title, "old_link": link, "new_link": new_link, "old_source": old_source
                 })
+                matched_assets.add(f"{found_tag}/{found_name}")
                 sec_stats["to_update"] += 1
             else:
-                to_add.append(_row_from_record(record, headers))
-                display_title = f"{folder_name} - {title}"
-                stats["new_in_repo_rows"].append({"section": key, "tag": tag, "file": fname, "title": display_title, "link": new_link, "size": size_mb})
-                sec_stats["new_in_repo"] += 1
+                if old_source in ("yandex", "terabox"):
+                    stats["legacy_only_rows"].append({
+                        "section": key, "row": row["_row"], "title": title,
+                        "folder": folder, "link": link, "source": old_source
+                    })
+                    sec_stats["legacy_only"] += 1
 
-        for r in rows_for_match:
-            if r["_row"] in matched_row_indices: continue
-            link = str(r.get("download_link", "") or "").strip()
-            if not link: continue
-            source = detect_link_source(link)
-            if source in ("yandex", "terabox"):
-                stats["legacy_only_rows"].append({"section": key, "row": r["_row"], "title": r.get("title", ""), "folder": r.get("folder", ""), "link": link, "source": source})
-                sec_stats["legacy_only"] += 1
+        # 2. ДОБАВЛЕНИЕ НОВЫХ ФАЙЛОВ ИЗ GITHUB
+        for rel in by_section[key]:
+            tag = rel.get("tag_name")
+            for asset in rel.get("assets") or []:
+                fname = asset.get("name")
+                if not fname: continue
+                if f"{tag}/{fname}" in matched_assets: continue
+                
+                info = parse_filename_by_section(fname, key)
+                title = info.get("title", "") or os.path.splitext(fname)[0]
+                folder_name = FOLDER_TRANSLATIONS.get(tag, tag)
+                new_link = build_asset_url(tag, fname)
+                
+                record = {
+                    "title": title, "description": "", "format": os.path.splitext(fname)[1].lstrip("."),
+                    "size": bytes_to_mb(asset.get("size", 0)), "download_link": new_link, 
+                    "folder": folder_name,
+                    "author": info.get("author", ""), "artist": info.get("artist", ""),
+                    "year": info.get("year", ""), "version": info.get("version", ""),
+                    "cover": "", "file_id": slugify(title), "legacy": "",
+                }
+                to_add.append(_row_from_record(record, headers))
+                stats["new_in_repo_rows"].append({"section": key, "tag": tag, "file": fname, "title": f"{folder_name} - {title}", "link": new_link, "size": record["size"]})
+                sec_stats["new_in_repo"] += 1
 
         print(f"     К обновлению ссылок:  {sec_stats['to_update']}")
         print(f"     Новых в репо:         {sec_stats['new_in_repo']}")
