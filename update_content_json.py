@@ -540,13 +540,23 @@ def detect_link_source(link: str) -> str:
         return "terabox"
     return "other"
 
-# ─── НОВАЯ ФУНКЦИЯ ДЛЯ СРАВНЕНИЯ ССЫЛОК ───
+# ─── УЛУЧШЕННАЯ ФУНКЦИЯ ДЛЯ СРАВНЕНИЯ ССЫЛОК ───
 def normalize_url(url: str) -> str:
     if not url: return ""
-    u = urllib.parse.unquote(url).strip().lower()
-    u = u.replace("http://", "https://")
-    u = u.rstrip("/")
-    return u
+    try:
+        # Приводим к нижнему регистру и убираем пробелы
+        u = str(url).strip().lower()
+        # Заменяем http на https
+        u = u.replace("http://", "https://")
+        # Убираем слэш в конце
+        u = u.rstrip("/")
+        # Декодируем %20 и %D0... (кириллицу) в обычные символы
+        u = urllib.parse.unquote_plus(u)
+        # Игнорируем пробелы, которые могли случайно попасть
+        u = u.replace(" ", "")
+        return u
+    except Exception:
+        return url
 
 
 # ============================================================
@@ -1024,7 +1034,7 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
                 old_link = str(matched.get("download_link", "") or "").strip()
                 old_source = detect_link_source(old_link)
                 
-                # ─── УМНОЕ СРАВНЕНИЕ ССЫЛОК (ИГНОРИРУЕМ URL-КОДИРОВАНИЕ И http/https) ───
+                # ─── СРАВНЕНИЕ ССЫЛОК ───
                 is_same_link = False
                 if old_source == "release":
                     if normalize_url(old_link) == normalize_url(new_link):
@@ -1038,7 +1048,15 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
                 merged = merge_row(matched["_raw"], new_row, headers)
                 rng = f"A{matched['_row']}:{end_col_letter}{matched['_row']}"
                 updates.append({"range": rng, "values": [merged]})
-                stats["to_update_rows"].append({"section": key, "tag": tag, "file": fname, "title": matched.get("title", ""), "old_link": old_link, "new_link": new_link, "old_source": old_source})
+                stats["to_update_rows"].append({
+                    "section": key,
+                    "tag": tag,
+                    "file": fname,
+                    "title": matched.get("title", ""),
+                    "old_link": old_link,
+                    "new_link": new_link,
+                    "old_source": old_source
+                })
                 sec_stats["to_update"] += 1
             else:
                 to_add.append(_row_from_record(record, headers))
@@ -1323,6 +1341,18 @@ def notify_migration_report(repo_stats: dict, json_stats: dict, run_url: str | N
         if sections:
             lines.extend(["", "*По разделам:*"])
             for key, s in sections.items(): lines.append(f"  `{key}`: +{s['new_in_repo']} / ~{s['to_update']} / legacy {s['legacy_only']}")
+            
+        # ─── ДЕТАЛЬНЫЙ ВЫВОД ОБНОВЛЕННЫХ ССЫЛОК ───
+        to_update_rows = repo_stats.get("to_update_rows") or []
+        if to_update_rows:
+            lines.append(f"\n🔄 *Детали обновления ссылок* ({len(to_update_rows)}):")
+            for r in to_update_rows[:20]: # Выводим первые 20
+                lines.append(f"  • {r.get('title', '')}")
+                lines.append(f"    Было:  `{r.get('old_link', '')}`")
+                lines.append(f"    Стало: `{r.get('new_link', '')}`")
+            if len(to_update_rows) > 20:
+                lines.append(f"  ... и еще {len(to_update_rows) - 20}")
+
     if json_stats:
         lines.extend(["", "*Генерация JSON*", f"• разделов: {json_stats.get('sections_ok', 0)}", f"• записей: {json_stats.get('total_records', 0)}"])
         if json_stats.get("sections_failed"): lines.append(f"• ошибок: {len(json_stats['sections_failed'])}")
