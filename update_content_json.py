@@ -18,6 +18,7 @@ import datetime
 import argparse
 import traceback
 import difflib
+import urllib.parse
 from typing import Any
 
 import requests
@@ -500,7 +501,6 @@ def match_asset_to_row(asset_name: str, rows: list[dict], section: str, folder: 
             return r
 
     # 3.8. Совпадение по началу названия (первые 7 символов без пробелов)
-    # Это спасает ситуацию, когда Avtosbor_sobitii... и Автосбор событий... не совпадают по difflib
     for r in rows:
         row_compact = _compact_match_str(r.get("title", ""))
         if len(asset_compact) >= 7 and len(row_compact) >= 7:
@@ -644,7 +644,6 @@ def backup_sheet(sh, worksheet, section_key: str, all_values: list[list[str]], m
     max_cols = max((len(r) for r in all_values), default=1)
     max_rows = len(all_values)
     try:
-        # Добавляем паузу и ретрай для бэкапа
         for attempt in range(3):
             try:
                 time.sleep(2)
@@ -678,7 +677,7 @@ def batch_update_rows(sheet, updates: list[dict]) -> int:
     for i in range(0, total, chunk):
         part = updates[i:i + chunk]
         try:
-            time.sleep(2) # Пауза перед обновлением
+            time.sleep(2)
             sheet.batch_update(part, value_input_option="USER_ENTERED")
             updated += len(part)
         except Exception as e:
@@ -814,7 +813,7 @@ def print_sheets_health(health: dict) -> None:
 
 
 # ============================================================
-# НОВАЯ ФУНКЦИЯ ОЧИСТКИ ДУБЛИКАТОВ (БЕЗ ПРЕВЫШЕНИЯ ЛИМИТОВ)
+# ОЧИСТКА ДУБЛИКАТОВ (БЕЗ ПРЕВЫШЕНИЯ ЛИМИТОВ)
 # ============================================================
 def clean_sheet_duplicates(sh, sections, dry_run=False):
     print("\n" + "=" * 60)
@@ -827,10 +826,8 @@ def clean_sheet_duplicates(sh, sections, dry_run=False):
         sheet_name = section.get("sheet_name")
         if not sheet_name: continue
         
-        try: 
-            sheet = sh.worksheet(sheet_name)
-        except Exception: 
-            continue
+        try: sheet = sh.worksheet(sheet_name)
+        except Exception: continue
         
         all_values = sheet.get_all_values()
         if len(all_values) < 2: continue
@@ -845,37 +842,24 @@ def clean_sheet_duplicates(sh, sections, dry_run=False):
         idx_title = get_idx(["название", "title"])
         idx_desc = get_idx(["описание", "description"])
         
-        if idx_title == -1 or idx_desc == -1: 
-            continue
+        if idx_title == -1 or idx_desc == -1: continue
         
-        valid_rows = []
-        empty_desc_rows = []
-        
+        valid_rows, empty_desc_rows = [], []
         for i, r in enumerate(all_values[1:], start=2):
             folder = r[idx_folder] if idx_folder != -1 and idx_folder < len(r) else ""
             title = r[idx_title] if idx_title < len(r) else ""
             desc = r[idx_desc] if idx_desc < len(r) else ""
-            
             if not title.strip(): continue
-            
             row_dict = {"_row": i, "_raw": r, "folder": folder, "title": title, "description": desc.strip()}
-            
-            if row_dict["description"]:
-                valid_rows.append(row_dict)
-            else:
-                empty_desc_rows.append(row_dict)
+            if row_dict["description"]: valid_rows.append(row_dict)
+            else: empty_desc_rows.append(row_dict)
                 
         rows_to_delete = []
-        
         for empty_row in empty_desc_rows:
-            # match_asset_to_row теперь умеет сопоставлять Avtosbor... с Автосбор...
             matched = match_asset_to_row(empty_row["title"], valid_rows, key, folder=empty_row["folder"])
-            
             if matched:
                 rows_to_delete.append(empty_row["_row"])
                 continue
-            
-            # Резервная проверка difflib (если match_asset_to_row не справился)
             compact_empty = _compact_match_str(empty_row["title"])
             if not compact_empty: continue
             for v_row in valid_rows:
@@ -885,39 +869,29 @@ def clean_sheet_duplicates(sh, sections, dry_run=False):
                     break
                     
         if rows_to_delete:
-            rows_to_delete.sort() # по возрастанию
+            rows_to_delete.sort()
             if not dry_run:
-                # Группируем в непрерывные блоки, чтобы не делать 500 запросов к API
                 blocks = []
                 start = rows_to_delete[0]
                 prev = start
                 for r in rows_to_delete[1:]:
-                    if r == prev + 1:
-                        prev = r
-                    else:
-                        blocks.append((start, prev))
-                        start = r
-                        prev = r
+                    if r == prev + 1: prev = r
+                    else: blocks.append((start, prev)); start = r; prev = r
                 blocks.append((start, prev))
-                
-                # Удаляем блоки СНИЗУ ВВЕРХ
                 blocks.reverse()
-                
                 for start, end in blocks:
                     try:
                         sheet.delete_rows(start, end)
                         print(f"    [-] [{key}] Удален блок строк {start}-{end} ({end - start + 1} шт.)")
                         total_deleted += (end - start + 1)
-                        time.sleep(2) # Пауза для защиты от 429
+                        time.sleep(2)
                     except Exception as e:
                         print(f"    [!] Ошибка удаления блока {start}-{end}: {e}")
             else:
                 print(f"    [DRY-RUN] [{key}] Будет удалено строк: {len(rows_to_delete)}")
     
-    if total_deleted > 0:
-        print(f"\n  ✓ Очистка завершена. Удалено строк: {total_deleted}")
-    else:
-        print("\n  ✓ Дублей без описания не найдено.")
+    if total_deleted > 0: print(f"\n  ✓ Очистка завершена. Удалено строк: {total_deleted}")
+    else: print("\n  ✓ Дублей без описания не найдено.")
 
 
 # ============================================================
@@ -967,7 +941,6 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
         stats["errors"].append(f"Не удалось открыть Google-таблицу: {e}")
         return stats
 
-    # ─── ВЫЗОВ ОЧИСТКИ ДУБЛИКАТОВ ───
     clean_sheet_duplicates(sh, sections, dry_run)
 
     for section in sections:
@@ -1025,8 +998,6 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
             info = parse_filename_by_section(fname, key)
             title = info.get("title", "") or os.path.splitext(fname)[0]
             file_id = _slug_for_asset(fname, key)
-
-            # ПЕРЕВОДИМ ПАПКУ СРАЗУ ПРИ ДОБАВЛЕНИИ
             folder_name = FOLDER_TRANSLATIONS.get(tag, tag)
 
             record = {
@@ -1037,15 +1008,20 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
                 "cover": "", "file_id": file_id, "legacy": "",
             }
 
-            # Ищем строку с учетом переведенной папки
             matched = match_asset_to_row(fname, rows_for_match, key, folder=folder_name)
 
             if matched:
                 matched_row_indices.add(matched["_row"])
                 old_link = str(matched.get("download_link", "") or "").strip()
                 old_source = detect_link_source(old_link)
+                
+                # ─── УМНОЕ СРАВНЕНИЕ ССЫЛОК (ИГНОРИРУЕМ URL-КОДИРОВАНИЕ) ───
+                is_same_link = False
+                if old_source == "release":
+                    if old_link == new_link or urllib.parse.unquote(old_link) == urllib.parse.unquote(new_link):
+                        is_same_link = True
 
-                if old_source == "release" and old_link == new_link:
+                if is_same_link:
                     sec_stats["unchanged"] += 1
                     continue
 
@@ -1057,7 +1033,6 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
                 sec_stats["to_update"] += 1
             else:
                 to_add.append(_row_from_record(record, headers))
-                # ВЫВОДИМ ПАПКУ В ОТЧЕТЕ ДЛЯ TELEGRAM
                 display_title = f"{folder_name} - {title}"
                 stats["new_in_repo_rows"].append({"section": key, "tag": tag, "file": fname, "title": display_title, "link": new_link, "size": size_mb})
                 sec_stats["new_in_repo"] += 1
@@ -1134,7 +1109,6 @@ def row_to_item(row: dict, columns: list[str] | None = None) -> dict:
     if item.get("title"):
         item["file_id"] = slugify(item["title"])
 
-    # ─── ПЕРЕВОДИМ ПАПКУ ───
     folder_val = item.get("folder", "")
     if folder_val:
         lower_folder = folder_val.strip().lower()
@@ -1171,8 +1145,6 @@ def generate_json_for_section(worksheet, json_path: str, columns: list[str] | No
 
     json_data: list[dict] = []
     skipped_no_title, skipped_hidden, short_descs = 0, 0, []
-    
-    # ─── УМНАЯ ЗАЩИТА ОТ ДУБЛИКАТОВ ───
     unique_items_dict = {}
     skipped_duplicates = 0
 
@@ -1189,7 +1161,6 @@ def generate_json_for_section(worksheet, json_path: str, columns: list[str] | No
         if compact_key in unique_items_dict:
             skipped_duplicates += 1
             existing = unique_items_dict[compact_key]
-            
             has_desc_new = len(str(item.get("description", "")).strip()) > 0
             has_desc_old = len(str(existing.get("description", "")).strip()) > 0
             
@@ -1203,7 +1174,6 @@ def generate_json_for_section(worksheet, json_path: str, columns: list[str] | No
         else:
             unique_items_dict[compact_key] = item
 
-    # Валидация для уникальных записей
     for item in unique_items_dict.values():
         if MIN_DESCRIPTION_LENGTH > 0:
             desc_len = _check_description_length(item)
@@ -1347,10 +1317,30 @@ def notify_migration_report(repo_stats: dict, json_stats: dict, run_url: str | N
     if json_stats:
         lines.extend(["", "*Генерация JSON*", f"• разделов: {json_stats.get('sections_ok', 0)}", f"• записей: {json_stats.get('total_records', 0)}"])
         if json_stats.get("sections_failed"): lines.append(f"• ошибок: {len(json_stats['sections_failed'])}")
+        
+    # ─── УЛУЧШЕННЫЙ ВЫВОД LEGACY-ССЫЛОК ───
     legacy_rows = (repo_stats or {}).get("legacy_only_rows") or []
     if legacy_rows:
-        legacy_titles = [r.get("title", "") for r in legacy_rows if r.get("title")]
-        lines.extend(["", f"⚠️ *Legacy требует решения* ({len(legacy_rows)}):", _fmt_titles_list(legacy_titles, max_show=10)])
+        yandex_rows = [r for r in legacy_rows if r.get("source") == "yandex"]
+        terabox_rows = [r for r in legacy_rows if r.get("source") == "terabox"]
+        
+        lines.append("")
+        lines.append(f"⚠️ *Legacy требует решения* (всего {len(legacy_rows)}):")
+        
+        if yandex_rows:
+            lines.append(f"\n🔴 *Яндекс.Диск* ({len(yandex_rows)}):")
+            for r in yandex_rows[:15]:
+                lines.append(f"  • {r.get('title', '')} (`{r.get('folder', '')}`)")
+            if len(yandex_rows) > 15:
+                lines.append(f"  ... и еще {len(yandex_rows) - 15}")
+                
+        if terabox_rows:
+            lines.append(f"\n🟡 *TeraBox* ({len(terabox_rows)}):")
+            for r in terabox_rows[:15]:
+                lines.append(f"  • {r.get('title', '')} (`{r.get('folder', '')}`)")
+            if len(terabox_rows) > 15:
+                lines.append(f"  ... и еще {len(terabox_rows) - 15}")
+
     new_rows = (repo_stats or {}).get("new_in_repo_rows") or []
     if new_rows:
         new_titles = [r.get("title", "") for r in new_rows if r.get("title")]
