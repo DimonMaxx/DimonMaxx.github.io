@@ -458,6 +458,68 @@ def _compact_match_str(text: str) -> str:
     t = _translit_ru_to_en(t)
     return t.replace(" ", "")
 
+def match_asset_to_row(asset_name: str, rows: list[dict], section: str, folder: str = "") -> dict | None:
+    asset_info = parse_filename_by_section(asset_name, section)
+    asset_title = asset_info.get("title", "")
+    if not asset_title: return None
+
+    asset_norm = normalize_for_match(asset_title)
+    asset_slug = slugify(asset_title)
+    asset_compact = _compact_match_str(asset_title)
+    asset_words = set(w for w in asset_norm.split() if len(w) >= 3 and w not in _STOP_WORDS)
+    folder_norm = normalize_for_match(folder) if folder else ""
+
+    # 1. Точное (folder + title)
+    for r in rows:
+        if folder_norm and normalize_for_match(r.get("folder", "")) != folder_norm: continue
+        if normalize_for_match(r.get("title", "")) == asset_norm: return r
+
+    # 2. Точное по title (без folder)
+    for r in rows:
+        if normalize_for_match(r.get("title", "")) == asset_norm: return r
+
+    # 3. По slug
+    for r in rows:
+        if slugify(r.get("title", "")) == asset_slug: return r
+
+    # 3.5. По транслиту кириллица → латиница
+    for r in rows:
+        row_title = r.get("title", "") or ""
+        row_translit = _translit_ru_to_en(row_title)
+        row_words = _words_set(row_translit)
+        if not row_words or not asset_words: continue
+        if row_words == asset_words: return r
+
+    # 3.6. По компактной строке (без пробелов)
+    for r in rows:
+        if _compact_match_str(r.get("title", "")) == asset_compact: return r
+
+    # 3.7. По нечёткому совпадению (difflib)
+    for r in rows:
+        row_compact = _compact_match_str(r.get("title", ""))
+        if not row_compact: continue
+        if difflib.SequenceMatcher(None, asset_compact, row_compact).ratio() >= 0.65: 
+            return r
+
+    # 3.8. Совпадение по началу названия (первые 7 символов без пробелов)
+    for r in rows:
+        row_compact = _compact_match_str(r.get("title", ""))
+        if len(asset_compact) >= 7 and len(row_compact) >= 7:
+            if asset_compact[:7] == row_compact[:7]:
+                return r
+
+    # 4. Частичное совпадение по словам (Jaccard)
+    best, best_score = None, 0.0
+    for r in rows:
+        row_words = set(w for w in normalize_for_match(r.get("title", "")).split() if len(w) >= 3 and w not in _STOP_WORDS)
+        if not row_words or not asset_words: continue
+        inter, union = asset_words & row_words, asset_words | row_words
+        score = len(inter) / len(union)
+        if score >= 0.7 and score > best_score:
+            best_score, best = score, r
+
+    return best
+
 def parse_release_link(url: str) -> tuple[str, str]:
     """Извлекает тег и имя файла из ссылки на релиз."""
     if not url: return None, None
