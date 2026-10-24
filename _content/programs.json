@@ -4384,14 +4384,6 @@
   },
   {
     "folder": "Макросы",
-    "title": "ОТБОР Текстовый",
-    "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
-    "file_id": "отбор-текстовый"
-  },
-  {
-    "folder": "Макросы",
     "title": "Сравнение стат52иРУИП167полей Поиск Двойников",
     "description": "Сравнение стат52 и РУИП 167 полей и поиск двойников",
     "size": "0.1",
