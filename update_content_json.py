@@ -464,6 +464,30 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool) -> dict:
 
         if rows_to_delete:
             print(f"     Найдены дубли: удаляем {len(rows_to_delete)} лишних строк...")
+            
+            # ─── ЗАПИСЬ В ЖУРНАЛ УДАЛЕНИЙ ───
+            if not dry_run:
+                try:
+                    log_sheet_name = "_deleted_duplicates"
+                    try:
+                        log_ws = sh.worksheet(log_sheet_name)
+                    except gspread.WorksheetNotFound:
+                        log_ws = sh.add_worksheet(title=log_sheet_name, rows=1000, cols=6)
+                        log_ws.append_row(["Дата", "Раздел", "Удаленное название", "Оставленное название", "Ссылка"])
+                    
+                    log_rows = []
+                    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
+                    for dup in stats["deleted_duplicates"]:
+                        log_rows.append([
+                            now_str, dup["section"], dup["deleted_title"], 
+                            dup["kept_title"], dup["url"]
+                        ])
+                    if log_rows:
+                        log_ws.append_rows(log_rows, value_input_option="USER_ENTERED")
+                except Exception as e:
+                    print(f"     [!] Не удалось записать лог удалений: {e}")
+            # ────────────────────────────────
+
             if not dry_run:
                 rows_to_delete.sort(reverse=True)
                 blocks = []
@@ -641,16 +665,18 @@ def notify_migration_report(repo_stats: dict, json_stats: dict, run_url: str | N
         deleted_rows = repo_stats.get("deleted_duplicates") or []
         if deleted_rows:
             lines.append(f"\n🗑 *Удаленные дубли (оставлена лучшая версия)*:")
-            for r in deleted_rows[:10]:
-                lines.append(f"  • {r.get('deleted_title')} (оставлено: {r.get('kept_title')})")
-            if len(deleted_rows) > 10: lines.append(f"  ... и еще {len(deleted_rows) - 10}")
+            # Выводим первые 50 удаленных строк
+            for r in deleted_rows[:50]: 
+                lines.append(f"  • {r.get('deleted_title')} ➔ (оставлено: {r.get('kept_title')})")
+            if len(deleted_rows) > 50: 
+                lines.append(f"  ... и еще {len(deleted_rows) - 50}")
 
         new_rows = repo_stats.get("new_in_repo_rows") or []
         if new_rows:
             lines.append(f"\n➕ *Новые файлы* ({len(new_rows)}):")
-            for r in new_rows:
+            for r in new_rows[:20]:
                 lines.append(f"  • {r.get('title')} ({r.get('size')} МБ)")
-            if len(new_rows) > 10: lines.append(f"  ... и еще {len(new_rows) - 10}")
+            if len(new_rows) > 20: lines.append(f"  ... и еще {len(new_rows) - 20}")
 
     if json_stats:
         lines.extend(["", "*Генерация JSON*", f"• записей: {json_stats.get('total_records', 0)}"])
