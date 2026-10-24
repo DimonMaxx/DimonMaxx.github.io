@@ -61,10 +61,7 @@ RELEASE_PROXY_BASE = os.environ.get(
 SPREADSHEET_ID   = os.environ.get("SPREADSHEET_ID", "")
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
-SUPABASE_URL = os.environ.get(
-    "SUPABASE_URL",
-    "https://rmoonebbvpmvthvpcmpt.supabase.co",
-)
+SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rmoonebbvpmvthvpcmpt.supabase.co")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
 COVERS_BUCKET = "covers"
 
@@ -88,15 +85,6 @@ FOLDER_TRANSLATIONS = {
     "skripty": "Скрипты",
     "makrosy": "Макросы",
     "dlya-windows-svoi": "Для windows свои",
-}
-
-SECTION_TO_SHEET_FALLBACK = {
-    "programs": "Программы",
-    "books":    "Книги",
-    "music":    "Музыка",
-    "games":    "Игры",
-    "movies":   "Фильмы",
-    "misc":     "Разное",
 }
 
 SECTION_CONFIG_FALLBACK = {
@@ -152,6 +140,7 @@ EXT_TO_SECTION = {
 }
 
 SECTION_VOTE_THRESHOLD = 0.5
+GARBAGE_CHARS = set("╞░─┘╦╪╟┌┐└┴┬├┤│╫╬═║╔╗╚╝")
 
 TAG_TO_SECTION = {
     "ajzek-azimov": "books", "aksenov-daniil": "books", "aleksandr-rudazov": "books",
@@ -184,6 +173,40 @@ TAG_TO_SECTION = {
     "skripty": "programs", "system": "programs", "text": "programs", "uninstall": "programs",
 }
 
+def has_cyrillic(text: str) -> bool:
+    if not text: return False
+    return bool(re.search(r'[а-яА-ЯёЁ]', str(text)))
+
+def has_garbage(text: str) -> bool:
+    if not text: return False
+    return any(ch in str(text) for ch in GARBAGE_CHARS)
+
+def score_row(row: dict) -> int:
+    """Оценивает качество строки для выбора лучшей из дублей."""
+    score = 0
+    title = str(row.get("title", "")).strip()
+    desc = str(row.get("description", "")).strip()
+    author = str(row.get("author", "")).strip()
+    
+    # 1. Приоритет русскому языку
+    if has_cyrillic(title): score += 100
+    if has_cyrillic(desc): score += 50
+    if has_cyrillic(author): score += 20
+    
+    # 2. Штраф за мусорные символы
+    if has_garbage(title): score -= 200
+    if has_garbage(desc): score -= 200
+    
+    # 3. Полнота и длина
+    if title: score += 10
+    if desc: 
+        score += 30
+        score += min(len(desc), 1000) // 10 # +1 балл за каждые 10 символов (до 100)
+    if author: score += 10
+    if row.get("cover"): score += 10
+    
+    return score
+
 def slugify(text: str) -> str:
     if not text: return ""
     s = str(text)
@@ -205,7 +228,6 @@ def list_all_releases() -> list[dict]:
         try:
             r = requests.get(url, headers=_github_headers(), timeout=HTTP_TIMEOUT)
         except Exception as e:
-            print(f"[!] GitHub API недоступен: {e}")
             return releases
         if r.status_code != 200: return releases
         batch = r.json()
@@ -292,22 +314,6 @@ def load_sheet_snapshot(sheet) -> tuple[list[list[str]], dict[str, dict]]:
                 if link: existing[link] = {"row": i, "values": list(r)}
     return rows, existing
 
-def merge_row(old_values: list[str], new_values: list[str], headers: list[str], always_update: set[str] | None = None) -> list[str]:
-    if always_update is None:
-        always_update = {"Ссылка для скачивания", "Ссылка", "Размер (МБ)", "Размер", "Формат", "download_link", "link", "size", "format", "Legacy"}
-    if not PRESERVE_USER_EDITS: return list(new_values)
-    result: list[str] = []
-    n = len(headers)
-    for i in range(n):
-        header = headers[i]
-        old_val = old_values[i] if i < len(old_values) else ""
-        new_val = new_values[i] if i < len(new_values) else ""
-        old_s = str(old_val).strip() if old_val is not None else ""
-        new_s = str(new_val).strip() if new_val is not None else ""
-        if header in always_update: result.append(new_s if new_s else old_s)
-        else: result.append(old_val if old_s else new_val)
-    return result
-
 def batch_update_rows(sheet, updates: list[dict]) -> int:
     if not updates: return 0
     total = len(updates)
@@ -358,17 +364,10 @@ def _row_from_record(record: dict, headers: list[str]) -> list[str]:
         row.append(record.get(en, ""))
     return row
 
-def parse_release_link(url: str) -> tuple[str, str]:
-    if not url: return None, None
-    decoded = urllib.parse.unquote(url)
-    parts = decoded.split('/download/')
-    if len(parts) == 2:
-        subparts = parts[1].split('/')
-        if len(subparts) >= 2:
-            tag = subparts[0]
-            filename = '/'.join(subparts[1:])
-            return tag, filename
-    return None, None
+def norm_url_for_comparison(url: str) -> str:
+    if not url: return ""
+    u = urllib.parse.unquote(str(url)).strip().lower()
+    return u.split('?')[0]
 
 def detect_link_source(link: str) -> str:
     if not link: return ""
@@ -392,17 +391,13 @@ def bytes_to_mb(size_bytes: int | float | str | None) -> str:
 # ============================================================
 # ШАГ A: GitHub Releases → Google Sheets
 # ============================================================
-def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: list[str] | None = None) -> dict:
-    stats = {"sections": {}, "to_update_rows": [], "new_in_repo_rows": [], "legacy_only_rows": [], "errors": []}
+def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool) -> dict:
+    stats = {"sections": {}, "new_in_repo_rows": [], "deleted_duplicates": [], "errors": []}
     print("\n" + "=" * 60 + "\nШАГ A: GitHub Releases → Google Sheets\n" + "=" * 60)
 
     releases = list_all_releases()
     if not releases: return stats
     
-    if tag_filter:
-        tag_set = set(tag_filter)
-        releases = [r for r in releases if r.get("tag_name") in tag_set]
-
     tag_to_section: dict[str, str] = {}
     for rel in releases:
         tag, assets = rel.get("tag_name") or "", rel.get("assets") or []
@@ -421,15 +416,6 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
         stats["errors"].append(f"Не удалось открыть Google-таблицу: {e}")
         return stats
 
-    # Строим карту всех файлов в репозитории
-    repo_assets_by_tag = {}
-    for tag, rels in by_section.items():
-        for rel in rels:
-            repo_assets_by_tag[rel.get("tag_name")] = rel.get("assets") or []
-
-    # Здесь мы будем хранить точные имена файлов, которые уже привязаны в таблице
-    matched_assets = set()
-
     for section in sections:
         key = section.get("key") or "?"
         label = section.get("label") or key
@@ -441,18 +427,20 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
 
         print(f"\n  ── Раздел: {label} ({key})\n     Лист: {sheet_name}")
         try: sheet = get_or_create_sheet(sh, sheet_name)
-        except Exception as e:
-            stats["errors"].append(f"[{key}] Не удалось открыть лист «{sheet_name}»: {e}")
-            continue
+        except Exception as e: continue
 
         try: all_values, existing_by_link = load_sheet_snapshot(sheet)
-        except Exception as e:
-            stats["errors"].append(f"[{key}] Ошибка чтения листа: {e}")
-            continue
+        except Exception as e: continue
 
-        sec_stats = {"to_update": 0, "new_in_repo": 0, "legacy_only": 0, "unchanged": 0}
+        sec_stats = {"to_update": 0, "new_in_repo": 0, "legacy_only": 0, "unchanged": 0, "deleted_dups": 0}
         rows_for_match: list[dict] = []
         header = [(h or "").strip() for h in (all_values[0] if all_values else [])]
+        
+        # Индекс колонки ссылки
+        link_col_idx = -1
+        for idx, h in enumerate(header):
+            if "ссылка" in h.lower() or "скачивания" in h.lower(): link_col_idx = idx; break
+
         for i, r in enumerate(all_values[1:], start=2):
             row_dict: dict[str, Any] = {"_row": i, "_raw": r}
             for j, h in enumerate(header):
@@ -460,75 +448,85 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
                 row_dict[en] = r[j] if j < len(r) else ""
             rows_for_match.append(row_dict)
 
-        updates: list[dict] = []
-        to_add: list[list[str]] = []
-        n_cols = len(headers)
-        end_col_letter = _col_letter(n_cols - 1)
-
-        # 1. ПРОХОД ПО СТРОКАМ ТАБЛИЦЫ
+        # 1. УМНАЯ ОЧИСТКА ДУБЛИКАТОВ
+        url_groups = {} 
         for row in rows_for_match:
-            title = row.get("title", "")
             link = row.get("download_link", "").strip()
-            folder = row.get("folder", "")
-            old_source = detect_link_source(link)
+            norm_l = norm_url_for_comparison(link)
+            if norm_l:
+                url_groups.setdefault(norm_l, []).append(row)
 
-            # Если ссылка ведет на GitHub — запоминаем этот файл и НЕ ТРОГАЕМ
-            if old_source == "release":
-                old_tag, old_filename = parse_release_link(link)
-                if old_tag and old_filename and old_filename in {a["name"] for a in repo_assets_by_tag.get(old_tag, [])}:
-                    matched_assets.add(f"{old_tag}/{old_filename}")
-                    sec_stats["unchanged"] += 1
-                    continue
-
-            # Если ссылка на Яндекс/Терабокс, пробуем найти замену в GitHub
-            target_tag = FOLDER_TRANSLATIONS.get(folder, slugify(folder))
-            found_tag, found_name = None, None
-            # Поиск по всем тегам
-            for tag, assets in repo_assets_by_tag.items():
-                for a in assets:
-                    if a["name"].lower() == link.split("/")[-1].lower():
-                        found_tag, found_name = tag, a["name"]
-                        break
-                if found_tag: break
-
-            if found_tag and found_name:
-                new_link = build_asset_url(found_tag, found_name)
-                record = {
-                    "title": title, "folder": folder,
-                    "size": bytes_to_mb(0), "download_link": new_link
-                }
-                new_row_data = _row_from_record(record, headers)
-                merged = merge_row(row["_raw"], new_row_data, headers)
-                rng = f"A{row['_row']}:{end_col_letter}{row['_row']}"
-                updates.append({"range": rng, "values": [merged]})
-                stats["to_update_rows"].append({
-                    "section": key, "tag": found_tag, "file": found_name,
-                    "title": title, "old_link": link, "new_link": new_link, "old_source": old_source
-                })
-                matched_assets.add(f"{found_tag}/{found_name}")
-                sec_stats["to_update"] += 1
-            else:
-                if old_source in ("yandex", "terabox"):
-                    stats["legacy_only_rows"].append({
-                        "section": key, "row": row["_row"], "title": title,
-                        "folder": folder, "link": link, "source": old_source
+        rows_to_delete = []
+        for norm_l, group in url_groups.items():
+            if len(group) > 1:
+                # Сортируем строки по убыванию "качества"
+                group.sort(key=score_row, reverse=True)
+                
+                best_row = group[0]
+                # Удаляем все остальные
+                for bad_row in group[1:]:
+                    rows_to_delete.append(bad_row["_row"])
+                    stats["deleted_duplicates"].append({
+                        "section": label, 
+                        "deleted_title": bad_row.get("title", ""), 
+                        "kept_title": best_row.get("title", ""),
+                        "url": norm_l
                     })
-                    sec_stats["legacy_only"] += 1
+                    sec_stats["deleted_dups"] += 1
 
-        # 2. ДОБАВЛЕНИЕ НОВЫХ ФАЙЛОВ ИЗ GITHUB
+        if rows_to_delete:
+            print(f"     Найдены дубли: удаляем {len(rows_to_delete)} лишних строк...")
+            if not dry_run:
+                rows_to_delete.sort(reverse=True)
+                blocks = []
+                start = rows_to_delete[0]
+                prev = start
+                for r in rows_to_delete[1:]:
+                    if r == prev + 1: prev = r
+                    else: blocks.append((start, prev)); start = r; prev = r
+                blocks.append((start, prev))
+                
+                for start, end in blocks:
+                    try: 
+                        sheet.delete_rows(start, end)
+                        time.sleep(2)
+                    except Exception as e: print(f"     Ошибка удаления: {e}")
+            
+            # Перезагружаем данные после удаления
+            if not dry_run:
+                all_values, _ = load_sheet_snapshot(sheet)
+                rows_for_match = []
+                header = [(h or "").strip() for h in (all_values[0] if all_values else [])]
+                for i, r in enumerate(all_values[1:], start=2):
+                    row_dict = {"_row": i, "_raw": r}
+                    for j, h in enumerate(header):
+                        row_dict[RU_TO_EN.get(h, h)] = r[j] if j < len(r) else ""
+                    rows_for_match.append(row_dict)
+                url_groups = {}
+                for row in rows_for_match:
+                    norm_l = norm_url_for_comparison(row.get("download_link", "").strip())
+                    if norm_l: url_groups[norm_l] = [row]
+
+        # 2. ДОБАВЛЕНИЕ НОВЫХ ФАЙЛОВ
+        to_add: list[list[str]] = []
+        
         for rel in by_section[key]:
             tag = rel.get("tag_name")
             for asset in rel.get("assets") or []:
                 fname = asset.get("name")
                 if not fname: continue
                 
-                # Если файл уже привязан в таблице — ПРОПУСКАЕМ
-                if f"{tag}/{fname}" in matched_assets: continue
+                new_link = build_asset_url(tag, fname)
+                norm_new_link = norm_url_for_comparison(new_link)
+                
+                # Если ссылка уже есть в таблице — пропускаем
+                if norm_new_link in url_groups:
+                    sec_stats["unchanged"] += 1
+                    continue
                 
                 info = re.sub(r'^[\d\.\-\_]+', '', os.path.splitext(fname)[0]).strip()
                 title = info if info else fname
                 folder_name = FOLDER_TRANSLATIONS.get(tag, tag)
-                new_link = build_asset_url(tag, fname)
                 
                 record = {
                     "title": title, "description": "", "format": os.path.splitext(fname)[1].lstrip("."),
@@ -543,21 +541,19 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
                     "title": f"{folder_name} - {title}", "link": new_link, "size": record["size"]
                 })
                 sec_stats["new_in_repo"] += 1
+                url_groups[norm_new_link] = [record]
 
-        print(f"     К обновлению ссылок:  {sec_stats['to_update']}")
-        print(f"     Новых в репо:         {sec_stats['new_in_repo']}")
-        print(f"     Legacy (без миграции): {sec_stats['legacy_only']}")
-        print(f"     Без изменений:        {sec_stats['unchanged']}")
+        print(f"     Удалено дублей: {sec_stats['deleted_dups']}")
+        print(f"     Новых добавлено: {sec_stats['new_in_repo']}")
+        print(f"     Без изменений: {sec_stats['unchanged']}")
 
         stats["sections"][key] = sec_stats
 
         if dry_run: continue
-        if updates: batch_update_rows(sheet, updates)
         if to_add: 
             added, failed = append_rows_safe(sheet, to_add)
-            if failed > 0: print(f"     [!] ВНИМАНИЕ: {failed} строк не удалось добавить (лимиты Google)")
+            if failed > 0: print(f"     [!] ВНИМАНИЕ: {failed} строк не удалось добавить")
 
-    print("\n[4/5] Шаг A завершён.")
     return stats
 
 # ============================================================
@@ -565,9 +561,7 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool, tag_filter: l
 # ============================================================
 def _read_records_safe(worksheet, headers: list[str]) -> list[dict] | None:
     try: all_values = worksheet.get_all_values()
-    except Exception as e:
-        print(f"  ОШИБКА чтения листа: {e}")
-        return None
+    except Exception: return None
     if not all_values: return []
     raw_header = all_values[0]
     positions: dict[str, int | None] = {}
@@ -603,22 +597,10 @@ def row_to_item(row: dict, columns: list[str] | None = None) -> dict:
             value = row[en_key]
         if _is_empty(value): continue
         item[en_key] = str(value).strip() if en_key != "description" else str(value)
-
     if item.get("title"): item["file_id"] = slugify(item["title"])
-
-    folder_val = item.get("folder", "")
-    if folder_val:
-        lower_folder = folder_val.strip().lower()
-        if lower_folder in FOLDER_TRANSLATIONS:
-            item["folder"] = FOLDER_TRANSLATIONS[lower_folder]
-
     return item
 
-def generate_json_for_section(worksheet, json_path: str, columns: list[str] | None = None, headers: list[str] | None = None) -> dict | None:
-    print(f"  Лист:    {worksheet.title}\n  JSON:    {json_path}")
-    dir_part = os.path.dirname(json_path) or "."
-    os.makedirs(dir_part, exist_ok=True)
-
+def generate_json_for_section(worksheet, json_path: str, columns: list[str] | None = None) -> dict | None:
     if headers is None:
         headers = []
         for key in columns or []:
@@ -631,7 +613,7 @@ def generate_json_for_section(worksheet, json_path: str, columns: list[str] | No
     if not records:
         try:
             with open(json_path, "w", encoding="utf-8") as f: json.dump([], f, ensure_ascii=False, indent=2)
-        except Exception as e: print(f"  ОШИБКА записи JSON: {e}"); return None
+        except: pass
         return {"count": 0}
 
     json_data: list[dict] = []
@@ -641,82 +623,51 @@ def generate_json_for_section(worksheet, json_path: str, columns: list[str] | No
 
     try:
         with open(json_path, "w", encoding="utf-8") as f: json.dump(json_data, f, ensure_ascii=False, indent=2)
-    except Exception as e: print(f"  ОШИБКА записи JSON: {e}"); return None
-
-    print(f"  ✓ Записано: {len(json_data)} записей")
+    except: pass
     return {"count": len(json_data)}
 
 def sheets_to_json(gs_client, sections: list[dict], dry_run: bool, repo_dir: str = ".") -> dict:
     stats = {"sections_ok": 0, "sections_failed": [], "total_records": 0}
-    print("\n" + "=" * 60 + "\nШАГ B: Google Sheets → JSON\n" + "=" * 60)
-    if not sections: return stats
     try: sh = open_spreadsheet(gs_client)
-    except Exception as e: return stats
+    except: return stats
 
     for section in sections:
         key, label = section.get("key") or "?", section.get("label") or key
         sheet_name, json_path = section.get("sheet_name") or label, section.get("json_path")
         columns = section.get("columns") or []
-        print(f"\n=== Раздел: {label} ({key}) ===")
         if not json_path: continue
         json_path = os.path.join(repo_dir, json_path)
         try: worksheet = sh.worksheet(sheet_name)
-        except Exception: 
-            stats["sections_failed"].append((key, f"лист «{sheet_name}» не найден"))
-            continue
-        
+        except: continue
         result = generate_json_for_section(worksheet, json_path, columns)
         if result is not None:
             stats["sections_ok"] += 1
             stats["total_records"] += result["count"]
-        else: stats["sections_failed"].append((key, "ошибка генерации"))
-
-    print("\n" + "=" * 60)
-    print(f"Обработано разделов: {stats['sections_ok']} из {len(sections)}\nВсего записей:       {stats['total_records']}")
-    print("=" * 60)
     return stats
 
 def notify_migration_report(repo_stats: dict, json_stats: dict, run_url: str | None = None) -> None:
-    if not repo_stats and not json_stats: return
     lines: list[str] = []
     if repo_stats:
-        sections = repo_stats.get("sections") or {}
-        total_to_update = sum(s["to_update"] for s in sections.values())
-        total_new = sum(s["new_in_repo"] for s in sections.values())
-        total_legacy = sum(s["legacy_only"] for s in sections.values())
-        total_unchanged = sum(s["unchanged"] for s in sections.values())
-        lines.extend(["*Миграция ссылок*", f"• обновлено: {total_to_update}", f"• новых: {total_new}", f"• legacy (без миграции): {total_legacy}", f"• без изменений: {total_unchanged}"])
-        if sections:
-            lines.extend(["", "*По разделам:*"])
-            for key, s in sections.items(): lines.append(f"  `{key}`: +{s['new_in_repo']} / ~{s['to_update']} / legacy {s['legacy_only']}")
-            
-        to_update_rows = repo_stats.get("to_update_rows") or []
-        if to_update_rows:
-            lines.append(f"\n🔄 *Детали обновления ссылок* ({len(to_update_rows)}):")
-            for r in to_update_rows[:20]:
-                lines.append(f"  • {r.get('title', '')}")
-                lines.append(f"    Было:  `{r.get('old_link', '')}`")
-                lines.append(f"    Стало: `{r.get('new_link', '')}`")
-            if len(to_update_rows) > 20: lines.append(f"  ... и еще {len(to_update_rows) - 20}")
+        total_deleted = sum(s.get("deleted_dups", 0) for s in (repo_stats.get("sections") or {}).values())
+        total_new = sum(s["new_in_repo"] for s in (repo_stats.get("sections") or {}).values())
+        lines.extend(["*Синхронизация*", f"• удалено дублей: {total_deleted}", f"• новых: {total_new}"])
+
+        deleted_rows = repo_stats.get("deleted_duplicates") or []
+        if deleted_rows:
+            lines.append(f"\n🗑 *Удаленные дубли (оставлена лучшая версия)*:")
+            for r in deleted_rows[:10]:
+                lines.append(f"  • {r.get('deleted_title')} (оставлено: {r.get('kept_title')})")
+            if len(deleted_rows) > 10: lines.append(f"  ... и еще {len(deleted_rows) - 10}")
 
         new_rows = repo_stats.get("new_in_repo_rows") or []
         if new_rows:
-            lines.append(f"\n➕ *Детально о новых файлах в репо* ({len(new_rows)}):")
+            lines.append(f"\n➕ *Новые файлы* ({len(new_rows)}):")
             for r in new_rows:
-                lines.append(f"  • {r.get('title', '')}")
-                lines.append(f"    Размер: `{r.get('size', '')} МБ`")
-            if len(new_rows) > 20: lines.append(f"  ... и еще {len(new_rows) - 20}")
+                lines.append(f"  • {r.get('title')} ({r.get('size')} МБ)")
+            if len(new_rows) > 10: lines.append(f"  ... и еще {len(new_rows) - 10}")
 
     if json_stats:
-        lines.extend(["", "*Генерация JSON*", f"• разделов: {json_stats.get('sections_ok', 0)}", f"• записей: {json_stats.get('total_records', 0)}"])
-        if json_stats.get("sections_failed"): lines.append(f"• ошибок: {len(json_stats['sections_failed'])}")
-        
-    legacy_rows = (repo_stats or {}).get("legacy_only_rows") or []
-    if legacy_rows:
-        lines.append(f"\n⚠️ *Legacy требует решения* ({len(legacy_rows)}):")
-        for r in legacy_rows[:10]:
-            lines.append(f"  • {r.get('title', '')} (`{r.get('folder', '')}`)")
-        if len(legacy_rows) > 10: lines.append(f"  ... и еще {len(legacy_rows) - 10}")
+        lines.extend(["", "*Генерация JSON*", f"• записей: {json_stats.get('total_records', 0)}"])
 
     notify_telegram("\n".join(lines))
 
@@ -744,25 +695,15 @@ def main() -> None:
             sections = [s for s in sections if s.get("key") in section_filter]
 
         gs_client = get_gspread_client()
-        
         if args.mode in ("repo-to-sheets", "all"):
             repo_stats = repo_to_sheets(gs_client, sections, dry_run)
         if args.mode in ("sheets-to-json", "all"):
             json_stats = sheets_to_json(gs_client, sections, dry_run, repo_dir=args.repo_dir)
 
         notify_migration_report(repo_stats, json_stats, run_url=run_url)
-        
-        total_to_update = sum(s["to_update"] for s in (repo_stats.get("sections") or {}).values())
-        total_new = sum(s["new_in_repo"] for s in (repo_stats.get("sections") or {}).values())
-        total_legacy = sum(s["legacy_only"] for s in (repo_stats.get("sections") or {}).values())
-        details = f"обновлено ссылок: {total_to_update}, новых в репо: {total_new}, legacy: {total_legacy}"
-        notify_result(title="Update content JSON", status="success", details=details, run_url=run_url)
-
     except Exception as e:
         print(f"\n[!!!] Критическая ошибка: {e}")
         traceback.print_exc()
-        notify_result(title="Update content JSON", status="failure", details=f"Критическая ошибка: {e}", run_url=run_url)
-        sys.exit(1)
 
 if __name__ == "__main__":
     main()
