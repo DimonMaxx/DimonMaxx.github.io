@@ -182,26 +182,22 @@ def has_garbage(text: str) -> bool:
     return any(ch in str(text) for ch in GARBAGE_CHARS)
 
 def score_row(row: dict) -> int:
-    """Оценивает качество строки для выбора лучшей из дублей."""
     score = 0
     title = str(row.get("title", "")).strip()
     desc = str(row.get("description", "")).strip()
     author = str(row.get("author", "")).strip()
     
-    # 1. Приоритет русскому языку
     if has_cyrillic(title): score += 100
     if has_cyrillic(desc): score += 50
     if has_cyrillic(author): score += 20
     
-    # 2. Штраф за мусорные символы
     if has_garbage(title): score -= 200
     if has_garbage(desc): score -= 200
     
-    # 3. Полнота и длина
     if title: score += 10
     if desc: 
         score += 30
-        score += min(len(desc), 1000) // 10 # +1 балл за каждые 10 символов (до 100)
+        score += min(len(desc), 1000) // 10 
     if author: score += 10
     if row.get("cover"): score += 10
     
@@ -436,11 +432,6 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool) -> dict:
         rows_for_match: list[dict] = []
         header = [(h or "").strip() for h in (all_values[0] if all_values else [])]
         
-        # Индекс колонки ссылки
-        link_col_idx = -1
-        for idx, h in enumerate(header):
-            if "ссылка" in h.lower() or "скачивания" in h.lower(): link_col_idx = idx; break
-
         for i, r in enumerate(all_values[1:], start=2):
             row_dict: dict[str, Any] = {"_row": i, "_raw": r}
             for j, h in enumerate(header):
@@ -459,11 +450,8 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool) -> dict:
         rows_to_delete = []
         for norm_l, group in url_groups.items():
             if len(group) > 1:
-                # Сортируем строки по убыванию "качества"
                 group.sort(key=score_row, reverse=True)
-                
                 best_row = group[0]
-                # Удаляем все остальные
                 for bad_row in group[1:]:
                     rows_to_delete.append(bad_row["_row"])
                     stats["deleted_duplicates"].append({
@@ -492,7 +480,6 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool) -> dict:
                         time.sleep(2)
                     except Exception as e: print(f"     Ошибка удаления: {e}")
             
-            # Перезагружаем данные после удаления
             if not dry_run:
                 all_values, _ = load_sheet_snapshot(sheet)
                 rows_for_match = []
@@ -519,7 +506,6 @@ def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool) -> dict:
                 new_link = build_asset_url(tag, fname)
                 norm_new_link = norm_url_for_comparison(new_link)
                 
-                # Если ссылка уже есть в таблице — пропускаем
                 if norm_new_link in url_groups:
                     sec_stats["unchanged"] += 1
                     continue
@@ -601,12 +587,12 @@ def row_to_item(row: dict, columns: list[str] | None = None) -> dict:
     return item
 
 def generate_json_for_section(worksheet, json_path: str, columns: list[str] | None = None) -> dict | None:
-    if headers is None:
-        headers = []
-        for key in columns or []:
-            variants = EN_TO_RU.get(key, [])
-            headers.append(variants[0] if variants else key)
-        if "Ссылка для скачивания" not in headers: headers.append("Ссылка для скачивания")
+    # ✅ ИСПРАВЛЕНО: Инициализируем headers локально
+    headers = []
+    for key in columns or []:
+        variants = EN_TO_RU.get(key, [])
+        headers.append(variants[0] if variants else key)
+    if "Ссылка для скачивания" not in headers: headers.append("Ссылка для скачивания")
 
     records = _read_records_safe(worksheet, headers)
     if records is None: return None
@@ -695,10 +681,16 @@ def main() -> None:
             sections = [s for s in sections if s.get("key") in section_filter]
 
         gs_client = get_gspread_client()
+        
         if args.mode in ("repo-to-sheets", "all"):
             repo_stats = repo_to_sheets(gs_client, sections, dry_run)
+            
         if args.mode in ("sheets-to-json", "all"):
-            json_stats = sheets_to_json(gs_client, sections, dry_run, repo_dir=args.repo_dir)
+            try:
+                json_stats = sheets_to_json(gs_client, sections, dry_run, repo_dir=args.repo_dir)
+            except Exception as e:
+                print(f"[!!!] Ошибка в шаге B (JSON): {e}")
+                json_stats = {"errors": [str(e)]}
 
         notify_migration_report(repo_stats, json_stats, run_url=run_url)
     except Exception as e:
