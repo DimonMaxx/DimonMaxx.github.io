@@ -12,8 +12,6 @@ import re
 import sys
 import json
 import time
-import base64
-import hashlib
 import datetime
 import argparse
 import traceback
@@ -29,11 +27,6 @@ try:
 except ImportError:
     gspread = None
     Credentials = None
-
-try:
-    from supabase import create_client as supa_create_client
-except ImportError:
-    supa_create_client = None
 
 try:
     from notify import notify_telegram, notify_result
@@ -61,24 +54,13 @@ RELEASE_PROXY_BASE = os.environ.get(
 SPREADSHEET_ID   = os.environ.get("SPREADSHEET_ID", "")
 SPREADSHEET_NAME = os.environ.get("SPREADSHEET_NAME", "НаполнениеСайта")
 
-SUPABASE_URL = os.environ.get("SUPABASE_URL", "https://rmoonebbvpmvthvpcmpt.supabase.co")
-SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "")
-COVERS_BUCKET = "covers"
-
 SITE_BASE_URL = os.environ.get("SITE_BASE_URL", "https://dimonmaxx.github.io").rstrip("/")
-
 HTTP_TIMEOUT = 30
 GITHUB_PER_PAGE = 100
 GITHUB_API_SLEEP = 0.3
 
-PRESERVE_USER_EDITS = os.environ.get("PRESERVE_USER_EDITS", "1") == "1"
-BACKUP_BEFORE_SYNC = os.environ.get("BACKUP_BEFORE_SYNC", "1") == "1"
-BACKUP_KEEP_COUNT = int(os.environ.get("BACKUP_KEEP_COUNT", "3"))
-ENRICH_BOOKS = os.environ.get("ENRICH_BOOKS", "0") == "1"
-PARSE_FILE_DESCRIPTIONS = os.environ.get("PARSE_FILE_DESCRIPTIONS", "0") == "1"
-MIN_DESCRIPTION_LENGTH = int(os.environ.get("MIN_DESCRIPTION_LENGTH", "20"))
-GITHUB_STEP_SUMMARY = os.environ.get("GITHUB_STEP_SUMMARY", "")
-REPORTS_DIR = os.environ.get("REPORTS_DIR", "_reports")
+# Колонки, которые НЕЛЬЗЯ перезаписывать, если строка уже существует
+IMMUTABLE_COLUMNS = ["folder", "title", "description", "author", "artist", "year", "cover"]
 
 FOLDER_TRANSLATIONS = {
     "plaginy": "Плагины",
@@ -87,35 +69,29 @@ FOLDER_TRANSLATIONS = {
     "dlya-windows-svoi": "Для windows свои",
 }
 
-SECTION_CONFIG_FALLBACK = {
+SECTION_CONFIG = {
     "books": {
-        "label": "Книги", "icon": "fa-book", "sheet_name": "Книги", "json_path": "_content/books.json",
-        "container": "books-container", "folderable": True,
+        "label": "Книги", "sheet_name": "Книги", "json_path": "_content/books.json",
         "columns": ["folder", "cover", "title", "author", "description", "format", "size", "download_link"],
     },
     "programs": {
-        "label": "Программы", "icon": "fa-code", "sheet_name": "Программы", "json_path": "_content/programs.json",
-        "container": "programs-container", "folderable": True,
+        "label": "Программы", "sheet_name": "Программы", "json_path": "_content/programs.json",
         "columns": ["folder", "title", "description", "version", "size", "download_link"],
     },
     "music": {
-        "label": "Музыка", "icon": "fa-music", "sheet_name": "Музыка", "json_path": "_content/music.json",
-        "container": "music-container", "folderable": True,
+        "label": "Музыка", "sheet_name": "Музыка", "json_path": "_content/music.json",
         "columns": ["folder", "title", "artist", "year", "size", "download_link"],
     },
     "games": {
-        "label": "Игры", "icon": "fa-gamepad", "sheet_name": "Игры", "json_path": "_content/games.json",
-        "container": "games-container", "folderable": False,
+        "label": "Игры", "sheet_name": "Игры", "json_path": "_content/games.json",
         "columns": ["title", "platform", "year", "description", "download_link"],
     },
     "movies": {
-        "label": "Фильмы", "icon": "fa-film", "sheet_name": "Фильмы", "json_path": "_content/movies.json",
-        "container": "movies-container", "folderable": False,
+        "label": "Фильмы", "sheet_name": "Фильмы", "json_path": "_content/movies.json",
         "columns": ["title", "year", "description", "download_link"],
     },
     "misc": {
-        "label": "Разное", "icon": "fa-ellipsis-h", "sheet_name": "Разное", "json_path": "_content/misc.json",
-        "container": "misc-container", "folderable": False,
+        "label": "Разное", "sheet_name": "Разное", "json_path": "_content/misc.json",
         "columns": ["title", "description", "download_link"],
     },
 }
@@ -138,9 +114,6 @@ EXT_TO_SECTION = {
     ".iso": "games", ".bin": "games",
     ".mp4": "movies", ".mkv": "movies", ".avi": "movies", ".mov": "movies", ".wmv": "movies",
 }
-
-SECTION_VOTE_THRESHOLD = 0.5
-GARBAGE_CHARS = set("╞░─┘╦╪╟┌┐└┴┬├┤│╫╬═║╔╗╚╝")
 
 TAG_TO_SECTION = {
     "ajzek-azimov": "books", "aksenov-daniil": "books", "aleksandr-rudazov": "books",
@@ -173,36 +146,10 @@ TAG_TO_SECTION = {
     "skripty": "programs", "system": "programs", "text": "programs", "uninstall": "programs",
 }
 
-def has_cyrillic(text: str) -> bool:
-    if not text: return False
-    return bool(re.search(r'[а-яА-ЯёЁ]', str(text)))
 
-def has_garbage(text: str) -> bool:
-    if not text: return False
-    return any(ch in str(text) for ch in GARBAGE_CHARS)
-
-def score_row(row: dict) -> int:
-    score = 0
-    title = str(row.get("title", "")).strip()
-    desc = str(row.get("description", "")).strip()
-    author = str(row.get("author", "")).strip()
-    
-    if has_cyrillic(title): score += 100
-    if has_cyrillic(desc): score += 50
-    if has_cyrillic(author): score += 20
-    
-    if has_garbage(title): score -= 200
-    if has_garbage(desc): score -= 200
-    
-    if title: score += 10
-    if desc: 
-        score += 30
-        score += min(len(desc), 1000) // 10 
-    if author: score += 10
-    if row.get("cover"): score += 10
-    
-    return score
-
+# ============================================================
+# ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+# ============================================================
 def slugify(text: str) -> str:
     if not text: return ""
     s = str(text)
@@ -211,27 +158,40 @@ def slugify(text: str) -> str:
     s = re.sub(r"[\s\-]+", "-", s)
     return s
 
+def norm_text(text: str) -> str:
+    """Очистка текста для умного сравнения."""
+    if not text: return ""
+    t = str(text).lower()
+    t = re.sub(r"\(.*?\)|\[.*?\]", "", t) # убираем скобки
+    t = re.sub(r"[^\w\s]", "", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+def norm_url_for_comparison(url: str) -> str:
+    if not url: return ""
+    u = urllib.parse.unquote(str(url)).strip().lower()
+    return u.split('?')[0]
+
 def _github_headers() -> dict[str, str]:
     headers = {"Accept": "application/vnd.github.v3+json", "User-Agent": "MyFiles-Sync/1.0"}
     if GITHUB_TOKEN: headers["Authorization"] = f"token {GITHUB_TOKEN}"
     return headers
 
 def list_all_releases() -> list[dict]:
-    releases: list[dict] = []
+    releases = []
     page = 1
     while True:
         url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/releases?per_page={GITHUB_PER_PAGE}&page={page}"
         try:
             r = requests.get(url, headers=_github_headers(), timeout=HTTP_TIMEOUT)
-        except Exception as e:
-            return releases
-        if r.status_code != 200: return releases
-        batch = r.json()
-        if not batch: break
-        releases.extend(batch)
-        if len(batch) < GITHUB_PER_PAGE: break
-        page += 1
-        time.sleep(GITHUB_API_SLEEP)
+            if r.status_code != 200: break
+            batch = r.json()
+            if not batch: break
+            releases.extend(batch)
+            if len(batch) < GITHUB_PER_PAGE: break
+            page += 1
+            time.sleep(GITHUB_API_SLEEP)
+        except Exception:
+            break
     return releases
 
 def build_asset_url(tag: str, filename: str) -> str:
@@ -240,45 +200,39 @@ def build_asset_url(tag: str, filename: str) -> str:
 def detect_section_by_assets(assets: list[dict], tag: str = "") -> str | None:
     if tag and tag in TAG_TO_SECTION: return TAG_TO_SECTION[tag]
     if not assets: return None
-    votes: dict[str, int] = {}
+    votes = {}
     for a in assets:
         ext = os.path.splitext(a.get("name", ""))[1].lower()
         section = EXT_TO_SECTION.get(ext)
         if section: votes[section] = votes.get(section, 0) + 1
     if not votes: return None
-    winner, winner_count = max(votes.items(), key=lambda x: x[1])
-    if (winner_count / len(assets)) >= SECTION_VOTE_THRESHOLD: return winner
-    return None
+    winner = max(votes.items(), key=lambda x: x[1])[0]
+    return winner
 
+
+# ============================================================
+# GOOGLE SHEETS
+# ============================================================
 def get_gspread_client():
-    if gspread is None or Credentials is None: raise RuntimeError("gspread / google-auth не установлены.")
-    creds_dict = None
-    raw_json = os.environ.get("GOOGLE_CREDENTIALS_JSON")
-    if raw_json:
-        try: creds_dict = json.loads(raw_json)
-        except json.JSONDecodeError as e: raise RuntimeError(f"Invalid GOOGLE_CREDENTIALS_JSON: {e}")
-    if creds_dict is None:
-        creds_file = os.environ.get("GOOGLE_CREDENTIALS_FILE", "credentials.json")
-        if os.path.exists(creds_file):
-            with open(creds_file, "r", encoding="utf-8") as f: creds_dict = json.load(f)
-    if creds_dict is None: raise RuntimeError("Не найдены Google-credentials.")
+    if gspread is None or Credentials is None: raise RuntimeError("gspread не установлен.")
+    creds_dict = json.loads(os.environ.get("GOOGLE_CREDENTIALS_JSON"))
     scopes = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     return gspread.authorize(creds)
 
 def open_spreadsheet(gs_client):
-    last_err = None
     for attempt in range(4):
         try:
-            if SPREADSHEET_ID: return gs_client.open_by_key(SPREADSHEET_ID)
-            return gs_client.open(SPREADSHEET_NAME)
+            return gs_client.open_by_key(SPREADSHEET_ID)
         except Exception as e:
-            last_err = e
             if "500" in str(e) or "429" in str(e) or "503" in str(e):
                 time.sleep(5)
                 continue
             raise e
-    raise last_err
+
+def get_or_create_sheet(sh, name: str):
+    try: return sh.worksheet(name)
+    except gspread.WorksheetNotFound: return sh.add_worksheet(title=name, rows=2000, cols=12)
 
 def _col_letter(n: int) -> str:
     s = ""
@@ -288,404 +242,195 @@ def _col_letter(n: int) -> str:
         s = chr(65 + r) + s
     return s
 
-def get_or_create_sheet(sh, name: str):
-    try: return sh.worksheet(name)
-    except gspread.WorksheetNotFound: return sh.add_worksheet(title=name, rows=2000, cols=12)
-
-def load_sheet_snapshot(sheet) -> tuple[list[list[str]], dict[str, dict]]:
-    try: rows = sheet.get_all_values()
-    except Exception: return [], {}
-    if not rows: return [], {}
-    header = [(h or "").strip().lower() for h in rows[0]]
-    link_idx = None
-    for cand in ("ссылка для скачивания", "ссылка", "download_link", "link"):
-        if cand in header:
-            link_idx = header.index(cand)
-            break
-    existing: dict[str, dict] = {}
-    if link_idx is not None and len(rows) >= 2:
-        for i, r in enumerate(rows[1:], start=2):
-            if len(r) > link_idx:
-                link = (r[link_idx] or "").strip()
-                if link: existing[link] = {"row": i, "values": list(r)}
-    return rows, existing
-
 def batch_update_rows(sheet, updates: list[dict]) -> int:
     if not updates: return 0
-    total = len(updates)
-    updated = 0
     chunk = 100
-    for i in range(0, total, chunk):
+    updated = 0
+    for i in range(0, len(updates), chunk):
         part = updates[i:i + chunk]
         try:
-            time.sleep(2)
+            time.sleep(1)
             sheet.batch_update(part, value_input_option="USER_ENTERED")
             updated += len(part)
         except Exception as e:
-            print(f"    [!] batch_update chunk {i // chunk}: {e}")
+            print(f"    [!] Ошибка batch_update: {e}")
     return updated
 
-def append_rows_safe(sheet, rows: list[list[str]], batch_size: int = 50) -> tuple[int, int]:
-    added, failed = 0, 0
-    total = len(rows)
-    for i in range(0, total, batch_size):
+def append_rows_safe(sheet, rows: list[list[str]], batch_size: int = 50):
+    added = 0
+    for i in range(0, len(rows), batch_size):
         batch = rows[i:i + batch_size]
-        success = False
-        for attempt in range(5):
+        for attempt in range(3):
             try:
-                time.sleep(3)
+                time.sleep(2)
                 sheet.append_rows(batch, value_input_option="USER_ENTERED")
                 added += len(batch)
-                success = True
                 break
-            except Exception as e:
-                time.sleep(10)
-        if not success:
-            failed += len(batch)
-            print(f"    [!] Не удалось добавить {len(batch)} строк после 5 попыток")
-    return added, failed
+            except Exception:
+                time.sleep(5)
+    return added
 
-def headers_from_columns(columns: list[str]) -> list[str]:
-    headers: list[str] = []
-    for key in columns or []:
-        ru = EN_TO_RU.get(key)
-        if ru: headers.append(ru[0])
-    if "Ссылка для скачивания" not in headers: headers.append("Ссылка для скачивания")
-    return headers
-
-def _row_from_record(record: dict, headers: list[str]) -> list[str]:
-    row: list[str] = []
-    for ru in headers:
-        en = RU_TO_EN.get(ru, ru)
-        row.append(record.get(en, ""))
-    return row
-
-def norm_url_for_comparison(url: str) -> str:
-    if not url: return ""
-    u = urllib.parse.unquote(str(url)).strip().lower()
-    return u.split('?')[0]
-
-def detect_link_source(link: str) -> str:
-    if not link: return ""
-    s = str(link).lower()
-    if "gh-release-proxy.macsimenkodima.workers.dev" in s or "github.com" in s and "/releases/" in s:
-        return "release"
-    if "disk.yandex" in s or "yadi.sk" in s:
-        return "yandex"
-    if "terabox" in s or "1024tera" in s or "4funbox" in s or "teraboxapp" in s:
-        return "terabox"
-    return "other"
-
-def bytes_to_mb(size_bytes: int | float | str | None) -> str:
-    try:
-        n = int(size_bytes or 0)
-    except (TypeError, ValueError):
-        return "0"
-    if n <= 0: return "0"
-    return str(round(n / (1024 * 1024), 1))
 
 # ============================================================
-# ШАГ A: GitHub Releases → Google Sheets
+# ОСНОВНАЯ ЛОГИКА МИГРАЦИИ И СИНХРОНИЗАЦИИ
 # ============================================================
-def repo_to_sheets(gs_client, sections: list[dict], dry_run: bool) -> dict:
-    stats = {"sections": {}, "new_in_repo_rows": [], "deleted_duplicates": [], "errors": []}
-    print("\n" + "=" * 60 + "\nШАГ A: GitHub Releases → Google Sheets\n" + "=" * 60)
-
-    releases = list_all_releases()
-    if not releases: return stats
+def sync_section(sh, section_key, config, repo_assets_by_tag, dry_run=False):
+    sheet_name = config["sheet_name"]
+    columns = config["columns"]
+    print(f"\n  ── Раздел: {config['label']} ({section_key})")
     
-    tag_to_section: dict[str, str] = {}
-    for rel in releases:
-        tag, assets = rel.get("tag_name") or "", rel.get("assets") or []
-        if not tag or not assets: continue
-        section = detect_section_by_assets(assets, tag)
-        if section: tag_to_section[tag] = section
-
-    by_section: dict[str, list[dict]] = {}
-    for rel in releases:
-        tag = rel.get("tag_name") or ""
-        section = tag_to_section.get(tag)
-        if section: by_section.setdefault(section, []).append(rel)
-
-    try: sh = open_spreadsheet(gs_client)
-    except Exception as e:
-        stats["errors"].append(f"Не удалось открыть Google-таблицу: {e}")
-        return stats
-
-    for section in sections:
-        key = section.get("key") or "?"
-        label = section.get("label") or key
-        if key not in by_section: continue
-
-        sheet_name = section.get("sheet_name") or label
-        columns = section.get("columns") or ["title", "description", "download_link"]
-        headers = headers_from_columns(columns)
-
-        print(f"\n  ── Раздел: {label} ({key})\n     Лист: {sheet_name}")
-        try: sheet = get_or_create_sheet(sh, sheet_name)
-        except Exception as e: continue
-
-        try: all_values, existing_by_link = load_sheet_snapshot(sheet)
-        except Exception as e: continue
-
-        sec_stats = {"to_update": 0, "new_in_repo": 0, "legacy_only": 0, "unchanged": 0, "deleted_dups": 0}
-        rows_for_match: list[dict] = []
-        header = [(h or "").strip() for h in (all_values[0] if all_values else [])]
-        
-        for i, r in enumerate(all_values[1:], start=2):
-            row_dict: dict[str, Any] = {"_row": i, "_raw": r}
-            for j, h in enumerate(header):
-                en = RU_TO_EN.get(h, h)
-                row_dict[en] = r[j] if j < len(r) else ""
-            rows_for_match.append(row_dict)
-
-        # 1. УМНАЯ ОЧИСТКА ДУБЛИКАТОВ
-        url_groups = {} 
-        for row in rows_for_match:
-            link = row.get("download_link", "").strip()
-            norm_l = norm_url_for_comparison(link)
-            if norm_l:
-                url_groups.setdefault(norm_l, []).append(row)
-
-        rows_to_delete = []
-        for norm_l, group in url_groups.items():
-            if len(group) > 1:
-                group.sort(key=score_row, reverse=True)
-                best_row = group[0]
-                for bad_row in group[1:]:
-                    rows_to_delete.append(bad_row["_row"])
-                    stats["deleted_duplicates"].append({
-                        "section": label, 
-                        "deleted_title": bad_row.get("title", ""), 
-                        "kept_title": best_row.get("title", ""),
-                        "url": norm_l
-                    })
-                    sec_stats["deleted_dups"] += 1
-
-        if rows_to_delete:
-            print(f"     Найдены дубли: удаляем {len(rows_to_delete)} лишних строк...")
-            
-            # ─── ЗАПИСЬ В ЖУРНАЛ УДАЛЕНИЙ ───
-            if not dry_run:
-                try:
-                    log_sheet_name = "_deleted_duplicates"
-                    try:
-                        log_ws = sh.worksheet(log_sheet_name)
-                    except gspread.WorksheetNotFound:
-                        log_ws = sh.add_worksheet(title=log_sheet_name, rows=1000, cols=6)
-                        log_ws.append_row(["Дата", "Раздел", "Удаленное название", "Оставленное название", "Ссылка"])
-                    
-                    log_rows = []
-                    now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M")
-                    for dup in stats["deleted_duplicates"]:
-                        log_rows.append([
-                            now_str, dup["section"], dup["deleted_title"], 
-                            dup["kept_title"], dup["url"]
-                        ])
-                    if log_rows:
-                        log_ws.append_rows(log_rows, value_input_option="USER_ENTERED")
-                except Exception as e:
-                    print(f"     [!] Не удалось записать лог удалений: {e}")
-            # ────────────────────────────────
-
-            if not dry_run:
-                rows_to_delete.sort(reverse=True)
-                blocks = []
-                start = rows_to_delete[0]
-                prev = start
-                for r in rows_to_delete[1:]:
-                    if r == prev + 1: prev = r
-                    else: blocks.append((start, prev)); start = r; prev = r
-                blocks.append((start, prev))
-                
-                for start, end in blocks:
-                    try: 
-                        sheet.delete_rows(start, end)
-                        time.sleep(2)
-                    except Exception as e: print(f"     Ошибка удаления: {e}")
-            
-            if not dry_run:
-                all_values, _ = load_sheet_snapshot(sheet)
-                rows_for_match = []
-                header = [(h or "").strip() for h in (all_values[0] if all_values else [])]
-                for i, r in enumerate(all_values[1:], start=2):
-                    row_dict = {"_row": i, "_raw": r}
-                    for j, h in enumerate(header):
-                        row_dict[RU_TO_EN.get(h, h)] = r[j] if j < len(r) else ""
-                    rows_for_match.append(row_dict)
-                url_groups = {}
-                for row in rows_for_match:
-                    norm_l = norm_url_for_comparison(row.get("download_link", "").strip())
-                    if norm_l: url_groups[norm_l] = [row]
-
-        # 2. ДОБАВЛЕНИЕ НОВЫХ ФАЙЛОВ
-        to_add: list[list[str]] = []
-        
-        for rel in by_section[key]:
-            tag = rel.get("tag_name")
-            for asset in rel.get("assets") or []:
-                fname = asset.get("name")
-                if not fname: continue
-                
-                new_link = build_asset_url(tag, fname)
-                norm_new_link = norm_url_for_comparison(new_link)
-                
-                if norm_new_link in url_groups:
-                    sec_stats["unchanged"] += 1
-                    continue
-                
-                info = re.sub(r'^[\d\.\-\_]+', '', os.path.splitext(fname)[0]).strip()
-                title = info if info else fname
-                folder_name = FOLDER_TRANSLATIONS.get(tag, tag)
-                
-                record = {
-                    "title": title, "description": "", "format": os.path.splitext(fname)[1].lstrip("."),
-                    "size": bytes_to_mb(asset.get("size", 0)), "download_link": new_link, 
-                    "folder": folder_name,
-                    "author": "", "artist": "", "year": "", "version": "",
-                    "cover": "", "file_id": slugify(title), "legacy": "",
-                }
-                to_add.append(_row_from_record(record, headers))
-                stats["new_in_repo_rows"].append({
-                    "section": key, "tag": tag, "file": fname, 
-                    "title": f"{folder_name} - {title}", "link": new_link, "size": record["size"]
-                })
-                sec_stats["new_in_repo"] += 1
-                url_groups[norm_new_link] = [record]
-
-        print(f"     Удалено дублей: {sec_stats['deleted_dups']}")
-        print(f"     Новых добавлено: {sec_stats['new_in_repo']}")
-        print(f"     Без изменений: {sec_stats['unchanged']}")
-
-        stats["sections"][key] = sec_stats
-
-        if dry_run: continue
-        if to_add: 
-            added, failed = append_rows_safe(sheet, to_add)
-            if failed > 0: print(f"     [!] ВНИМАНИЕ: {failed} строк не удалось добавить")
-
-    return stats
-
-# ============================================================
-# ШАГ B: Google Sheets → JSON
-# ============================================================
-def _read_records_safe(worksheet, headers: list[str]) -> list[dict] | None:
-    try: all_values = worksheet.get_all_values()
-    except Exception: return None
-    if not all_values: return []
-    raw_header = all_values[0]
-    positions: dict[str, int | None] = {}
-    for want in headers:
-        want_clean = want.strip()
-        pos = None
-        for i, h in enumerate(raw_header):
-            if (h or "").strip().lower() == want_clean.lower(): pos = i; break
-        if pos is None:
-            for i, h in enumerate(raw_header):
-                if want_clean.lower() in (h or "").strip().lower(): pos = i; break
-        positions[want] = pos
-    records: list[dict] = []
-    for row in all_values[1:]:
-        rec: dict[str, str] = {}
-        for want, pos in positions.items():
-            rec[want] = row[pos] if (pos is not None and pos < len(row)) else ""
-        records.append(rec)
-    return records
-
-def _is_empty(value) -> bool:
-    return value is None or (isinstance(value, str) and not value.strip())
-
-def row_to_item(row: dict, columns: list[str] | None = None) -> dict:
-    item: dict[str, Any] = {}
-    target_keys = [k for k in (columns or []) if k] or list(EN_TO_RU.keys())
-    for en_key in target_keys:
-        value = None
-        for ru_col in EN_TO_RU.get(en_key, []):
-            if ru_col in row and not _is_empty(row[ru_col]):
-                value = row[ru_col]; break
-        if _is_empty(value) and en_key in row and not _is_empty(row[en_key]):
-            value = row[en_key]
-        if _is_empty(value): continue
-        item[en_key] = str(value).strip() if en_key != "description" else str(value)
-    if item.get("title"): item["file_id"] = slugify(item["title"])
-    return item
-
-def generate_json_for_section(worksheet, json_path: str, columns: list[str] | None = None) -> dict | None:
-    # ✅ ИСПРАВЛЕНО: Инициализируем headers локально
-    headers = []
-    for key in columns or []:
-        variants = EN_TO_RU.get(key, [])
-        headers.append(variants[0] if variants else key)
-    if "Ссылка для скачивания" not in headers: headers.append("Ссылка для скачивания")
-
-    records = _read_records_safe(worksheet, headers)
-    if records is None: return None
-    if not records:
-        try:
-            with open(json_path, "w", encoding="utf-8") as f: json.dump([], f, ensure_ascii=False, indent=2)
-        except: pass
-        return {"count": 0}
-
-    json_data: list[dict] = []
-    for row in records:
-        item = row_to_item(row, columns)
-        if item.get("title"): json_data.append(item)
-
     try:
-        with open(json_path, "w", encoding="utf-8") as f: json.dump(json_data, f, ensure_ascii=False, indent=2)
-    except: pass
-    return {"count": len(json_data)}
+        sheet = get_or_create_sheet(sh, sheet_name)
+        all_values = sheet.get_all_values()
+    except Exception as e:
+        print(f"     [!] Ошибка доступа к листу: {e}")
+        return {}
 
-def sheets_to_json(gs_client, sections: list[dict], dry_run: bool, repo_dir: str = ".") -> dict:
-    stats = {"sections_ok": 0, "sections_failed": [], "total_records": 0}
-    try: sh = open_spreadsheet(gs_client)
-    except: return stats
+    if not all_values:
+        return {}
 
-    for section in sections:
-        key, label = section.get("key") or "?", section.get("label") or key
-        sheet_name, json_path = section.get("sheet_name") or label, section.get("json_path")
-        columns = section.get("columns") or []
-        if not json_path: continue
-        json_path = os.path.join(repo_dir, json_path)
-        try: worksheet = sh.worksheet(sheet_name)
-        except: continue
-        result = generate_json_for_section(worksheet, json_path, columns)
-        if result is not None:
-            stats["sections_ok"] += 1
-            stats["total_records"] += result["count"]
+    header = [(h or "").strip() for h in all_values[0]]
+    idx_folder = header.index("Папка") if "Папка" in header else -1
+    idx_title = header.index("Название") if "Название" in header else -1
+    idx_link = header.index("Ссылка для скачивания") if "Ссылка для скачивания" in header else -1
+    
+    if idx_title == -1 or idx_link == -1:
+        print(f"     [!] Не найдены колонки 'Название' или 'Ссылка'")
+        return {}
+
+    # Собираем данные о том, что уже есть в таблице
+    existing_rows = [] # list of dicts
+    url_to_row_idx = {} # norm_url -> row_index
+    legacy_rows_by_title = {} # norm_title -> row_index
+
+    for i, row in enumerate(all_values[1:], start=2):
+        title = row[idx_title] if idx_title < len(row) else ""
+        link = row[idx_link] if idx_link < len(row) else ""
+        folder = row[idx_folder] if idx_folder != -1 and idx_folder < len(row) else ""
+        
+        row_data = {
+            "_row_num": i,
+            "_raw": row,
+            "title": title,
+            "link": link,
+            "folder": folder
+        }
+        existing_rows.append(row_data)
+        
+        norm_l = norm_url_for_comparison(link)
+        if norm_l:
+            url_to_row_idx[norm_l] = i
+            if "terabox" in norm_l or "yandex" in norm_l:
+                legacy_rows_by_title[norm_text(title)] = row_data
+
+    # Списки для обновления
+    updates = []
+    to_add = []
+    stats = {"migrated": 0, "added": 0, "unchanged": 0}
+    
+    # Проходим по всем файлам в GitHub
+    for tag, assets in repo_assets_by_tag.items():
+        for asset in assets:
+            fname = asset["name"]
+            ext = os.path.splitext(fname)[1].lower()
+            
+            # Пропускаем файлы не из этого раздела
+            if EXT_TO_SECTION.get(ext) != section_key:
+                continue
+                
+            new_link = build_asset_url(tag, fname)
+            norm_new_link = norm_url_for_comparison(new_link)
+            
+            # 1. Если ссылка уже есть в таблице — НИЧЕГО НЕ ТРОГАЕМ (сохраняем ручные правки)
+            if norm_new_link in url_to_row_idx:
+                stats["unchanged"] += 1
+                continue
+                
+            # 2. Ищем, нет ли этого файла под видом legacy (Терабокс/Яндекс)
+            clean_title = os.path.splitext(fname)[0]
+            clean_title = re.sub(r'^[\d\.\-\_]+', '', clean_title).strip()
+            norm_clean_title = norm_text(clean_title)
+            
+            # Ищем совпадение среди legacy строк
+            matched_legacy_row = None
+            # Сначала точное совпадение, потом частичное
+            if norm_clean_title in legacy_rows_by_title:
+                matched_legacy_row = legacy_rows_by_title[norm_clean_title]
+            else:
+                for l_title, l_row in legacy_rows_by_title.items():
+                    # Если одно название содержит другое (например, "potplayer" и "potplayer 7sh3")
+                    if norm_clean_title in l_title or l_title in norm_clean_title:
+                        # Проверяем, что это из той же папки (если папка указана)
+                        if not l_row["folder"] or l_row["folder"].lower() in tag.lower() or FOLDER_TRANSLATIONS.get(tag, tag).lower() == l_row["folder"].lower():
+                            matched_legacy_row = l_row
+                            break
+                            
+            if matched_legacy_row:
+                # МИГРАЦИЯ! Заменяем ссылку в старой строке на GitHub
+                row_idx = matched_legacy_row["_row_num"]
+                old_row = matched_legacy_row["_raw"]
+                
+                # Создаем новую строку на основе старой (сохраняем все ручные правки)
+                new_row_data = list(old_row)
+                # Обновляем только ссылку и размер (если колонка размера есть)
+                new_row_data[idx_link] = new_link
+                
+                # Проверяем колонку размера
+                idx_size = header.index("Размер (МБ)") if "Размер (МБ)" in header else -1
+                if idx_size != -1:
+                    new_row_data[idx_size] = str(round(asset["size"] / (1024 * 1024), 1))
+
+                rng = f"A{row_idx}:{_col_letter(len(header)-1)}{row_idx}"
+                updates.append({"range": rng, "values": [new_row_data]})
+                
+                print(f"     🔄 Миграция: {matched_legacy_row['title']} ➔ GitHub")
+                stats["migrated"] += 1
+                # Удаляем из legacy словаря, чтобы не мигрировать дважды
+                del legacy_rows_by_title[norm_text(matched_legacy_row['title'])]
+                continue
+
+            # 3. Если это абсолютно новый файл (нет в таблице и нет в legacy)
+            folder_name = FOLDER_TRANSLATIONS.get(tag, tag)
+            
+            # Формируем запись по стандартным правилам
+            record = {k: "" for k in EN_TO_RU.keys()}
+            record["title"] = clean_title
+            record["folder"] = folder_name
+            record["download_link"] = new_link
+            record["size"] = str(round(asset["size"] / (1024 * 1024), 1))
+            record["format"] = ext.replace(".", "")
+            
+            # Собираем строку по заголовкам
+            final_row = []
+            for h in header:
+                en = RU_TO_EN.get(h)
+                final_row.append(record.get(en, "") if en else "")
+                
+            to_add.append(final_row)
+            stats["added"] += 1
+
+    # Применяем изменения
+    if not dry_run:
+        if updates:
+            print(f"     Обновление ссылок: {len(updates)}")
+            batch_update_rows(sheet, updates)
+        if to_add:
+            print(f"     Добавление новых: {len(to_add)}")
+            append_rows_safe(sheet, to_add)
+            
+            # Запись в лог добавленных файлов (в Telegram)
+            for row in to_add:
+                # Ищем название для лога
+                title_idx = header.index("Название") if "Название" in header else -1
+                title_val = row[title_idx] if title_idx != -1 else "Неизвестно"
+                stats.setdefault("added_titles", []).append(title_val)
+
     return stats
 
-def notify_migration_report(repo_stats: dict, json_stats: dict, run_url: str | None = None) -> None:
-    lines: list[str] = []
-    if repo_stats:
-        total_deleted = sum(s.get("deleted_dups", 0) for s in (repo_stats.get("sections") or {}).values())
-        total_new = sum(s["new_in_repo"] for s in (repo_stats.get("sections") or {}).values())
-        lines.extend(["*Синхронизация*", f"• удалено дублей: {total_deleted}", f"• новых: {total_new}"])
 
-        deleted_rows = repo_stats.get("deleted_duplicates") or []
-        if deleted_rows:
-            lines.append(f"\n🗑 *Удаленные дубли (оставлена лучшая версия)*:")
-            # Выводим первые 50 удаленных строк
-            for r in deleted_rows[:50]: 
-                lines.append(f"  • {r.get('deleted_title')} ➔ (оставлено: {r.get('kept_title')})")
-            if len(deleted_rows) > 50: 
-                lines.append(f"  ... и еще {len(deleted_rows) - 50}")
-
-        new_rows = repo_stats.get("new_in_repo_rows") or []
-        if new_rows:
-            lines.append(f"\n➕ *Новые файлы* ({len(new_rows)}):")
-            for r in new_rows[:20]:
-                lines.append(f"  • {r.get('title')} ({r.get('size')} МБ)")
-            if len(new_rows) > 20: lines.append(f"  ... и еще {len(new_rows) - 20}")
-
-    if json_stats:
-        lines.extend(["", "*Генерация JSON*", f"• записей: {json_stats.get('total_records', 0)}"])
-
-    notify_telegram("\n".join(lines))
-
-def main() -> None:
+def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--mode", choices=["repo-to-sheets", "sheets-to-json", "all"], default="all")
+    parser.add_argument("--mode", choices=["all"], default="all")
     parser.add_argument("--in-place", action="store_true")
     parser.add_argument("--sections", default="")
     parser.add_argument("--repo-dir", default=".")
@@ -693,35 +438,59 @@ def main() -> None:
 
     dry_run = not args.in_place
     section_filter = [s.strip() for s in args.sections.split(",") if s.strip()] or None
-    run_url = None
-    if os.environ.get("GITHUB_RUN_ID"):
-        repo = os.environ.get("GITHUB_REPOSITORY", "")
-        run_url = f"https://github.com/{repo}/actions/runs/{os.environ['GITHUB_RUN_ID']}"
+    run_url = f"https://github.com/{os.environ.get('GITHUB_REPOSITORY', '')}/actions/runs/{os.environ.get('GITHUB_RUN_ID', '')}"
 
-    repo_stats, json_stats = {}, {}
+    print("=" * 60)
+    print(f"Синхронизация GitHub ➔ Google Sheets (Режим: {'DRY-RUN' if dry_run else 'LIVE'})")
+    print("=" * 60)
+
     try:
-        sections = []
-        for k, cfg in SECTION_CONFIG_FALLBACK.items():
-            sections.append({"key": k, "label": cfg["label"], "sheet_name": cfg["sheet_name"], "json_path": cfg["json_path"], "columns": cfg["columns"]})
-        if section_filter:
-            sections = [s for s in sections if s.get("key") in section_filter]
-
         gs_client = get_gspread_client()
+        sh = open_spreadsheet(gs_client)
         
-        if args.mode in ("repo-to-sheets", "all"):
-            repo_stats = repo_to_sheets(gs_client, sections, dry_run)
-            
-        if args.mode in ("sheets-to-json", "all"):
-            try:
-                json_stats = sheets_to_json(gs_client, sections, dry_run, repo_dir=args.repo_dir)
-            except Exception as e:
-                print(f"[!!!] Ошибка в шаге B (JSON): {e}")
-                json_stats = {"errors": [str(e)]}
+        print("\nЗагрузка релизов из GitHub...")
+        releases = list_all_releases()
+        
+        repo_assets_by_tag = {}
+        for rel in releases:
+            tag = rel.get("tag_name")
+            if tag:
+                repo_assets_by_tag[tag] = rel.get("assets", [])
+                
+        print(f"Получено тегов: {len(repo_assets_by_tag)}")
+        
+        total_stats = {"migrated": 0, "added": 0, "unchanged": 0, "added_titles": []}
+        
+        for key, cfg in SECTION_CONFIG.items():
+            if section_filter and key not in section_filter:
+                continue
+                
+            stats = sync_section(sh, key, cfg, repo_assets_by_tag, dry_run)
+            for k in ["migrated", "added", "unchanged"]:
+                total_stats[k] += stats.get(k, 0)
+            total_stats["added_titles"].extend(stats.get("added_titles", []))
 
-        notify_migration_report(repo_stats, json_stats, run_url=run_url)
+        # Отчет в Telegram
+        lines = ["*Синхронизация завершена*"]
+        if total_stats["migrated"] > 0:
+            lines.append(f"🔄 Мигрировано (Терабокс ➔ GitHub): {total_stats['migrated']}")
+        if total_stats["added"] > 0:
+            lines.append(f"➕ Добавлено новых файлов: {total_stats['added']}")
+            for t in total_stats["added_titles"][:10]:
+                lines.append(f"  • {t}")
+            if len(total_stats["added_titles"]) > 10:
+                lines.append(f"  ... и еще {len(total_stats['added_titles']) - 10}")
+        if total_stats["unchanged"] > 0:
+            lines.append(f"✅ Без изменений (сохранены ваши правки): {total_stats['unchanged']}")
+            
+        notify_telegram("\n".join(lines))
+        print("\n" + "=" * 60)
+        print("Готово!")
+        
     except Exception as e:
         print(f"\n[!!!] Критическая ошибка: {e}")
         traceback.print_exc()
+        notify_telegram(f"❌ Ошибка синхронизации: {e}")
 
 if __name__ == "__main__":
     main()
