@@ -1,192 +1,11 @@
 [
   {
-    "folder": "Для windows свои",
-    "title": "CertificateParser",
-    "description": "Программа для сканирования и распознавания сертификатов для последующего занесения в ЦП с помощью плагина автозагрузки",
-    "version": "1",
-    "size": "479.9",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dlya-windows-svoi/CertificateParser.rar",
-    "file_id": "certificateparser"
-  },
-  {
-    "folder": "Макросы",
-    "title": "ЕРН Макрос",
-    "description": "Обработка выггрузок ЕРН",
-    "version": "1",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/ern-makros.xlsm",
-    "file_id": "ерн-макрос"
-  },
-  {
-    "folder": "Макросы",
-    "title": "МВД Макрос",
-    "description": "Обработка выггрузок МВД",
-    "version": "1",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/mvd-makros.xlsm",
-    "file_id": "мвд-макрос"
-  },
-  {
-    "folder": "Макросы",
-    "title": "МВД, ЕРН, ЗАГС+ДляУверсальнойПроверки версия 2",
-    "description": "Проверка выгрузок МВД, ЕРН и ЗАГС и сравнение с выгрузкой базы",
-    "version": "2",
-    "size": "0.2",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/mvd-ern-zagsdlyauversalnojproverki-versiya-2.xlsm",
-    "file_id": "мвд-ерн-загсдляуверсальнойпроверки-версия-2"
-  },
-  {
-    "folder": "Макросы",
-    "title": "отбор из других районов XLSX Версия 2",
-    "description": "Записи из месячной выгрузки из других районов но с событиями на своей территории",
-    "version": "2",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-iz-drugih-rajonov-xlsx-versiya-2.xlsm",
-    "file_id": "отбор-из-других-районов-xlsx-версия-2"
-  },
-  {
-    "folder": "Макросы",
-    "title": "отбор из других районов XLSX Версия 2 для либра офиса",
-    "description": "Записи из месячной выгрузки из других районов но с событиями на своей территории",
-    "version": "2",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-iz-drugih-rajonov-xlsx-versiya-2-dlya-libra-ofisa.ods",
-    "file_id": "отбор-из-других-районов-xlsx-версия-2-для-либра-офиса"
-  },
-  {
-    "folder": "Макросы",
-    "title": "Просмотреть, редактировать, выгрузить версия 6",
-    "description": "Различные просмотры выгрузок 167 полей для последущей работы с базой",
-    "version": "6",
-    "size": "0.2",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/prosmotret-redaktirovat-vygruzit-versiya-6.xlsm",
-    "file_id": "просмотреть-редактировать-выгрузить-версия-6"
-  },
-  {
-    "folder": "Макросы",
-    "title": "Стат52УИК_Комментарии",
-    "description": "Выявление из отчета стат.52 записей с комментариями",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/stat52uikkommentarii.xlsm",
-    "file_id": "стат52уиккомментарии"
-  },
-  {
-    "folder": "Макросы",
-    "title": "Clean_MVD_Klinrai",
-    "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП район",
-    "version": "1",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/cleanmvdklinrai.ods",
-    "file_id": "cleanmvdklinrai"
-  },
-  {
-    "folder": "Макросы",
-    "title": "RUIPvsPRIUR_16.03.2026 версия 5",
-    "description": "Различные сравнения выгрузок РУИП и ПРИУР. РУИП и РУИП разных вариантов",
-    "version": "5",
-    "size": "0.4",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/ruipvspriur16032026-versiya-5.xlsm",
-    "file_id": "ruipvspriur16032026-версия-5"
-  },
-  {
-    "folder": "Плагины",
-    "title": "gas-plagins_v2",
-    "description": "Запись с экрана и сохранение строк с автопереходом на следующую страницу",
-    "version": "2",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/gas-plaginsv2.zip",
-    "file_id": "gas-plaginsv2"
-  },
-  {
-    "folder": "Скрипты",
-    "title": "База167поФильтрам",
-    "description": "Отбор по фильтрам из выгрузки 167 полей по основных критериям. Только избиратели, только умершие, только убывшие",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/baza167pofiltram.rar",
-    "file_id": "база167пофильтрам"
-  },
-  {
-    "folder": "Скрипты",
-    "title": "ОтчетБД",
-    "description": "Отчет из Базы данных 167 полей с добавлением номера УИК каждой карточке",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/otchetbd.rar",
-    "file_id": "отчетбд"
-  },
-  {
-    "folder": "Скрипты",
-    "title": "ПоследнееИзДинамики",
-    "description": "Отбор последнего события из Динамики выгрузки 167полей",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/posledneeizdinamiki.rar",
-    "file_id": "последнееиздинамики"
-  },
-  {
-    "folder": "Скрипты",
-    "title": "СКРИПТ Проверка списков для Linux",
-    "description": "Проверка списков для Linux",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/skript-proverka-spiskov-dlya-linux.rar",
-    "file_id": "скрипт-проверка-списков-для-linux"
-  },
-  {
-    "folder": "Скрипты",
-    "title": "Чужой без убытия",
-    "description": "Определение карточек последнее событие произошло уже не на своей территории но от вас нет события убытия",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/chuzhoj-bez-ubytiya.rar",
-    "file_id": "чужой-без-убытия"
-  },
-  {
-    "folder": "Скрипты",
-    "title": "CleanMVD",
-    "description": "Скрипт для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/cleanmvd.rar",
-    "file_id": "cleanmvd"
-  },
-  {
-    "folder": "Скрипты",
-    "title": "MVD_v2",
-    "description": "Работа с выгрузкой МВД",
-    "version": "2",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/mvdv2.rar",
-    "file_id": "mvdv2"
-  },
-  {
-    "folder": "Скрипты",
-    "title": "Script_Dyblu",
-    "description": "Поиск дублей в различных вариантах",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/scriptdyblu.rar",
-    "file_id": "scriptdyblu"
-  },
-  {
-    "folder": "Скрипты",
-    "title": "SCRIPT-ZAGS",
-    "description": "Работа с выгрузкой из администрации по смерти за месяц",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/script-zags.rar",
-    "file_id": "script-zags"
-  },
-  {
-    "folder": "Скрипты",
-    "title": "WorkDIN_22.07.2026",
-    "description": "Большая подборка разных поисков и сравнений из Полной выгрузки Динамики Базы из ЦП",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/workdin22072026.rar",
-    "file_id": "workdin22072026"
+    "folder": "System",
+    "title": "Microsoft DirectX",
+    "description": "Microsoft DirectX обеспечивает совместимость компьютерных игр и программ с множеством разнообразных аудио- и видеоадаптеров.",
+    "size": "26.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/system/Direct.X.exe",
+    "file_id": "microsoft-directx"
   },
   {
     "folder": "Adobe",
@@ -342,19 +161,19 @@
   },
   {
     "folder": "AEditor",
-    "title": "Mp3tag",
-    "description": "Mp3tag - программа для быстрого редактирования ID3-тэгов и комментариев в аудио файлах.",
-    "size": "5.9",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/mp3tag.exe",
-    "file_id": "mp3tag"
-  },
-  {
-    "folder": "AEditor",
     "title": "mp3Tag Pro",
     "description": "mp3Tag Pro - мощный органайзер музыки и редактор аудио тэгов с многими дополнительными возможностями.",
     "size": "5.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/mp3tag-pro.exe",
     "file_id": "mp3tag-pro"
+  },
+  {
+    "folder": "AEditor",
+    "title": "Mp3tag",
+    "description": "Mp3tag - программа для быстрого редактирования ID3-тэгов и комментариев в аудио файлах.",
+    "size": "5.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/mp3tag.exe",
+    "file_id": "mp3tag"
   },
   {
     "folder": "AEditor",
@@ -419,54 +238,6 @@
     "size": "7.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/aeditor/tagscanner.exe",
     "file_id": "tagscanner"
-  },
-  {
-    "folder": "AMS",
-    "title": "АудиоМАСТЕР",
-    "description": "АудиоМАСТЕР - программа для работы с аудио файлами самых популярных форматов. Редактируйте музыку, записывайте звук с микрофона, создавайте рингтоны для мобильных! Удобный захват аудио с CD, увлекательные эффекты и многое другое - просто и доступно каждому.",
-    "size": "56.9",
-    "download_link": "https://d.terabox.app/file/5ed85fd8546c2633014b0ac0cc2823c6?fid=4398361031480-250528-227494395537969&dstime=1791919235&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-bQruRWpVm3xzW1KMQBuFUn1ZJLM%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942221210543105176&dp-callid=0&r=202096719&sh=1&region=jp",
-    "file_id": "аудиомастер"
-  },
-  {
-    "folder": "AMS",
-    "title": "ВидеоМАСТЕР",
-    "description": "ВидеоМАСТЕР - мощный и быстрый конвертер, включающий все необходимые функции для работы с видео. Он позволяет конвертировать отдельные ролики и целые DVD диски в любой формат. Теперь не нужно тратить время на подбор необходимых настроек! ВидеоМАСТЕР включает свыше 350 предустановок конвертации видео для мобильных телефонов, плееров, игровых приставок и сайтов.",
-    "size": "45.4",
-    "download_link": "https://d.terabox.app/file/e77e3e8015a6c9c3e83fe4d50a4a9ea2?fid=4398361031480-250528-151371471265795&dstime=1791919235&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-JJP9elzOmVPum7STPwxh4RuxP0s%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942221210543105176&dp-callid=0&r=575724636&sh=1&region=jp",
-    "file_id": "видеомастер"
-  },
-  {
-    "folder": "AMS",
-    "title": "Конструктор шкафов-купе",
-    "description": "Конструктор шкафов-купе - удобный редактор для разработки дизайна шкафов с нуля. Программа позволяет добиться профессионального результата и создать трёхмерную модель в кратчайшие сроки, независимо от опыта. Вы без труда спроектируете шкаф, который идеально подойдёт вам по всем параметрам, ведь в конструкторе есть все инструменты, чтобы реализовать любую вашу креативную задумку.",
-    "size": "13.1",
-    "download_link": "https://d.terabox.app/file/98f2e897e0b3594462679e028f13569d?fid=4398361031480-250528-294788290946738&dstime=1791919235&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-JhYWRYzdCP2ZYSq0CCoh%2Bvu9fI8%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942221210543105176&dp-callid=0&r=316233961&sh=1&region=jp",
-    "file_id": "конструктор-шкафов-купе"
-  },
-  {
-    "folder": "AMS",
-    "title": "Ускоритель Компьютера",
-    "description": "Ускоритель Компьютера - программа быстро и безопасно очистит систему от мусора, оптимизирует реестр, ускорит запуск Windows.",
-    "size": "10.2",
-    "download_link": "https://d.terabox.app/file/c001bb000695355fd65ced549737992b?fid=4398361031480-250528-230845024673442&dstime=1791919235&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-kFfHkovaQCqHCYk7qXPtWv5G%2FhE%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942221210543105176&dp-callid=0&r=548449696&sh=1&region=jp",
-    "file_id": "ускоритель-компьютера"
-  },
-  {
-    "folder": "AMS",
-    "title": "Фото на документы Профи",
-    "description": "Фото на документы Профи - удобная программа для быстрой подготовки и печати фото на документы. Включает готовые форматы фотографий для всех необходимых документов: внутренний и заграничный паспорт, визы различных стран, удостоверения и пропуска. Она позволяет всего за несколько минут получить фотографию на документ профессионального качества.",
-    "size": "62.1",
-    "download_link": "https://d.terabox.app/file/e4843a0d47871c037844348d8c7c2653?fid=4398361031480-250528-1074532006623461&dstime=1791919235&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-FgBNaO%2BdG0uEI2iVuDoAG7BEFno%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942221210543105176&dp-callid=0&r=984844725&sh=1&region=jp",
-    "file_id": "фото-на-документы-профи"
-  },
-  {
-    "folder": "AMS",
-    "title": "ФотоДОКТОР",
-    "description": "ФотоДОКТОР быстро восстановит удаленные фотографии в любых форматах с ваших носителей.",
-    "size": "13.6",
-    "download_link": "https://d.terabox.app/file/fdbcfce84a540fd7e4aff5579cf08f75?fid=4398361031480-250528-974507325883635&dstime=1791919235&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-F4Tlzc1eSCVxBugoCZpSmtyp1wE%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942221210543105176&dp-callid=0&r=260367845&sh=1&region=jp",
-    "file_id": "фотодоктор"
   },
   {
     "folder": "Archive",
@@ -547,14 +318,6 @@
     "size": "6.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/ascomp/image-former-pro.exe",
     "file_id": "image-former-pro"
-  },
-  {
-    "folder": "ASComp",
-    "title": "KeyCtrl",
-    "description": "ASCOMP KeyCtrl предназначена для повышения производительности работы за счет оптимизации автоматизации нажатия клавиш в системах Windows. Он позволяет вам определять собственные сочетания клавиш для таких задач, как открытие часто используемых папок или веб-сайтов, вставка часто используемого текста, перевод содержимого веб-сайта, создание снимков экрана и изменение состояния окна.",
-    "size": "5.3",
-    "download_link": "https://d.terabox.app/file/3913313d64c4f126da3fbad379bab45c?fid=4398361031480-250528-507596883022126&dstime=1791920067&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-fljErtdLNaVjbB%2F7Ogms6QK3wFg%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942444437580224938&dp-callid=0&r=323623858&sh=1&region=jp",
-    "file_id": "keyctrl"
   },
   {
     "folder": "ASComp",
@@ -774,14 +537,6 @@
   },
   {
     "folder": "Converter",
-    "title": "Unchecky 1.2",
-    "description": "Unchecky - утилита, которая предназначена для предотвращения установки нежелательного ПО (различные тулбары, рекламные и шпионские программы) на компьютер пользователя, содержащегося в инсталляторах устанавливаемых приложений. Unchecky работает в фоновом режиме (запускается как служба) и автоматически снимает галочки с ненужных элементов, а также информирует с помощью предупреждающего окна, уменьшая шанс случайной установки нежелательной программы.",
-    "size": "34.5",
-    "download_link": "https://d.terabox.app/file/365174d0bd4dc8e1bf78f6eae7fb532d?fid=4398361031480-250528-685413048757690&dstime=1791920008&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-l6OlDU1HIHr%2Fp%2FA%2FNpCqzi4ITkI%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942428796053615443&dp-callid=0&r=913500198&sh=1&region=jp",
-    "file_id": "unchecky-12"
-  },
-  {
-    "folder": "Converter",
     "title": "VidCoder",
     "description": "VidCoder - видеоконвертер с многопоточной и пакетной обработкой файлов. В состав программы входит несколько фильтров, возможен предварительный просмотр видео. VidCoder позволяет настраивать качество итоговых файлов по ряду параметров: битрейту, размеру и т.п. Также есть несколько готовых наборов настроек для оптимизации видео под возможности мобильных устройств.",
     "size": "74.5",
@@ -918,27 +673,11 @@
   },
   {
     "folder": "Defrag",
-    "title": "O&O Defrag Professional",
-    "description": "OO Defrag позволит вам вернуть утраченную производительность рабочих станций Windows. Программа устранит фрагментацию файлов и расположит их в нужном порядке. OO Defrag предлагает широкий выбор новых и уникальных функциональных возможностей, которые позволяют без лишних усилий оптимизировать работу вашей системы.",
-    "size": "21.7",
-    "download_link": "https://d.terabox.app/file/33145161ea586ab8ec5654c1b09e3627?fid=4398361031480-250528-224788113242936&dstime=1791920125&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-vYOQYs9W7wgLz0C7bB5V%2FDpWq8I%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942460229356817255&dp-callid=0&r=741474281&sh=1&region=jp",
-    "file_id": "oo-defrag-professional"
-  },
-  {
-    "folder": "Defrag",
     "title": "Raxco PerfectDisk Professional Business",
     "description": "Raxco PerfectDisk - мощный дефрагментатор с практически всеми необходимыми для качественной дефрагментации функциями. Может дефрагментировать не только локальные диски, но и сетевые. Поддерживается работа с RAID-томами.",
     "size": "20.2",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/defrag/raxco-perfectdisk-professional-business.exe",
     "file_id": "raxco-perfectdisk-professional-business"
-  },
-  {
-    "folder": "Diagnostics",
-    "title": "AIDA64 Business",
-    "description": "AIDA64 - информационно-диагностическая программа, предоставляющая максимум информации о вашей системе.",
-    "size": "88.0",
-    "download_link": "https://d.terabox.app/file/bedf3b96ef498c4675c514b149c58148?fid=4398361031480-250528-228985249568601&dstime=1791919976&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-Q1lRgVBHH6J2h8bbhFKvS3tfdX4%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942420234550585012&dp-callid=0&r=191655221&sh=1&region=jp",
-    "file_id": "aida64-business"
   },
   {
     "folder": "Diagnostics",
@@ -1022,18 +761,10 @@
   },
   {
     "folder": "Diagnostics",
-    "title": "PassMark BurnInTest",
-    "description": "PassMark BurnInTest - программа для тестирования различных подсистем компьютера в экстремальных условиях. Программа тестирует работу процессора, жестких дисков, CD/DVD-приводов (в том числе и записывающих), звуковых карт и видеокарт, памяти, сетевых соединения, принтеров и т.д.",
-    "size": "44.9",
-    "download_link": "https://d.terabox.app/file/c329059e86bc553fb75edc8ccadd140d?fid=4398361031480-250528-761400991251848&dstime=1791919976&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-GbH2bYQ1IJyurEctEIduIlsSJOM%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942420234550585012&dp-callid=0&r=276694799&sh=1&region=jp",
-    "file_id": "passmark-burnintest"
-  },
-  {
-    "folder": "Diagnostics",
     "title": "PassMark PerformanceTest",
     "description": "PassMark PerformanceTest - набор тестов, позволяющих оценить общую производительность вашего ПК по сравнению с другими компьютерами. В программу входят двадцать семь стандартных тестов в семи группах, плюс еще пять для пользовательских тестов. Среди стандартных можно отметить тесты процессоров, 2D и 3D графики, дисковых накопителей, памяти, CD/DVD-приводов и многих других составляющих компьютера.",
     "size": "55.7",
-    "download_link": "https://d.terabox.app/file/261fdb6b1a42e80b73cdfc527b95813f?fid=4398361031480-250528-47363513344687&dstime=1791919976&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-KeDDyGCB3ciW6YB9eDtM%2FbYbVcQ%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942420234550585012&dp-callid=0&r=492485724&sh=1&region=jp",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/diagnostics/Performance.Test.exe",
     "file_id": "passmark-performancetest"
   },
   {
@@ -1054,19 +785,19 @@
   },
   {
     "folder": "Disc",
-    "title": "Alcohol 120%",
-    "description": "Alcohol 120% - эмулятор CD/DVD-дисков. Программа  имеет возможность работы с 31 образом одновременно, обеспечивает несоизмеримо большую (по сравнению с CD/DVD) скорость передачи данных между приложением и образом диска.",
-    "size": "8.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/alcohol-120.exe",
-    "file_id": "alcohol-120"
-  },
-  {
-    "folder": "Disc",
     "title": "Alcohol 120% Free",
     "description": "Alcohol 120% - эмулятор CD/DVD-дисков. Программа  имеет возможность работы с 31 образом одновременно, обеспечивает несоизмеримо большую (по сравнению с CD/DVD) скорость передачи данных между приложением и образом диска. Бесплатная версия позволяет создать 2 виртуальных накопителя и записывать одновременно 1 диск.",
     "size": "8.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/alcohol-120-free.exe",
     "file_id": "alcohol-120-free"
+  },
+  {
+    "folder": "Disc",
+    "title": "Alcohol 120%",
+    "description": "Alcohol 120% - эмулятор CD/DVD-дисков. Программа  имеет возможность работы с 31 образом одновременно, обеспечивает несоизмеримо большую (по сравнению с CD/DVD) скорость передачи данных между приложением и образом диска.",
+    "size": "8.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/alcohol-120.exe",
+    "file_id": "alcohol-120"
   },
   {
     "folder": "Disc",
@@ -1150,14 +881,6 @@
   },
   {
     "folder": "Disc",
-    "title": "Nero Burning ROM & Nero Express",
-    "description": "Nero Burning ROM - действующий чемпион по прожигу дисков. Прожиг проектов DVD-Video, BDMV и AVCHD. Запись аудио компакт-дисков на ПК и конвертация аудио. Создание надежных и защищенных дисков с помощью встроенной технологии SecurDisc.",
-    "size": "33.9",
-    "download_link": "https://d.terabox.app/file/9dce87b2b2e3b6e81d75556ba7ebe4f8?fid=4398361031480-250528-682877826715361&dstime=1791919946&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-rmUlKA%2BsfjFUVIhlijWrXVsTO%2Fg%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942412168405719196&dp-callid=0&r=420389965&sh=1&region=jp",
-    "file_id": "nero-burning-rom-nero-express"
-  },
-  {
-    "folder": "Disc",
     "title": "Non-Stop Copy",
     "description": "Non-Stop Copy позволяет копировать поврежденные файлы с любых носителей, причем информация из нечитаемых секторов заменяется нулевыми байтами. Также пытается прочитать информацию из плохо читаемых секторов в несколько попыток. Программа не использует никаких низкоуровневых методов чтения информации, и благодаря этому будет корректно работать на любых типах носителей и на любых файловых системах, поддерживаемых операционной системой.",
     "size": "1.8",
@@ -1190,19 +913,19 @@
   },
   {
     "folder": "Disc",
-    "title": "SPTD",
-    "description": "SPTD (SCSI Pass Through Direct) - драйвер устройства, который обеспечивает новый метод доступа к запоминающим устройствам. SPTD используется в программах DAEMON Tools и Alcohol 120%.",
-    "size": "1.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/sptd.exe",
-    "file_id": "sptd"
-  },
-  {
-    "folder": "Disc",
     "title": "SPTD для Windows 10",
     "description": "SPTD (SCSI Pass Through Direct) - драйвер устройства, который обеспечивает новый метод доступа к запоминающим устройствам. SPTD используется в программах DAEMON Tools и Alcohol 120%.",
     "size": "1.1",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/sptd-dlya-windows-10.exe",
     "file_id": "sptd-для-windows-10"
+  },
+  {
+    "folder": "Disc",
+    "title": "SPTD",
+    "description": "SPTD (SCSI Pass Through Direct) - драйвер устройства, который обеспечивает новый метод доступа к запоминающим устройствам. SPTD используется в программах DAEMON Tools и Alcohol 120%.",
+    "size": "1.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/disc/sptd.exe",
+    "file_id": "sptd"
   },
   {
     "folder": "Disc",
@@ -1245,12 +968,22 @@
     "file_id": "wintousb-technician"
   },
   {
-    "folder": "Download",
-    "title": "3D Youtube Downloader",
-    "description": "3D Youtube Downloader предназначена для загрузки видео клипов и аудио дорожек с таких популярных сервисов, как Youtube, Daily Motion, Vimeo и др. Приложение анализирует список доступных файлов с подробной информацией о качестве и, в зависимости от текущего режима, автоматически выбирает необходимый файл для загрузки либо предоставляет возможность выбора пользователю.",
-    "size": "50.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/download/3d-youtube-downloader.exe",
-    "file_id": "3d-youtube-downloader"
+    "folder": "Для windows свои",
+    "title": "CertificateParser",
+    "description": "Программа для сканирования и распознавания сертификатов для последующего занесения в ЦП с помощью плагина автозагрузки",
+    "version": "1",
+    "size": "479.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dlya-windows-svoi/CertificateParser.rar",
+    "file_id": "certificateparser"
+  },
+  {
+    "folder": "Для windows свои",
+    "title": "ProtocolScanner",
+    "description": "Сканирование протоколов",
+    "version": "1.0",
+    "size": "196.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dlya-windows-svoi/ProtocolScanner.rar",
+    "file_id": "protocolscanner"
   },
   {
     "folder": "Download",
@@ -1259,6 +992,14 @@
     "size": "50.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/download/3d-youtube-downloader-batch.exe",
     "file_id": "3d-youtube-downloader-batch"
+  },
+  {
+    "folder": "Download",
+    "title": "3D Youtube Downloader",
+    "description": "3D Youtube Downloader предназначена для загрузки видео клипов и аудио дорожек с таких популярных сервисов, как Youtube, Daily Motion, Vimeo и др. Приложение анализирует список доступных файлов с подробной информацией о качестве и, в зависимости от текущего режима, автоматически выбирает необходимый файл для загрузки либо предоставляет возможность выбора пользователю.",
+    "size": "50.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/download/3d-youtube-downloader.exe",
+    "file_id": "3d-youtube-downloader"
   },
   {
     "folder": "Download",
@@ -1342,14 +1083,6 @@
   },
   {
     "folder": "Download",
-    "title": "Uptooda",
-    "description": "Uptooda - программа для загрузки изображений, фотографий, кадров из видео в интернет.",
-    "size": "17.4",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/download/uptooda.exe",
-    "file_id": "uptooda"
-  },
-  {
-    "folder": "Download",
     "title": "µTorrent",
     "description": "µTorrent - одна из самых лучших и функциональных программ для работы с сетью BitTorrent.",
     "size": "6.8",
@@ -1358,19 +1091,11 @@
   },
   {
     "folder": "Download",
-    "title": "µTorrent + DHT + uTorrent Cleaner",
-    "description": "µTorrent - одна из самых лучших и функциональных программ для работы с сетью BitTorrent. \n+ Классический патч DHT [\"Enable DHT\"/\"Peer Exchange\"/\"Local Peer Discovery\"] (файлообмен без участия трекера).\n+ uTorrent Cleaner - программа для автоматического удаления неиспользуемых *.torrent файлов, удаленных из клиента µTorrent.",
-    "size": "6.8",
-    "download_link": "https://d.terabox.app/file/beee2f22d3747571f27cd8e328acd12b?fid=4398361031480-250528-338411140692912&dstime=1791919295&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-D6QRB3qOvpUlPQJL0DKfjCIu7Kg%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942237299509371749&dp-callid=0&r=539992437&sh=1&region=jp",
-    "file_id": "torrent-dht-utorrent-cleaner"
-  },
-  {
-    "folder": "Download",
-    "title": "µTorrent + uTorrent Cleaner",
-    "description": "µTorrent - одна из самых лучших и функциональных программ для работы с сетью BitTorrent. \n+ uTorrent Cleaner - программа для автоматического удаления неиспользуемых *.torrent файлов, удаленных из клиента µTorrent.",
-    "size": "6.8",
-    "download_link": "https://d.terabox.app/file/9fd4026421f854ff20ddc0782d750475?fid=4398361031480-250528-621919934762933&dstime=1791919295&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-giy7y5z40yEGUwkAhkv4zptvDA4%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942237299509371749&dp-callid=0&r=824273494&sh=1&region=jp",
-    "file_id": "torrent-utorrent-cleaner"
+    "title": "Uptooda",
+    "description": "Uptooda - программа для загрузки изображений, фотографий, кадров из видео в интернет.",
+    "size": "17.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/download/uptooda.exe",
+    "file_id": "uptooda"
   },
   {
     "folder": "File",
@@ -1459,14 +1184,6 @@
     "size": "0.2",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/file/total-commander-extended-lite.exe",
     "file_id": "total-commander-extended-lite"
-  },
-  {
-    "folder": "File",
-    "title": "Total Commander MAX-Pack",
-    "description": "Total Commander MAX-Pack - файловый менеджер с лучшими плагинами и отборными портативными программами.",
-    "size": "59.6",
-    "download_link": "https://d.terabox.app/file/fac70d0131e418b3b2ea7983bc8bde06?fid=4398361031480-250528-103665528372588&dstime=1791919917&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-fitpfQrdcK8ioWU6pr0F9ppSGTc%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942404280855030336&dp-callid=0&r=653158608&sh=1&region=jp",
-    "file_id": "total-commander-max-pack"
   },
   {
     "folder": "File",
@@ -1830,22 +1547,6 @@
   },
   {
     "folder": "Interface",
-    "title": "Гаджеты для Windows 7",
-    "description": "Набор гаджетов для Windows 7. \nДля установки набора в Windows 8.x и 10 нужно предварительно установить дополнительное ПО \n(Windows 8 Desktop Gadgets, Windows Desktop Gadgets или 8GadgetPack).",
-    "size": "19.3",
-    "download_link": "https://d.terabox.app/file/4150f1f544831a99d5a342207a3c848c?fid=4398361031480-250528-359889851208351&dstime=1791919857&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-IgBohJnn%2BHfF2Sc%2Frp2HULOr0e0%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942387843946280673&dp-callid=0&r=848841127&sh=1&region=jp",
-    "file_id": "гаджеты-для-windows-7"
-  },
-  {
-    "folder": "Interface",
-    "title": "Скринсейверы",
-    "description": "Скринсейверы (Хранители экрана).",
-    "size": "44.1",
-    "download_link": "https://d.terabox.app/file/18b6cb6b138985544e2a7fc8c4bfc4b3?fid=4398361031480-250528-651813840333713&dstime=1791919857&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-Nvy64%2BxTBP0U7VBk4%2BH6KZmMt9E%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942387843946280673&dp-callid=0&r=195060098&sh=1&region=jp",
-    "file_id": "скринсейверы"
-  },
-  {
-    "folder": "Interface",
     "title": "Atomic Alarm Clock",
     "description": "Atomic Alarm Clock преобразит ваши часы в трее, добавит им функциональности и привлекательности. В качестве сигналов данная программа позволяет использовать MP3-файлы. Помимо работы в качестве будильника, программа также может запускать в назначенное время другие приложения, выходить из системы, перезагружать компьютер, выключать его и многое другое. Внешний вид часов можно выбрать из вариантов скинов.",
     "size": "7.2",
@@ -1950,6 +1651,14 @@
   },
   {
     "folder": "Interface",
+    "title": "Скринсейверы",
+    "description": "Скринсейверы (Хранители экрана).",
+    "size": "44.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/interface/Screen.Savers.exe",
+    "file_id": "скринсейверы"
+  },
+  {
+    "folder": "Interface",
     "title": "ScrollNavigator",
     "description": "ScrollNavigator - программа, которая поможет вам прокручивать по-вертикали и по-горизонтали ваши документы. С помощью этой утилиты достаточно зажать правую кнопку мыши в любом месте страницы и протянуть курсор в нужном направлении. Это поможет вам избежать позиционирование мыши над полосой прокрутки и позволит перемещаться в обоих направлениях одновременно. Кроме того, программа позволяет добавлять динамическое ускорение к колесу вашей мыши.",
     "size": "2.6",
@@ -1979,14 +1688,6 @@
     "size": "36.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/interface/stardock-start11.exe",
     "file_id": "stardock-start11"
-  },
-  {
-    "folder": "Interface",
-    "title": "StartIsBack++ / StartAllBack",
-    "description": "StartIsBack++ / StartAllBack возвращает в операционные системы Windows 11/10/8.x полнофункциональную кнопку запуска меню Пуск, такую же как и в Windows 7.",
-    "size": "6.2",
-    "download_link": "https://d.terabox.app/file/b6cc3ad0fd59d85df4fe86d98799144c?fid=4398361031480-250528-104643783330853&dstime=1791919857&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-dNFtisfyoqihLdRUUPYdp%2BwD98A%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942387843946280673&dp-callid=0&r=127271867&sh=1&region=jp",
-    "file_id": "startisback-startallback"
   },
   {
     "folder": "Interface",
@@ -2229,12 +1930,115 @@
     "file_id": "wi-fi-scanner"
   },
   {
-    "folder": "Media",
-    "title": "Обложки «Pandemic» и «Euphoria»",
-    "description": "AIMP Skins - Обложки «Pandemic» и «Euphoria».",
-    "size": "1.3",
-    "download_link": "https://d.terabox.app/file/ea976e7cbff0ced8cc5a373b6a2ce01f?fid=4398361031480-250528-128336125005751&dstime=1791919826&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-l%2BDzaNvGpolRaZmi%2FvhuePoq6XU%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942379773612478345&dp-callid=0&r=712240238&sh=1&region=jp",
-    "file_id": "обложки-pandemic-и-euphoria"
+    "folder": "Макросы",
+    "title": "cleanmvd",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/cleanmvd.ods",
+    "file_id": "cleanmvd"
+  },
+  {
+    "folder": "Макросы",
+    "title": "Clean_MVD_Klinrai",
+    "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП район",
+    "version": "1",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/cleanmvdklinrai.ods",
+    "file_id": "cleanmvdklinrai"
+  },
+  {
+    "folder": "Макросы",
+    "title": "ЕРН Макрос",
+    "description": "Обработка выггрузок ЕРН",
+    "version": "1",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/ern-makros.xlsm",
+    "file_id": "ерн-макрос"
+  },
+  {
+    "folder": "Макросы",
+    "title": "МВД, ЕРН, ЗАГС+ДляУверсальнойПроверки версия 2",
+    "description": "Проверка выгрузок МВД, ЕРН и ЗАГС и сравнение с выгрузкой базы",
+    "version": "2",
+    "size": "0.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/mvd-ern-zagsdlyauversalnojproverki-versiya-2.xlsm",
+    "file_id": "мвд-ерн-загсдляуверсальнойпроверки-версия-2"
+  },
+  {
+    "folder": "Макросы",
+    "title": "МВД Макрос",
+    "description": "Обработка выггрузок МВД",
+    "version": "1",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/mvd-makros.xlsm",
+    "file_id": "мвд-макрос"
+  },
+  {
+    "folder": "Макросы",
+    "title": "отбор из других районов XLSX Версия 2 для либра офиса",
+    "description": "Записи из месячной выгрузки из других районов но с событиями на своей территории",
+    "version": "2",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-iz-drugih-rajonov-xlsx-versiya-2-dlya-libra-ofisa.ods",
+    "file_id": "отбор-из-других-районов-xlsx-версия-2-для-либра-офиса"
+  },
+  {
+    "folder": "Макросы",
+    "title": "отбор из других районов XLSX Версия 2",
+    "description": "Записи из месячной выгрузки из других районов но с событиями на своей территории",
+    "version": "2",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-iz-drugih-rajonov-xlsx-versiya-2.xlsm",
+    "file_id": "отбор-из-других-районов-xlsx-версия-2"
+  },
+  {
+    "folder": "Макросы",
+    "title": "otbor-tekstovyj-rajon",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
+    "file_id": "otbor-tekstovyj-rajon"
+  },
+  {
+    "folder": "Макросы",
+    "title": "ОТБОР Текстовый Район",
+    "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП район",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
+    "file_id": "отбор-текстовый-район"
+  },
+  {
+    "folder": "Макросы",
+    "title": "Просмотреть, редактировать, выгрузить версия 6",
+    "description": "Различные просмотры выгрузок 167 полей для последущей работы с базой",
+    "version": "6",
+    "size": "0.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/prosmotret-redaktirovat-vygruzit-versiya-6.xlsm",
+    "file_id": "просмотреть-редактировать-выгрузить-версия-6"
+  },
+  {
+    "folder": "Макросы",
+    "title": "RUIPvsPRIUR_16.03.2026 версия 5",
+    "description": "Различные сравнения выгрузок РУИП и ПРИУР. РУИП и РУИП разных вариантов",
+    "version": "5",
+    "size": "0.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/ruipvspriur16032026-versiya-5.xlsm",
+    "file_id": "ruipvspriur16032026-версия-5"
+  },
+  {
+    "folder": "Макросы",
+    "title": "Сравнение стат52иРУИП167полей Поиск Двойников",
+    "description": "Сравнение стат52 и РУИП 167 полей и поиск двойников",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/sravnenie-stat52iruip167polej-poisk-dvojnikov.xlsm",
+    "file_id": "сравнение-стат52ируип167полей-поиск-двойников"
+  },
+  {
+    "folder": "Макросы",
+    "title": "Стат52УИК_Комментарии",
+    "description": "Выявление из отчета стат.52 записей с комментариями",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/stat52uikkommentarii.xlsm",
+    "file_id": "стат52уиккомментарии"
   },
   {
     "folder": "Media",
@@ -2270,19 +2074,19 @@
   },
   {
     "folder": "Media",
-    "title": "foobar2000",
-    "description": "foobar2000 - программный аудиопроигрыватель. Минималистичный интерфейс и высокая производительность программы сочетаются с широкими возможностями и расширяемостью.",
-    "size": "7.2",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/foobar2000.exe",
-    "file_id": "foobar2000"
-  },
-  {
-    "folder": "Media",
     "title": "foobar2000 DarkOne + DUIFoon",
     "description": "Русифицированная версия foobar2000 DarkOne + DUIFoon содержит несколько тем на основе стандартного (в том числе DUIFoon) и Columns интерфейса (DarkOne v.3.0, DarkOne v.4.0 и DarkOne v.4.0 Mod с быстрым переключением).",
     "size": "54.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/foobar2000-darkone-duifoon.exe",
     "file_id": "foobar2000-darkone-duifoon"
+  },
+  {
+    "folder": "Media",
+    "title": "foobar2000",
+    "description": "foobar2000 - программный аудиопроигрыватель. Минималистичный интерфейс и высокая производительность программы сочетаются с широкими возможностями и расширяемостью.",
+    "size": "7.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/foobar2000.exe",
+    "file_id": "foobar2000"
   },
   {
     "folder": "Media",
@@ -2384,9 +2188,33 @@
     "folder": "Media",
     "title": "PotPlayer (7sh3)",
     "description": "PotPlayer - популярный медиаплеер. Высокое качество воспроизведения; Поддержка современных видео и аудио форматов, DVD, Blu-ray (без меню), 3D видео (+MVC), Шейдеры, Захват видео и аудио...; Наличие встроенных аппаратных декодеров DXVA, Intel QuickSync, Nvidia CUDA (H.264/AVC, H.265/HEVC, WVC1, WMV3, MPEG2, MPEG4); Поддержка всех типов субтитров.",
-    "size": "78.9",
-    "download_link": "https://d.terabox.app/file/02d584b5122437594f50097e3aa09fbf?fid=4398361031480-250528-428653099069845&dstime=1791919826&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-toAHyyEGcKUJW3vir53Xq7O%2FDQo%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942379773612478345&dp-callid=0&r=515728050&sh=1&region=jp",
+    "size": "101.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/Pot.Player-x64.exe",
     "file_id": "potplayer-7sh3"
+  },
+  {
+    "folder": "Media",
+    "title": "Pot.Player-x86",
+    "description": "PotPlayer - популярный медиаплеер. Высокое качество воспроизведения; Поддержка современных видео и аудио форматов, DVD, Blu-ray (без меню), 3D видео (+MVC), Шейдеры, Захват видео и аудио...; Наличие встроенных аппаратных декодеров DXVA, Intel QuickSync, Nvidia CUDA (H.264/AVC, H.265/HEVC, WVC1, WMV3, MPEG2, MPEG4); Поддержка всех типов субтитров.",
+    "size": "78.9",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/Pot.Player-x86.exe",
+    "file_id": "potplayer-x86"
+  },
+  {
+    "folder": "Media",
+    "title": "Pot.Player.Final-x64",
+    "description": "PotPlayer - популярный медиаплеер. Высокое качество воспроизведения; Поддержка современных видео и аудио форматов, DVD, Blu-ray (без меню), 3D видео (+MVC), Шейдеры, Захват видео и аудио...; Наличие встроенных аппаратных декодеров DXVA, Intel QuickSync, Nvidia CUDA (H.264/AVC, H.265/HEVC, WVC1, WMV3, MPEG2, MPEG4); Поддержка всех типов субтитров.",
+    "size": "163.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/Pot.Player.Final-x64.exe",
+    "file_id": "potplayerfinal-x64"
+  },
+  {
+    "folder": "Media",
+    "title": "Pot.Player.Final-x86",
+    "description": "PotPlayer - популярный медиаплеер. Высокое качество воспроизведения; Поддержка современных видео и аудио форматов, DVD, Blu-ray (без меню), 3D видео (+MVC), Шейдеры, Захват видео и аудио...; Наличие встроенных аппаратных декодеров DXVA, Intel QuickSync, Nvidia CUDA (H.264/AVC, H.265/HEVC, WVC1, WMV3, MPEG2, MPEG4); Поддержка всех типов субтитров.",
+    "size": "152.2",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/media/Pot.Player.Final-x86.exe",
+    "file_id": "potplayerfinal-x86"
   },
   {
     "folder": "Media",
@@ -2494,19 +2322,19 @@
   },
   {
     "folder": "MEditor",
-    "title": "MKVToolNix + gMKVExtractGUI + MKVCleaver",
-    "description": "MKVToolNix - набор программных компонентов для работы с файлами формата MKV (Matroska).",
-    "size": "70.7",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/meditor/mkvtoolnix-gmkvextractgui-mkvcleaver.exe",
-    "file_id": "mkvtoolnix-gmkvextractgui-mkvcleaver"
-  },
-  {
-    "folder": "MEditor",
     "title": "MKVToolNix for Windows 7",
     "description": "MKVToolNix - набор программных компонентов для работы с файлами формата MKV (Matroska).",
     "size": "70.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/meditor/mkvtoolnix-for-windows-7.exe",
     "file_id": "mkvtoolnix-for-windows-7"
+  },
+  {
+    "folder": "MEditor",
+    "title": "MKVToolNix + gMKVExtractGUI + MKVCleaver",
+    "description": "MKVToolNix - набор программных компонентов для работы с файлами формата MKV (Matroska).",
+    "size": "70.7",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/meditor/mkvtoolnix-gmkvextractgui-mkvcleaver.exe",
+    "file_id": "mkvtoolnix-gmkvextractgui-mkvcleaver"
   },
   {
     "folder": "MEditor",
@@ -2542,19 +2370,19 @@
   },
   {
     "folder": "MSO",
-    "title": "Classic Menu for Office",
-    "description": "Classic Menu for Office - утилита для тех, кто хочет безболезненно перейти от старого знакомого интерфейса офисных программ к новому интерфейсу Microsoft Office 2010-2019. Надстройка Classic Menu для Office 2003-2019 и Office 365 встраивает в этот офисный пакет привычный классический интерфейс. Всё, что она делает - добавляет свою вкладку в ленту и показывает меню и панель инструментов в стиле Office 2003.",
-    "size": "16.8",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/mso/classic-menu-for-office.exe",
-    "file_id": "classic-menu-for-office"
-  },
-  {
-    "folder": "MSO",
     "title": "Classic Menu for Office 2007",
     "description": "Classic Menu for Office 2007 - классический вид Microsoft Office 2003 для Microsoft Office 2007. Классический вид позволяет работать с Office 2007 так, как если бы это был Office 2003. Он включает в себя не только Классическое меню для Word 2007, Excel 2007 и PowerPoint 2007, но также для Access 2007 и Outlook 2007.",
     "size": "16.8",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/mso/classic-menu-for-office-2007.exe",
     "file_id": "classic-menu-for-office-2007"
+  },
+  {
+    "folder": "MSO",
+    "title": "Classic Menu for Office",
+    "description": "Classic Menu for Office - утилита для тех, кто хочет безболезненно перейти от старого знакомого интерфейса офисных программ к новому интерфейсу Microsoft Office 2010-2019. Надстройка Classic Menu для Office 2003-2019 и Office 365 встраивает в этот офисный пакет привычный классический интерфейс. Всё, что она делает - добавляет свою вкладку в ленту и показывает меню и панель инструментов в стиле Office 2003.",
+    "size": "16.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/mso/classic-menu-for-office.exe",
+    "file_id": "classic-menu-for-office"
   },
   {
     "folder": "MSO",
@@ -2579,22 +2407,6 @@
     "size": "54.8",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/mso/softmaker-office.exe",
     "file_id": "softmaker-office"
-  },
-  {
-    "folder": "MSO",
-    "title": "Windows Word",
-    "description": "WindowsWord - текстовый редактор документов .docx, .doc и просмотр .pdf - быстрый и легкий полноценный редактор текстов. Поддержка всех форматов текстовых документов: DOC, TXT, DOCX, RTF, PDF и др.",
-    "size": "16.2",
-    "download_link": "https://d.terabox.app/file/deb62c33efb2975ac8cc048a3e7d744c?fid=4398361031480-250528-882980647402098&dstime=1791919767&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-JQLv2wol5HaxBWCI5IUm%2B5f5ADs%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942364021789340064&dp-callid=0&r=682025540&sh=1&region=jp",
-    "file_id": "windows-word"
-  },
-  {
-    "folder": "Office",
-    "title": "ЛовиОтвет",
-    "description": "ЛовиОтвет - программа  для автоматического решения математических примеров любой сложности с отображением этапов решения онлайн.",
-    "size": "3.0",
-    "download_link": "https://d.terabox.app/file/f2fb28de17cae1854b857839fecff79b?fid=4398361031480-250528-981825659519905&dstime=1791919737&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-QPrc5LGbxzQGPM4lNxtCpKKCan0%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942355946330526471&dp-callid=0&r=883405689&sh=1&region=jp",
-    "file_id": "ловиответ"
   },
   {
     "folder": "Office",
@@ -2659,14 +2471,6 @@
     "size": "4.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/office/dbf-viewer-2000.exe",
     "file_id": "dbf-viewer-2000"
-  },
-  {
-    "folder": "Office",
-    "title": "EPIM Pro",
-    "description": "EPIM - высокофункциональный менеджер персональной информации с продуманным интерфейсом и множеством возможностей. Содержит средства для работы с календарем, списком задач, заметками и контактами.",
-    "size": "52.0",
-    "download_link": "https://d.terabox.app/file/3a8aceada54caf0bc3ddfc91c79ba69f?fid=4398361031480-250528-318621440480194&dstime=1791919737&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-jZk3KmxGWxjw0BdyFKOq%2BfXT22Y%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942355946330526471&dp-callid=0&r=906459739&sh=1&region=jp",
-    "file_id": "epim-pro"
   },
   {
     "folder": "Office",
@@ -2851,14 +2655,6 @@
     "size": "37.6",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/optimizers/reviversoft-pc-reviver.exe",
     "file_id": "reviversoft-pc-reviver"
-  },
-  {
-    "folder": "Optimizers",
-    "title": "Speccy Professional",
-    "description": "Speccy мониторит аппаратную часть компьютера, и отображает информацию об операционной системе и характеристики установленного железа.",
-    "size": "20.2",
-    "download_link": "https://d.terabox.app/file/5a9596d76c2b3c8b166d0535c2cdf0e0?fid=4398361031480-250528-864581588037646&dstime=1791920185&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-8q%2FVx76IdgHeDVS8wyfL65bCVdY%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942476187499480832&dp-callid=0&r=403354600&sh=1&region=jp",
-    "file_id": "speccy-professional"
   },
   {
     "folder": "Optimizers",
@@ -3181,6 +2977,49 @@
     "file_id": "teorex-multi-view-inpaint"
   },
   {
+    "folder": "Плагины",
+    "title": "АвтоматПоискаПоБазеИзФайла",
+    "description": "Поиск по базе из файла и сохранение в накопительную таблицу",
+    "size": "0.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/avtomatpoiskapobazeizfajla.rar",
+    "file_id": "автоматпоискапобазеизфайла"
+  },
+  {
+    "folder": "Плагины",
+    "title": "Автосбор событий с чужими событиями или карточек с одной датой",
+    "description": "Автоматический сборщик событий с чужими событиями во всем карточкам или карточек с одной датой",
+    "size": "0.1",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/Avtosbor_sobitii_s_chygimi_i_sobitii_s_odnoi_datoi.rar",
+    "file_id": "автосбор-событий-с-чужими-событиями-или-карточек-с-одной-датой"
+  },
+  {
+    "folder": "Плагины",
+    "title": "ButtonCollector",
+    "description": "Сборщик селекторов и расположений кнопок на отрытой странице и при переходе на следующую страницу собирает данные о кнопках со второй странцы и последующих.",
+    "version": "1.0",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/ButtonCollector.rar",
+    "file_id": "buttoncollector"
+  },
+  {
+    "folder": "Плагины",
+    "title": "gas-plagins_v2",
+    "description": "Запись с экрана и сохранение строк с автопереходом на следующую страницу",
+    "version": "2",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/gas-plaginsv2.zip",
+    "file_id": "gas-plaginsv2"
+  },
+  {
+    "folder": "Плагины",
+    "title": "ПоискВакансий",
+    "description": "Собирает информацию со страниц о фактическом количественном составе комиссии и эталонном составе комисси и на основе этих данных определяет сколько вакансий есть в каждой из комиссий",
+    "version": "2.8",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/Poisk_Vakansii.rar",
+    "file_id": "поисквакансий"
+  },
+  {
     "folder": "Print",
     "title": "A4ScanDoc",
     "description": "A4ScanDoc - программа для сканирования документов на сканерах, начиная от настольных и заканчивая сканерами с автоподачей документов для сканирования. Подойдет как для разового, так и для массового сканирования документов. Дает возможность стандартизировать сканирование документов как в больших организациях, так и дома. Cканирование в BMP, JPEG, PNG, TIFF и PDF.",
@@ -3195,14 +3034,6 @@
     "size": "22.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/print/fineprint.exe",
     "file_id": "fineprint"
-  },
-  {
-    "folder": "Print",
-    "title": "NAPS2 (Not Another PDF Scanner 2)",
-    "description": "NAPS2 (Not Another PDF Scanner 2) - программа для сканирования документов и сохранения их в формат PDF или в виде графического изображения (bmp, gif, tif, jpg, png и др.). NAPS2 позволяет создавать несколько профилей сканирования в зависимости от требуемых параметров качества отсканированного файла. Поддерживается и пакетное сканирование, что удобно при работе с большим объемом документов. Важно, что этот инструмент содержит модуль распознавания текста: вы можете использовать функцию OCR (оптическое распознавание текста) для добавления поиска в создаваемых PDF-файлах (русский язык поддерживается).",
-    "size": "51.2",
-    "download_link": "https://d.terabox.app/file/e7f9335ae1473891a64e072478fa68de?fid=4398361031480-250528-825862339740918&dstime=1791919619&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-BWdllvgXiyxULVSbDnbHL3vHVXI%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942324358369437402&dp-callid=0&r=636106564&sh=1&region=jp",
-    "file_id": "naps2-not-another-pdf-scanner-2"
   },
   {
     "folder": "Print",
@@ -3230,14 +3061,6 @@
   },
   {
     "folder": "RadioTV",
-    "title": "Радиоточка Плюс",
-    "description": "Радиоточка - программа для прослушивания на ПК онлайн-радио каналов.",
-    "size": "3.8",
-    "download_link": "https://d.terabox.app/file/2479ca63602caadf8d8da284a014ce56?fid=4398361031480-250528-695334637020367&dstime=1791919590&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-243J3QAQRHGsk79dTBNyLk%2F1USw%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942316479397160525&dp-callid=0&r=127491294&sh=1&region=jp",
-    "file_id": "радиоточка-плюс"
-  },
-  {
-    "folder": "RadioTV",
     "title": "IP-TV Player",
     "description": "IP-TV Player - высококачественный проигрыватель для вещания эфирных каналов IP-телевидения. Индивидуальные настройки для каналов, возможность записи потока в файл. Поддерживаются телепрограммы в формате JTV, планировщик записи/просмотра, фоновая запись.",
     "size": "35.8",
@@ -3251,6 +3074,14 @@
     "size": "24.9",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/radiotv/pcradio.exe",
     "file_id": "pcradio"
+  },
+  {
+    "folder": "RadioTV",
+    "title": "Радиоточка Плюс",
+    "description": "Радиоточка - программа для прослушивания на ПК онлайн-радио каналов.",
+    "size": "3.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/radiotv/Radio.Tochka.exe",
+    "file_id": "радиоточка-плюс"
   },
   {
     "folder": "RadioTV",
@@ -3323,14 +3154,6 @@
     "size": "11.3",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/recovery/ibeesoft-data-recovery.exe",
     "file_id": "ibeesoft-data-recovery"
-  },
-  {
-    "folder": "Recovery",
-    "title": "O&O DiskRecovery Technician",
-    "description": "OO DiskRecovery просматривает каждый сектор на жестком диске, карте памяти или в цифровой камере для поиска потерянных файлов. Даже если  носитель отформатирован или файловая система разрушена, можно восстановить удаленные данные. Распознаются и восстанавливаются более 350 типов файлов, включая документы Word, книги Excel, базы данных Access и почти все общеизвестные форматы графики, фото, фильмов, аудио (JPEG, AVI, MPEG, MP3, WAV, BMP, TIFF, Corel Draw, Photoshop, Framemaker, Adobe Illustrator, и многие другие).",
-    "size": "9.8",
-    "download_link": "https://d.terabox.app/file/49cf3c39c3145d38012e30fb239e3882?fid=4398361031480-250528-275094063849546&dstime=1791919561&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-DSQ9o0tOFXJcapzMNKNTNZGjBnQ%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942308600928570288&dp-callid=0&r=293784550&sh=1&region=jp",
-    "file_id": "oo-diskrecovery-technician"
   },
   {
     "folder": "Recovery",
@@ -3957,12 +3780,103 @@
     "file_id": "zentimo-xstorage-manager"
   },
   {
-    "folder": "System",
-    "title": "Обновление корневых сертификатов",
-    "description": "Проблема корневых сертификатов стала актуальна для Windows 7 после окончания её поддержки. И если с отсутствием свежих хотфиксов жить, в принципе, можно, то из-за необновлённого хранилища сертификатов перестают нормально отображаться сайты и даже ломаются онлайн инсталляторы.",
-    "size": "0.8",
-    "download_link": "https://d.terabox.app/file/b23c790a622d0d233e66ec7a74579e27?fid=4398361031480-250528-721312170493598&dstime=1791919264&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-11KSiFE6G78q59G0Vw8gTbohsPg%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942229102908344008&dp-callid=0&r=669283660&sh=1&region=jp",
-    "file_id": "обновление-корневых-сертификатов"
+    "folder": "Скрипты",
+    "title": "База167поФильтрам",
+    "description": "Отбор по фильтрам из выгрузки 167 полей по основных критериям. Только избиратели, только умершие, только убывшие",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/baza167pofiltram.rar",
+    "file_id": "база167пофильтрам"
+  },
+  {
+    "folder": "Скрипты",
+    "title": "Чужой без убытия",
+    "description": "Определение карточек последнее событие произошло уже не на своей территории но от вас нет события убытия",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/chuzhoj-bez-ubytiya.rar",
+    "file_id": "чужой-без-убытия"
+  },
+  {
+    "folder": "Скрипты",
+    "title": "CleanMVD",
+    "description": "Скрипт для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/cleanmvd.rar",
+    "file_id": "cleanmvd"
+  },
+  {
+    "folder": "Скрипты",
+    "title": "MVD_v2",
+    "description": "Работа с выгрузкой МВД",
+    "version": "2",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/mvdv2.rar",
+    "file_id": "mvdv2"
+  },
+  {
+    "folder": "Скрипты",
+    "title": "ОтчетБД",
+    "description": "Отчет из Базы данных 167 полей с добавлением номера УИК каждой карточке",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/otchetbd.rar",
+    "file_id": "отчетбд"
+  },
+  {
+    "folder": "Скрипты",
+    "title": "ПоследнееИзДинамики",
+    "description": "Отбор последнего события из Динамики выгрузки 167полей",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/posledneeizdinamiki.rar",
+    "file_id": "последнееиздинамики"
+  },
+  {
+    "folder": "Скрипты",
+    "title": "SCRIPT-ZAGS",
+    "description": "Работа с выгрузкой из администрации по смерти за месяц",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/script-zags.rar",
+    "file_id": "script-zags"
+  },
+  {
+    "folder": "Скрипты",
+    "title": "Script_Dyblu",
+    "description": "Поиск дублей в различных вариантах",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/scriptdyblu.rar",
+    "file_id": "scriptdyblu"
+  },
+  {
+    "folder": "Скрипты",
+    "title": "СКРИПТ Проверка списков для Linux",
+    "description": "Проверка списков для Linux",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/skript-proverka-spiskov-dlya-linux.rar",
+    "file_id": "скрипт-проверка-списков-для-linux"
+  },
+  {
+    "folder": "Скрипты",
+    "title": "СнятьЗащутуСЛистаВxlsx",
+    "description": "Скрипт для снятия защиты с листа",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/snyatzashhutuslistavxlsx.rar",
+    "file_id": "снятьзащутуслиставxlsx"
+  },
+  {
+    "folder": "Скрипты",
+    "title": "WorkDIN_22.07.2026",
+    "description": "Большая подборка разных поисков и сравнений из Полной выгрузки Динамики Базы из ЦП",
+    "version": "1",
+    "size": "0.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/workdin22072026.rar",
+    "file_id": "workdin22072026"
   },
   {
     "folder": "System",
@@ -3979,6 +3893,30 @@
     "size": "65.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/system/java-se-jre-8-x86.exe",
     "file_id": "java-se-jre-8-x86"
+  },
+  {
+    "folder": "System",
+    "title": "Microsoft ASP.NET Core Runtime x64",
+    "description": ".NET Desktop Runtime позволяет запускать существующие настольные приложения Windows, использующие среду выполнения .NET.",
+    "size": "10.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/system/microsoft-aspnet-core-runtime-x64.exe",
+    "file_id": "microsoft-aspnet-core-runtime-x64"
+  },
+  {
+    "folder": "System",
+    "title": "Microsoft ASP.NET Core Runtime x86",
+    "description": ".NET Desktop Runtime позволяет запускать существующие настольные приложения Windows, использующие среду выполнения .NET.",
+    "size": "10.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/system/microsoft-aspnet-core-runtime-x86.exe",
+    "file_id": "microsoft-aspnet-core-runtime-x86"
+  },
+  {
+    "folder": "System",
+    "title": "Microsoft Edge WebView2 Runtime (Online)",
+    "description": "Microsoft Edge WebView2 Runtime служит для возможности встраивания контента, созданного с использованием веб-технологий (контента с сайтов) в обычные приложения для компьютера с использованием движка Chromium из Microsoft Edge. В Windows 11 компонент установлен в системе по умолчанию.",
+    "size": "1.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/system/microsoft-edge-webview2-runtime-online.exe",
+    "file_id": "microsoft-edge-webview2-runtime-online"
   },
   {
     "folder": "System",
@@ -4011,54 +3949,6 @@
     "size": "60.7",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/system/microsoft-net-framework-481-windows-108x7.exe",
     "file_id": "microsoft-net-framework-481-windows-108x7"
-  },
-  {
-    "folder": "System",
-    "title": "Microsoft ASP.NET Core Runtime x64",
-    "description": ".NET Desktop Runtime позволяет запускать существующие настольные приложения Windows, использующие среду выполнения .NET.",
-    "size": "10.8",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/system/microsoft-aspnet-core-runtime-x64.exe",
-    "file_id": "microsoft-aspnet-core-runtime-x64"
-  },
-  {
-    "folder": "System",
-    "title": "Microsoft ASP.NET Core Runtime x86",
-    "description": ".NET Desktop Runtime позволяет запускать существующие настольные приложения Windows, использующие среду выполнения .NET.",
-    "size": "10.3",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/system/microsoft-aspnet-core-runtime-x86.exe",
-    "file_id": "microsoft-aspnet-core-runtime-x86"
-  },
-  {
-    "folder": "System",
-    "title": "Microsoft DirectX",
-    "description": "Microsoft DirectX обеспечивает совместимость компьютерных игр и программ с множеством разнообразных аудио- и видеоадаптеров.",
-    "size": "26.2",
-    "download_link": "https://d.terabox.app/file/5911eabd6c5016543f946f4f798a252d?fid=4398361031480-250528-245957701412932&dstime=1791919267&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-i9eBiu1pd7dkwEQPMp9lbDmWyFU%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942229777316485117&dp-callid=0&r=798803183&sh=1&region=jp",
-    "file_id": "microsoft-directx"
-  },
-  {
-    "folder": "System",
-    "title": "Microsoft Edge WebView2 Runtime (Online)",
-    "description": "Microsoft Edge WebView2 Runtime служит для возможности встраивания контента, созданного с использованием веб-технологий (контента с сайтов) в обычные приложения для компьютера с использованием движка Chromium из Microsoft Edge. В Windows 11 компонент установлен в системе по умолчанию.",
-    "size": "1.6",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/system/microsoft-edge-webview2-runtime-online.exe",
-    "file_id": "microsoft-edge-webview2-runtime-online"
-  },
-  {
-    "folder": "System",
-    "title": "Microsoft Visual C++ 2005-2008-2010-2012-2013",
-    "description": "Microsoft Visual C++ Redistributable Package. В данной сборке (Hybrid) официальные 32-х и 64-х битные версии Microsoft Visual C++ 2005-2008-2010-2012-2013 Redistributable Package.",
-    "size": "46.3",
-    "download_link": "https://d.terabox.app/file/5d7ca7e03cf5ad72c45ea69c9820b697?fid=4398361031480-250528-113828523927916&dstime=1791919264&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-96OlReyZ5CIwgdHie%2Btqyf4FtDQ%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942229102908344008&dp-callid=0&r=994978219&sh=1&region=jp",
-    "file_id": "microsoft-visual-c-2005-2008-2010-2012-2013"
-  },
-  {
-    "folder": "System",
-    "title": "Microsoft Visual C++ 2005-2022 Hybrid GUI",
-    "description": "VCRHybGuiSetup - GUI-установщик, \nкоторый позволяет запускать сборку Microsoft Visual C++ Hybrid, с разными ключами.\nMicrosoft Visual C++ Redistributable Package. В данной сборке (Hybrid), самые последние, официальные 32-х и 64-х битные версии Microsoft Visual C++ 2005-2008-2010-2012-2013-2019-2022 Redistributable Package.",
-    "size": "0.8",
-    "download_link": "https://d.terabox.app/file/a9b351d92258893c91f576c5a8a2ca42?fid=4398361031480-250528-180418828409735&dstime=1791919264&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-PY7RC%2BBVYTYf2KJIeBa8GdzY22A%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942229102908344008&dp-callid=0&r=104061703&sh=1&region=jp",
-    "file_id": "microsoft-visual-c-2005-2022-hybrid-gui"
   },
   {
     "folder": "System",
@@ -4317,91 +4207,43 @@
     "file_id": "your-uninstaller-pro"
   },
   {
-    "title": "belico",
-    "size": "9.9",
-    "download_link": "https://d.terabox.app/file/7b0c871f9959cfb8b3c23047b4dcf65f?fid=4398361031480-250528-918181246856909&dstime=1791919201&rt=sh&sign=FDtAER-DCb740ccc5511e5e8fedcff06b081203-%2FviodKbHpwDtgX%2FIDc5i9b8%2BaYs%3D&expires=8h&chkv=0&chkbd=0&chkpc=&dp-logid=8942211953628007398&dp-callid=0&r=755064433&sh=1&region=jp",
-    "file_id": "belico"
+    "folder": "System",
+    "title": "Microsoft Visual C++ 2005-2008-2010-2012-2013",
+    "description": "Microsoft Visual C++ Redistributable Package. В данной сборке (Hybrid) официальные 32-х и 64-х битные версии Microsoft Visual C++ 2005-2008-2010-2012-2013 Redistributable Package.",
+    "size": "46.3",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/system/VCRHyb64.exe",
+    "file_id": "microsoft-visual-c-2005-2008-2010-2012-2013"
   },
   {
-    "folder": "Плагины",
-    "title": "ButtonCollector",
-    "description": "Сборщик селекторов и расположений кнопок на отрытой странице и при переходе на следующую страницу собирает данные о кнопках со второй странцы и последующих.",
-    "version": "1.0",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/ButtonCollector.rar",
-    "file_id": "buttoncollector"
+    "folder": "System",
+    "title": "Microsoft Visual C++ 2005-2022 Hybrid GUI",
+    "description": "VCRHybGuiSetup - GUI-установщик, \nкоторый позволяет запускать сборку Microsoft Visual C++ Hybrid, с разными ключами.\nMicrosoft Visual C++ Redistributable Package. В данной сборке (Hybrid), самые последние, официальные 32-х и 64-х битные версии Microsoft Visual C++ 2005-2008-2010-2012-2013-2019-2022 Redistributable Package.",
+    "size": "0.8",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/system/VCRHybGui.exe",
+    "file_id": "microsoft-visual-c-2005-2022-hybrid-gui"
   },
   {
-    "folder": "Плагины",
-    "title": "ПоискВакансий",
-    "description": "Собирает информацию со страниц о фактическом количественном составе комиссии и эталонном составе комисси и на основе этих данных определяет сколько вакансий есть в каждой из комиссий",
-    "version": "2.8",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/Poisk_Vakansii.rar",
-    "file_id": "поисквакансий"
+    "folder": "File",
+    "title": "Total.Cmd.Max",
+    "description": "Total Commander MAX-Pack - файловый менеджер с лучшими плагинами и отборными портативными программами.",
+    "size": "59.6",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/file/Total.Cmd.Max.exe",
+    "file_id": "totalcmdmax"
   },
   {
-    "folder": "Для windows свои",
-    "title": "ProtocolScanner",
-    "description": "Сканирование протоколов",
-    "version": "1.0",
-    "size": "196.3",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/dlya-windows-svoi/ProtocolScanner.rar",
-    "file_id": "protocolscanner"
+    "folder": "Diagnostics",
+    "title": "AIDA.64-x64",
+    "description": "AIDA64 - информационно-диагностическая программа, предоставляющая максимум информации о вашей системе.",
+    "size": "88.0",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/diagnostics/AIDA.64-x64.exe",
+    "file_id": "aida64-x64"
   },
   {
-    "folder": "Скрипты",
-    "title": "СнятьЗащутуСЛистаВxlsx",
-    "description": "Скрипт для снятия защиты с листа",
-    "version": "1",
-    "size": "0.0",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/skripty/snyatzashhutuslistavxlsx.rar",
-    "file_id": "снятьзащутуслиставxlsx"
-  },
-  {
-    "folder": "Плагины",
-    "title": "АвтоматПоискаПоБазеИзФайла",
-    "description": "Поиск по базе из файла и сохранение в накопительную таблицу",
-    "size": "0.3",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/avtomatpoiskapobazeizfajla.rar",
-    "file_id": "автоматпоискапобазеизфайла"
-  },
-  {
-    "folder": "Плагины",
-    "title": "Автосбор событий с чужими событиями или карточек с одной датой",
-    "description": "Автоматический сборщик событий с чужими событиями во всем карточкам или карточек с одной датой",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/Avtosbor_sobitii_s_chygimi_i_sobitii_s_odnoi_datoi.rar",
-    "file_id": "автосбор-событий-с-чужими-событиями-или-карточек-с-одной-датой"
-  },
-  {
-    "folder": "Макросы",
-    "title": "ОТБОР Текстовый Район",
-    "description": "Макрос для работы с месячной МВД выгрузкой.  Ее очистка от мусорных событий и событий которые уже есть в базе ЦП район",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj.xlsm",
-    "file_id": "отбор-текстовый-район"
-  },
-  {
-    "folder": "Макросы",
-    "title": "Сравнение стат52иРУИП167полей Поиск Двойников",
-    "description": "Сравнение стат52 и РУИП 167 полей и поиск двойников",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/sravnenie-stat52iruip167polej-poisk-dvojnikov.xlsm",
-    "file_id": "сравнение-стат52ируип167полей-поиск-двойников"
-  },
-  {
-    "folder": "Макросы",
-    "title": "cleanmvd",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/cleanmvd.ods",
-    "file_id": "cleanmvd"
-  },
-  {
-    "folder": "Макросы",
-    "title": "otbor-tekstovyj-rajon",
-    "size": "0.1",
-    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/makrosy/otbor-tekstovyj-rajon.xlsm",
-    "file_id": "otbor-tekstovyj-rajon"
+    "folder": "Diagnostics",
+    "title": "AIDA.64-x86",
+    "description": "AIDA64 - информационно-диагностическая программа, предоставляющая максимум информации о вашей системе.",
+    "size": "90.4",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/diagnostics/AIDA.64-x86.exe",
+    "file_id": "aida64-x86"
   }
 ]
