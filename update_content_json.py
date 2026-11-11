@@ -196,6 +196,14 @@ def score_row(row: dict) -> int:
     
     return score
 
+def norm_text(text: str) -> str:
+    """Очистка текста для умного сравнения."""
+    if not text: return ""
+    t = str(text).lower()
+    t = re.sub(r"\(.*?\)|\[.*?\]", "", t) # убираем скобки
+    t = re.sub(r"[^\w\s]", "", t) # убираем спецсимволы
+    return re.sub(r"\s+", " ", t).strip()
+
 def slugify(text: str) -> str:
     if not text: return ""
     s = str(text)
@@ -229,18 +237,6 @@ def list_all_releases() -> list[dict]:
 
 def build_asset_url(tag: str, filename: str) -> str:
     return f"{RELEASE_PROXY_BASE}/download/{tag}/{filename}"
-
-def detect_section_by_assets(assets: list[dict], tag: str = "") -> str | None:
-    if tag and tag in TAG_TO_SECTION: return TAG_TO_SECTION[tag]
-    if not assets: return None
-    votes = {}
-    for a in assets:
-        ext = os.path.splitext(a.get("name", ""))[1].lower()
-        section = EXT_TO_SECTION.get(ext)
-        if section: votes[section] = votes.get(section, 0) + 1
-    if not votes: return None
-    winner = max(votes.items(), key=lambda x: x[1])[0]
-    return winner
 
 def get_gspread_client():
     if gspread is None or Credentials is None: raise RuntimeError("gspread не установлен.")
@@ -330,7 +326,6 @@ def bytes_to_mb(size_bytes: int | float | str | None) -> str:
     if n <= 0: return "0"
     return str(round(n / (1024 * 1024), 1))
 
-
 # ============================================================
 # ШАГ A: GitHub Releases → Google Sheets
 # ============================================================
@@ -345,8 +340,7 @@ def sync_section(sh, section_key, config, repo_assets_by_tag, dry_run=False):
         print(f"     [!] Ошибка доступа к листу: {e}")
         return {}
 
-    if not all_values:
-        return {}
+    if not all_values: return {}
 
     header = [(h or "").strip() for h in all_values[0]]
     idx_folder = header.index("Папка") if "Папка" in header else -1
@@ -384,8 +378,7 @@ def sync_section(sh, section_key, config, repo_assets_by_tag, dry_run=False):
             fname = asset["name"]
             ext = os.path.splitext(fname)[1].lower()
             
-            if EXT_TO_SECTION.get(ext) != section_key:
-                continue
+            if EXT_TO_SECTION.get(ext) != section_key: continue
                 
             new_link = build_asset_url(tag, fname)
             norm_new_link = norm_url_for_comparison(new_link)
@@ -456,7 +449,6 @@ def sync_section(sh, section_key, config, repo_assets_by_tag, dry_run=False):
     print(f"     Без изменений: {stats['unchanged']}")
     return stats
 
-
 # ============================================================
 # ШАГ B: Google Sheets → JSON
 # ============================================================
@@ -502,7 +494,6 @@ def row_to_item(row: dict, columns: list[str] | None = None) -> dict:
     return item
 
 def generate_json_for_section(worksheet, json_path: str, columns: list[str] | None = None) -> dict | None:
-    # Инициализация headers строго здесь, чтобы избежать UnboundLocalError
     headers = []
     for key in columns or []:
         variants = EN_TO_RU.get(key, [])
@@ -577,7 +568,6 @@ def main():
         gs_client = get_gspread_client()
         sh = open_spreadsheet(gs_client)
         
-        # Подготовка списка разделов
         sections = []
         for k, cfg in SECTION_CONFIG_FALLBACK.items():
             sections.append({"key": k, "label": cfg["label"], "sheet_name": cfg["sheet_name"], "json_path": cfg["json_path"], "columns": cfg["columns"]})
@@ -587,7 +577,6 @@ def main():
         total_stats = {"migrated": 0, "added": 0, "unchanged": 0, "added_titles": []}
         json_stats = {}
 
-        # ─── ШАГ A: GitHub ➔ Sheets ───
         if args.mode in ("repo-to-sheets", "all"):
             print("\nЗагрузка релизов из GitHub...")
             releases = list_all_releases()
@@ -595,27 +584,23 @@ def main():
             repo_assets_by_tag = {}
             for rel in releases:
                 tag = rel.get("tag_name")
-                if tag:
-                    repo_assets_by_tag[tag] = rel.get("assets", [])
+                if tag: repo_assets_by_tag[tag] = rel.get("assets", [])
                     
             print(f"Получено тегов: {len(repo_assets_by_tag)}")
             
             for key, cfg in SECTION_CONFIG_FALLBACK.items():
-                if section_filter and key not in section_filter:
-                    continue
+                if section_filter and key not in section_filter: continue
                 stats = sync_section(sh, key, cfg, repo_assets_by_tag, dry_run)
                 for k in ["migrated", "added", "unchanged"]:
                     total_stats[k] += stats.get(k, 0)
                 total_stats["added_titles"].extend(stats.get("added_titles", []))
 
-        # ─── ШАГ B: Sheets ➔ JSON ───
         if args.mode in ("sheets-to-json", "all"):
             print("\n" + "=" * 60)
             print("ШАГ B: Генерация JSON из Google Sheets")
             print("=" * 60)
             json_stats = sheets_to_json(gs_client, sections, dry_run, repo_dir=args.repo_dir)
 
-        # ─── ОТЧЕТ В TELEGRAM ───
         lines = ["*Синхронизация завершена*"]
         if total_stats["migrated"] > 0:
             lines.append(f"🔄 Мигрировано (Терабокс ➔ GitHub): {total_stats['migrated']}")
