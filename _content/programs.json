@@ -4245,5 +4245,14 @@
     "size": "90.4",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/diagnostics/AIDA.64-x86.exe",
     "file_id": "aida64-x86"
+  },
+  {
+    "folder": "Плагины",
+    "title": "Стаж_работы",
+    "description": "Собирает информацию по размеру стажа работы во всех избирательных комиссиях со страниц избирательных комиссий по каждому члену ИК и выводит в отчет XLSX",
+    "version": "2.1",
+    "size": "0.04",
+    "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/stazh_raboty.rar",
+    "file_id": "стажработы"
   }
 ]
