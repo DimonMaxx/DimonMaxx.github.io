@@ -4258,6 +4258,8 @@
   {
     "folder": "Плагины",
     "title": "FineErnMvd_v07",
+    "description": "Перестраивает экранную форму данных СМЭВ, делая расположение полей более компактным и логичным (двухколоночная сетка, корректные размеры полей ввода и текстовых областей). Это упрощает чтение и анализ информации.",
+    "version": "0.7",
     "size": "0.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/FineErnMvd_v07.rar",
     "file_id": "fineernmvdv07"
