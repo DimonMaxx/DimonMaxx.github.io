@@ -4267,6 +4267,8 @@
   {
     "folder": "Плагины",
     "title": "RUIP_Address_Helper",
+    "description": "В инцидентах УКД при добавлении нового события автоматически переносит адрес из регистрации места жительства в поле адрес откуда прибыл УИП",
+    "version": "2.5",
     "size": "0.0",
     "download_link": "https://gh-release-proxy.macsimenkodima.workers.dev/download/plaginy/RUIP_Address_Helper.rar",
     "file_id": "ruipaddresshelper"
