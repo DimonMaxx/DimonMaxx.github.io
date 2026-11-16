@@ -1,31 +1,14 @@
 name: Sync content (releases → sheets → json)
 
 # ────────────────────────────────────────────────────────────
-# Что делает:
-#   1. Читает релизы из приватного репо DimonMaxx/files
-#      (через STORAGE_TOKEN — classic PAT со scope `repo`).
-#   2. Сопоставляет их со строками Google Sheets.
-#   3. Обновляет ссылки (заменяет Яндекс/TeraBox на release-proxy).
-#   4. Добавляет новые строки, которых ещё нет в Sheets.
-#   5. Помечает legacy-строки (не нашли в репо) — для ручного решения.
-#   6. Генерирует _content/*.json + sitemap.xml.
-#   7. Коммитит изменения в репозиторий.
-#   8. Отправляет отчёт в Telegram.
-#
 # Триггеры:
 #   • schedule  — раз в сутки в 03:00 UTC
 #   • workflow_dispatch — вручную из GitHub UI или из админки
-#     (через Edge Function github-dispatch)
 # ────────────────────────────────────────────────────────────
 
 on:
   workflow_dispatch:
     inputs:
-      sections:
-        description: 'Разделы через запятую (пусто = все). Например: books,music'
-        required: false
-        default: ''
-        type: string
       mode:
         description: 'Режим работы'
         required: false
@@ -41,6 +24,40 @@ on:
         required: false
         default: false
         type: boolean
+      
+      # ─── Чекбоксы для выбора разделов ───
+      sync_books:
+        description: '📚 Книги'
+        type: boolean
+        default: true
+      sync_programs:
+        description: '💻 Программы'
+        type: boolean
+        default: true
+      sync_music:
+        description: '🎵 Музыка'
+        type: boolean
+        default: true
+      sync_games:
+        description: '🎮 Игры'
+        type: boolean
+        default: true
+      sync_movies:
+        description: '🎬 Фильмы'
+        type: boolean
+        default: true
+      sync_misc:
+        description: '📁 Разное'
+        type: boolean
+        default: true
+      sync_articles:
+        description: '📝 Статьи'
+        type: boolean
+        default: true
+      sync_news:
+        description: '📰 Новости'
+        type: boolean
+        default: true
   schedule:
     # Раз в сутки в 03:00 UTC
     - cron: '0 3 * * *'
@@ -77,7 +94,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # ─── 4. Кэш обогащений (для ENRICH_BOOKS=1) ───
+      # ─── 4. Кэш обогащений ───
       - name: Restore enrichment cache
         uses: actions/cache@v4
         with:
@@ -94,12 +111,10 @@ jobs:
       - name: Run update_content_json.py
         id: sync
         env:
-          # GitHub Releases (хранилище, приватный репо)
+          # GitHub Releases
           STORAGE_OWNER:              ${{ secrets.STORAGE_OWNER || 'DimonMaxx' }}
           STORAGE_REPO:               ${{ secrets.STORAGE_REPO  || 'files' }}
           STORAGE_TOKEN:              ${{ secrets.STORAGE_TOKEN }}
-
-          # Cloudflare Worker — CDN-прокси релизов
           RELEASE_PROXY_BASE:         ${{ secrets.RELEASE_PROXY_BASE || 'https://gh-release-proxy.macsimenkodima.workers.dev' }}
 
           # Google Sheets
@@ -107,14 +122,12 @@ jobs:
           SPREADSHEET_ID:             ${{ secrets.SPREADSHEET_ID }}
           SPREADSHEET_NAME:           "НаполнениеСайта"
 
-          # Supabase (site_sections, hidden_items)
+          # Supabase
           SUPABASE_URL:               "https://rmoonebbvpmvthvpcmpt.supabase.co"
           SUPABASE_SERVICE_ROLE_KEY:  ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
-          # Сайт (для sitemap)
+          # Сайт
           SITE_BASE_URL:              "https://dimonmaxx.github.io"
-
-          # Google Books (для ENRICH_BOOKS=1)
           GOOGLE_BOOKS_API_KEY:       ${{ secrets.GOOGLE_BOOKS_API_KEY }}
 
           # Флаги поведения
@@ -125,36 +138,45 @@ jobs:
           ENRICH_BOOKS:               "0"
           PARSE_FILE_DESCRIPTIONS:    "0"
 
-          # Отчёты в Telegram
+          # Telegram
           TELEGRAM_BOT_TOKEN:         ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID:           ${{ secrets.TELEGRAM_CHAT_ID }}
-
-          # Параметры запуска
-          SYNC_SECTIONS:              ${{ github.event.inputs.sections || '' }}
         run: |
-          # ─── Перевод русского выбора в английские флаги для скрипта ───
+          # ─── Перевод выбора режима ───
           MODE_INPUT="${{ github.event.inputs.mode }}"
-          
           case "$MODE_INPUT" in
-            "Полная синхронизация (GitHub + Sheets + JSON)")
-              MODE="all"
-              ;;
-            "Только GitHub -> Google Sheets (Сбор файлов)")
-              MODE="repo-to-sheets"
-              ;;
-            "Только Google Sheets -> JSON (Обновление сайта)")
-              MODE="sheets-to-json"
-              ;;
-            "Только отчет (Ничего не менять)")
-              MODE="report-only"
-              ;;
-            *)
-              MODE="all"
-              ;;
+            "Полная синхронизация (GitHub + Sheets + JSON)") MODE="all" ;;
+            "Только GitHub -> Google Sheets (Сбор файлов)") MODE="repo-to-sheets" ;;
+            "Только Google Sheets -> JSON (Обновление сайта)") MODE="sheets-to-json" ;;
+            "Только отчет (Ничего не менять)") MODE="report-only" ;;
+            *) MODE="all" ;;
           esac
 
-          DRY="${{ github.event.inputs.dry_run }}"
+          # ─── Сбор выбранных разделов из чекбоксов ───
+          SYNC_SECTIONS=""
+          # Проверяем, что запуск ручной (чтобы при авто-запуске по расписанию работали все разделы)
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.sync_books }}" = "true" ]; then SYNC_SECTIONS="${SYNC_SECTIONS}books,"; fi
+            if [ "${{ github.event.inputs.sync_programs }}" = "true" ]; then SYNC_SECTIONS="${SYNC_SECTIONS}programs,"; fi
+            if [ "${{ github.event.inputs.sync_music }}" = "true" ]; then SYNC_SECTIONS="${SYNC_SECTIONS}music,"; fi
+            if [ "${{ github.event.inputs.sync_games }}" = "true" ]; then SYNC_SECTIONS="${SYNC_SECTIONS}games,"; fi
+            if [ "${{ github.event.inputs.sync_movies }}" = "true" ]; then SYNC_SECTIONS="${SYNC_SECTIONS}movies,"; fi
+            if [ "${{ github.event.inputs.sync_misc }}" = "true" ]; then SYNC_SECTIONS="${SYNC_SECTIONS}misc,"; fi
+            if [ "${{ github.event.inputs.sync_articles }}" = "true" ]; then SYNC_SECTIONS="${SYNC_SECTIONS}articles,"; fi
+            if [ "${{ github.event.inputs.sync_news }}" = "true" ]; then SYNC_SECTIONS="${SYNC_SECTIONS}news,"; fi
+            
+            # Убираем лишнюю запятую в конце
+            SYNC_SECTIONS=${SYNC_SECTIONS%,}
+            
+            # Если пользователь снял все галочки, делаем предупреждение, но запускаем все (или можно прервать)
+            if [ -z "$SYNC_SECTIONS" ]; then
+              echo "ВНИМАНИЕ: Не выбран ни один раздел. Будут обновлены ВСЕ разделы."
+              SYNC_SECTIONS=""
+            fi
+          fi
 
+          # ─── Формирование аргументов ───
+          DRY="${{ github.event.inputs.dry_run }}"
           ARGS="--mode=$MODE --repo-dir=."
 
           if [ "$DRY" = "true" ]; then
@@ -166,7 +188,10 @@ jobs:
           fi
 
           if [ -n "$SYNC_SECTIONS" ]; then
+            echo "Выбранные разделы: $SYNC_SECTIONS"
             ARGS="$ARGS --sections=$SYNC_SECTIONS"
+          else
+            echo "Разделы: ВСЕ"
           fi
 
           echo "Запуск: python update_content_json.py $ARGS"
@@ -204,7 +229,7 @@ jobs:
 
           git push
 
-      # ─── 7. Upload отчёта как артефакт ───
+      # ─── 7. Upload отчёта ───
       - name: Upload migration report
         if: always()
         uses: actions/upload-artifact@v4
@@ -223,16 +248,9 @@ jobs:
           TELEGRAM_CHAT_ID:   ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           STATUS="${{ job.status }}"
-          if [ "$STATUS" = "cancelled" ]; then
-            EMOJI="⚠️"
-          else
-            EMOJI="❌"
-          fi
-
-          TEXT="$EMOJI Sync content — $STATUS"
-          TEXT="$TEXT
+          if [ "$STATUS" = "cancelled" ]; then EMOJI="⚠️"; else EMOJI="❌"; fi
+          TEXT="$EMOJI Sync content — $STATUS
           Запуск: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-
           curl -s -X POST \
             "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
