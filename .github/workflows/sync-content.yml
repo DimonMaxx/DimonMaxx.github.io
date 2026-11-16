@@ -27,15 +27,15 @@ on:
         default: ''
         type: string
       mode:
-        description: 'Режим (all | repo-to-sheets | sheets-to-json | report-only)'
+        description: 'Режим работы'
         required: false
-        default: 'all'
+        default: 'Полная синхронизация (GitHub + Sheets + JSON)'
         type: choice
         options:
-          - all
-          - repo-to-sheets
-          - sheets-to-json
-          - report-only
+          - 'Полная синхронизация (GitHub + Sheets + JSON)'
+          - 'Только GitHub -> Google Sheets (Сбор файлов)'
+          - 'Только Google Sheets -> JSON (Обновление сайта)'
+          - 'Только отчет (Ничего не менять)'
       dry_run:
         description: 'Dry-run (не писать в Sheets/JSON, только отчёт)'
         required: false
@@ -48,8 +48,6 @@ on:
 permissions:
   contents: write
 
-# Не запускать параллельно с другими sync-workflow (delete-content,
-# sync-yandex, sync-terabox) — чтобы не было гонок при git push.
 concurrency:
   group: sync-content
   cancel-in-progress: false
@@ -134,7 +132,27 @@ jobs:
           # Параметры запуска
           SYNC_SECTIONS:              ${{ github.event.inputs.sections || '' }}
         run: |
-          MODE="${{ github.event.inputs.mode || 'all' }}"
+          # ─── Перевод русского выбора в английские флаги для скрипта ───
+          MODE_INPUT="${{ github.event.inputs.mode }}"
+          
+          case "$MODE_INPUT" in
+            "Полная синхронизация (GitHub + Sheets + JSON)")
+              MODE="all"
+              ;;
+            "Только GitHub -> Google Sheets (Сбор файлов)")
+              MODE="repo-to-sheets"
+              ;;
+            "Только Google Sheets -> JSON (Обновление сайта)")
+              MODE="sheets-to-json"
+              ;;
+            "Только отчет (Ничего не менять)")
+              MODE="report-only"
+              ;;
+            *)
+              MODE="all"
+              ;;
+          esac
+
           DRY="${{ github.event.inputs.dry_run }}"
 
           ARGS="--mode=$MODE --repo-dir=."
@@ -175,7 +193,6 @@ jobs:
 
           git commit -m "Auto-sync content $(date -u +'%Y-%m-%d %H:%M UTC')"
 
-          # На случай параллельного push — rebase и повторить
           git pull --rebase origin main || {
             echo "Rebase conflict — оставляем свежую генерацию"
             git checkout --theirs _content/ 2>/dev/null || true
