@@ -4,7 +4,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const GITHUB_TOKEN  = Deno.env.get("GITHUB_TOKEN")!;
 const GITHUB_OWNER  = Deno.env.get("GITHUB_OWNER")  ?? "DimonMaxx";
-const GITHUB_REPO   = Deno.env.get("GITHUB_REPO")   ?? "my-site";
+const GITHUB_REPO   = Deno.env.get("GITHUB_REPO")   ?? "DimonMaxx.github.io"; // Исправлено на актуальный репозиторий!
 const SUPABASE_URL  = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_ANON = Deno.env.get("SUPABASE_ANON_KEY")!;
 
@@ -56,7 +56,7 @@ serve(async (req) => {
   }
 
   // 3. Принимаем тело запроса
-  let body: { workflow?: string; inputs?: Record<string, unknown> };
+  let body: { workflow?: string; inputs?: Record<string, any> };
   try {
     body = await req.json();
   } catch {
@@ -71,8 +71,46 @@ serve(async (req) => {
     return json({ error: "Missing inputs" }, 400);
   }
 
-  // 4. Проксируем на GitHub
+  // ─── 4. ТРАНСФОРМАЦИЯ ВХОДНЫХ ДАННЫХ ───
+  // Переводим старый формат { sections: "books,music" } 
+  // в новый формат чекбоксов { sync_books: true, sync_music: true, ... }
+  let finalInputs = { ...inputs };
+
+  if (workflow === 'sync-content.yml') {
+    const allowedSections = ['books', 'programs', 'music', 'games', 'movies', 'misc', 'articles', 'news'];
+    
+    // Базовые настройки для нового YAML
+    const ghInputs: Record<string, any> = {
+      mode: 'Полная синхронизация (GitHub + Sheets + JSON)',
+      dry_run: inputs.dry_run === true
+    };
+    
+    // По умолчанию снимаем все галочки
+    allowedSections.forEach(sec => ghInputs[`sync_${sec}`] = false);
+    
+    // Если фронтенд передал строку sections, разбиваем её по запятой
+    const sectionsStr = typeof inputs.sections === 'string' ? inputs.sections : '';
+    
+    // Если строка пустая, значит выбрано "обновить всё" (ставим true везде)
+    const requestedSections = sectionsStr.trim() !== '' 
+      ? sectionsStr.split(',') 
+      : allowedSections;
+      
+    // Ставим галочки (true) только для выбранных разделов
+    requestedSections.forEach((sec: string) => {
+      const clean = sec.trim();
+      if (allowedSections.includes(clean)) {
+        ghInputs[`sync_${clean}`] = true;
+      }
+    });
+    
+    // Заменяем старые входные данные на новые
+    finalInputs = ghInputs;
+  }
+
+  // 5. Проксируем на GitHub
   const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/actions/workflows/${workflow}/dispatches`;
+  
   let ghResp: Response;
   try {
     ghResp = await fetch(url, {
@@ -83,7 +121,7 @@ serve(async (req) => {
         "Content-Type": "application/json",
         "User-Agent": "MyFiles-Admin-Proxy",
       },
-      body: JSON.stringify({ ref: "main", inputs }),
+      body: JSON.stringify({ ref: "main", inputs: finalInputs }),
     });
   } catch (e) {
     return json({ error: "GitHub request failed: " + String(e) }, 502);
@@ -92,6 +130,7 @@ serve(async (req) => {
   if (ghResp.status === 204) {
     return json({ ok: true });
   }
+  
   const text = await ghResp.text();
   return json({ error: `GitHub API ${ghResp.status}: ${text}` }, ghResp.status);
 });
