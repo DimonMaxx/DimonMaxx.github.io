@@ -1043,3 +1043,116 @@
         // initTableState, getFilteredSorted, buildProgramsNotice, init.
     };
 })();
+// ============================================================
+// ЛОГИКА ОБНОВЛЕНИЯ КОНТЕНТА (ДЛЯ ГЛАВНОЙ СТРАНИЦЫ)
+// ============================================================
+const ALL_SECTIONS = [
+    { key: 'books', label: 'Книги' },
+    { key: 'programs', label: 'Программы' },
+    { key: 'music', label: 'Музыка' },
+    { key: 'games', label: 'Игры' },
+    { key: 'movies', label: 'Фильмы' },
+    { key: 'misc', label: 'Разное' },
+    { key: 'articles', label: 'Статьи' },
+    { key: 'news', label: 'Новости' }
+];
+
+function initContentRefresh() {
+    const refreshBtn = document.getElementById('contentRefreshBtn');
+    const refreshModal = document.getElementById('refreshModal');
+    const refreshCancelBtn = document.getElementById('refreshCancelBtn');
+    const refreshStartBtn = document.getElementById('refreshStartBtn');
+    const refreshSelectAll = document.getElementById('refreshSelectAll');
+    const refreshSectionsGrid = document.getElementById('refreshSectionsGrid');
+    const refreshStatus = document.getElementById('refreshStatus');
+
+    if (!refreshBtn || !refreshModal) return;
+
+    // Наполняем чекбоксы (только один раз)
+    if (refreshSectionsGrid.children.length === 1 && refreshSectionsGrid.children[0].classList.contains('refresh-loading')) {
+        refreshSectionsGrid.innerHTML = '';
+        ALL_SECTIONS.forEach(section => {
+            const label = document.createElement('label');
+            label.style.cssText = 'display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; color: #1e293b; background: white; transition: 0.2s;';
+            label.innerHTML = `
+                <input type="checkbox" value="${section.key}" class="refresh-section-cb" checked style="width: 16px; height: 16px; accent-color: #2563eb; cursor: pointer;">
+                ${section.label}
+            `;
+            refreshSectionsGrid.appendChild(label);
+        });
+    }
+
+    // Обработчик открытия модалки
+    refreshBtn.addEventListener('click', () => {
+        refreshModal.style.display = 'flex';
+        refreshStatus.style.display = 'none';
+    });
+
+    // Обработчик отмены
+    refreshCancelBtn.addEventListener('click', () => {
+        refreshModal.style.display = 'none';
+    });
+
+    // "Выбрать все"
+    refreshSelectAll.addEventListener('change', (e) => {
+        const cbs = document.querySelectorAll('.refresh-section-cb');
+        cbs.forEach(cb => cb.checked = e.target.checked);
+    });
+
+    // Снятие галочки "Выбрать все" при снятии одного чекбокса
+    refreshSectionsGrid.addEventListener('change', (e) => {
+        if (e.target.classList.contains('refresh-section-cb')) {
+            const cbs = document.querySelectorAll('.refresh-section-cb');
+            refreshSelectAll.checked = Array.from(cbs).every(cb => cb.checked);
+        }
+    });
+
+    // Запуск обновления
+    refreshStartBtn.addEventListener('click', async () => {
+        const selected = Array.from(document.querySelectorAll('.refresh-section-cb:checked')).map(cb => cb.value);
+        
+        if (selected.length === 0) {
+            refreshStatus.style.display = 'block';
+            refreshStatus.style.background = '#fee2e2';
+            refreshStatus.style.color = '#991b1b';
+            refreshStatus.textContent = 'Выберите хотя бы один раздел.';
+            return;
+        }
+
+        refreshStartBtn.disabled = true;
+        refreshStartBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Запуск...';
+        refreshStatus.style.display = 'block';
+        refreshStatus.style.background = '#dbeafe';
+        refreshStatus.style.color = '#1e40af';
+        refreshStatus.textContent = `Отправка запроса на обновление: ${selected.join(', ')}...`;
+
+        try {
+            const supabaseClient = window.MF.getSupabaseClient();
+            const { data, error } = await supabaseClient.functions.invoke('github-dispatch', {
+                body: {
+                    workflow: 'sync-content.yml',
+                    inputs: { sections: selected.join(',') }
+                }
+            });
+
+            if (error) throw error;
+
+            refreshStatus.style.background = '#dcfce7';
+            refreshStatus.style.color = '#166534';
+            refreshStatus.textContent = `✅ Обновление успешно запущено! Результат придет в Telegram.`;
+            
+            setTimeout(() => { refreshModal.style.display = 'none'; }, 3000);
+        } catch (err) {
+            console.error('Ошибка:', err);
+            refreshStatus.style.background = '#fee2e2';
+            refreshStatus.style.color = '#991b1b';
+            refreshStatus.textContent = `❌ Ошибка: ${err.message || 'Не удалось запустить процесс.'}`;
+        } finally {
+            refreshStartBtn.disabled = false;
+            refreshStartBtn.innerHTML = '<i class="fas fa-play"></i> Запустить';
+        }
+    });
+}
+
+// Вызываем инициализацию при загрузке
+document.addEventListener('DOMContentLoaded', initContentRefresh);

@@ -33,7 +33,6 @@
     state.unhideInProgress    = false;
 
     // Порог осиротевших для красного badge и тоста
-    // (совпадает с ORPHANS_ALERT_THRESHOLD в workflows, только для UI)
     const ORPHANS_ALERT_BADGE = 100;
 
     let _badgesIntervalId = null;
@@ -98,106 +97,73 @@
     }
 
     // ============================================================
-    // МОДАЛКА ОБНОВЛЕНИЯ КОНТЕНТА
+    // МОДАЛКА ОБНОВЛЕНИЯ КОНТЕНТА (ОБНОВЛЕНА)
     // ============================================================
-    function detectSectionSources(section) {
-        const urlRaw = section.yandex_url || '';
-        const urls = urlRaw.split(/[\n;]+/).map(s => s.trim()).filter(Boolean);
-        let hasYandex = false;
-        let hasTerabox = false;
-        for (const u of urls) {
-            const l = u.toLowerCase();
-            if (l.includes('disk.yandex') || l.includes('yadi.sk')) hasYandex = true;
-            if (l.includes('terabox') || l.includes('1024tera')
-                || l.includes('4funbox') || l.includes('teraboxapp')) hasTerabox = true;
-        }
-        return { hasYandex, hasTerabox };
-    }
-
     async function openRefreshModal() {
         const modal = document.getElementById('refreshModal');
         const sourcesEl = document.getElementById('refreshSources');
         const startBtn = document.getElementById('refreshStartBtn');
+        const selectAllCb = document.getElementById('refreshSelectAll');
 
-        sourcesEl.innerHTML = '<div class="refresh-loading"><i class="fas fa-spinner fa-spin"></i> Загрузка разделов...</div>';
+        sourcesEl.innerHTML = '<div class="refresh-loading" style="text-align: center; color: #94a3b8; padding: 40px 0;"><i class="fas fa-spinner fa-spin"></i> Загрузка разделов...</div>';
         startBtn.disabled = true;
+        selectAllCb.checked = true;
         modal.classList.add('active');
 
         let sections = [];
         try {
             const { data, error } = await supabaseClient
                 .from('site_sections')
-                .select('key, label, icon, yandex_url, sort_order')
+                .select('key, label, sort_order')
                 .eq('is_active', true)
                 .order('sort_order');
             if (error) throw error;
             sections = data || [];
         } catch (e) {
-            sourcesEl.innerHTML = `<div class="refresh-empty">Ошибка загрузки: ${MF.escapeHtml(e.message || '')}</div>`;
+            sourcesEl.innerHTML = `<div class="refresh-empty" style="color: #94a3b8; font-style: italic; font-size: 13px; padding: 8px 0 4px;">Ошибка загрузки: ${MF.escapeHtml(e.message || '')}</div>`;
             return;
         }
 
-        const yandexList = [];
-        const teraboxList = [];
-        sections.forEach(s => {
-            const src = detectSectionSources(s);
-            if (src.hasYandex) yandexList.push(s);
-            if (src.hasTerabox) teraboxList.push(s);
-        });
-
-        function renderSourceBlock(sourceKey, sourceLabel, iconClass, sections) {
-            if (sections.length === 0) {
-                return `
-                    <div class="refresh-source-block" data-source="${sourceKey}">
-                        <label class="refresh-source-header">
-                            <input type="checkbox" class="source-cb" data-source="${sourceKey}" disabled>
-                            <i class="fas ${iconClass}"></i> ${sourceLabel}
-                        </label>
-                        <div class="refresh-source-sections">
-                            <div class="refresh-empty">Нет разделов с ссылками на ${sourceLabel}</div>
-                        </div>
-                    </div>`;
-            }
-            const listHtml = sections.map(s => `
-                <label>
-                    <input type="checkbox" class="section-cb"
-                           data-source="${sourceKey}"
-                           data-key="${MF.escapeAttr(s.key)}" checked>
-                    <span>${MF.escapeHtml(s.label)}</span>
-                </label>
-            `).join('');
-
-            return `
-                <div class="refresh-source-block" data-source="${sourceKey}">
-                    <label class="refresh-source-header">
-                        <input type="checkbox" class="source-cb" data-source="${sourceKey}" checked>
-                        <i class="fas ${iconClass}"></i> ${sourceLabel}
-                    </label>
-                    <div class="refresh-source-sections">
-                        ${listHtml}
-                    </div>
-                </div>`;
+        if (sections.length === 0) {
+            sourcesEl.innerHTML = `<div class="refresh-empty" style="color: #94a3b8; font-style: italic; font-size: 13px; padding: 8px 0 4px;">Нет активных разделов</div>`;
+            return;
         }
 
-        sourcesEl.innerHTML =
-            renderSourceBlock('yandex', 'Яндекс.Диск', 'fa-cloud', yandexList) +
-            renderSourceBlock('terabox', 'TeraBox', 'fa-cloud-upload-alt', teraboxList);
+        // Рендерим плоскую сетку чекбоксов
+        let html = '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">';
+        sections.forEach(s => {
+            html += `
+                <label style="display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; background: white; transition: 0.2s;">
+                    <input type="checkbox" class="refresh-section-cb" value="${MF.escapeAttr(s.key)}" checked style="width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer;">
+                    <span>${MF.escapeHtml(s.label)}</span>
+                </label>
+            `;
+        });
+        html += '</div>';
+        sourcesEl.innerHTML = html;
 
-        sourcesEl.querySelectorAll('.source-cb').forEach(cb => {
-            cb.addEventListener('change', function () {
-                const src = this.dataset.source;
-                const checked = this.checked;
-                sourcesEl.querySelectorAll(`.section-cb[data-source="${src}"]`)
-                    .forEach(inner => { inner.checked = checked; });
+        const cbs = sourcesEl.querySelectorAll('.refresh-section-cb');
+
+        // Обработчик "Выбрать все"
+        // Удаляем старый обработчик, чтобы не дублировался
+        const newSelectAll = selectAllCb.cloneNode(true);
+        selectAllCb.parentNode.replaceChild(newSelectAll, selectAllCb);
+        
+        newSelectAll.addEventListener('change', function() {
+            cbs.forEach(cb => cb.checked = this.checked);
+            updateStartBtnState();
+        });
+
+        // Обработчики отдельных чекбоксов
+        cbs.forEach(cb => {
+            cb.addEventListener('change', function() {
+                newSelectAll.checked = Array.from(cbs).every(c => c.checked);
                 updateStartBtnState();
             });
         });
-        sourcesEl.querySelectorAll('.section-cb').forEach(cb => {
-            cb.addEventListener('change', updateStartBtnState);
-        });
 
         function updateStartBtnState() {
-            const anyChecked = sourcesEl.querySelectorAll('.section-cb:checked').length > 0;
+            const anyChecked = sourcesEl.querySelectorAll('.refresh-section-cb:checked').length > 0;
             startBtn.disabled = !anyChecked;
         }
         updateStartBtnState();
@@ -211,17 +177,12 @@
         const startBtn = document.getElementById('refreshStartBtn');
         const sourcesEl = document.getElementById('refreshSources');
 
-        const yandexSections = [];
-        const teraboxSections = [];
-
-        sourcesEl.querySelectorAll('.section-cb[data-source="yandex"]:checked').forEach(cb => {
-            yandexSections.push(cb.dataset.key);
-        });
-        sourcesEl.querySelectorAll('.section-cb[data-source="terabox"]:checked').forEach(cb => {
-            teraboxSections.push(cb.dataset.key);
+        const selectedSections = [];
+        sourcesEl.querySelectorAll('.refresh-section-cb:checked').forEach(cb => {
+            selectedSections.push(cb.value);
         });
 
-        if (yandexSections.length === 0 && teraboxSections.length === 0) {
+        if (selectedSections.length === 0) {
             showToast('Не выбрано ни одного раздела', 'error');
             return;
         }
@@ -233,80 +194,43 @@
         }
         const token = session.access_token;
 
-        const tasks = [];
-        if (yandexSections.length > 0) {
-            tasks.push({
-                label:    'Яндекс.Диск',
-                workflow: 'sync-yandex.yml',
-                inputs:   { sections: yandexSections.join(',') },
-            });
-        }
-        if (teraboxSections.length > 0) {
-            tasks.push({
-                label:    'TeraBox',
-                workflow: 'sync-terabox.yml',
-                inputs:   { sections: teraboxSections.join(',') },
-            });
-        }
-
         startBtn.disabled = true;
         startBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Запускаю...';
 
-        const launched = [];
-        const failed = [];
+        try {
+            // Вызываем Edge Function github-dispatch
+            const resp = await fetch(`${SUPABASE_URL}/functions/v1/github-dispatch`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    workflow: 'sync-content.yml', // Только единый источник
+                    inputs: { sections: selectedSections.join(',') },
+                }),
+            });
 
-        for (const t of tasks) {
-            try {
-                const resp = await fetch(`${SUPABASE_URL}/functions/v1/github-dispatch`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`,
-                    },
-                    body: JSON.stringify({
-                        workflow: t.workflow,
-                        inputs: t.inputs,
-                    }),
-                });
-                let payload = {};
-                try { payload = await resp.json(); } catch (_) {}
-                if (resp.ok && payload.ok) {
-                    launched.push(t.label);
-                } else {
-                    failed.push(`${t.label}: ${payload.error || 'HTTP ' + resp.status}`);
-                }
-            } catch (e) {
-                failed.push(`${t.label}: ${e.message}`);
+            let payload = {};
+            try { payload = await resp.json(); } catch (_) {}
+
+            if (!resp.ok || !payload.ok) {
+                throw new Error(payload.error || 'HTTP ' + resp.status);
             }
-            if (tasks.indexOf(t) < tasks.length - 1) {
-                await new Promise(r => setTimeout(r, 1500));
-            }
-        }
 
-        startBtn.disabled = false;
-        startBtn.innerHTML = '<i class="fas fa-play"></i> Запустить обновление';
-
-        if (failed.length === 0) {
             closeRefreshModal();
             logAdminAction('run_workflow', null, null, {
-                tasks: tasks.map(t => ({
-                    workflow: t.workflow,
-                    sections: t.inputs.sections,
-                })),
+                workflow: 'sync-content.yml',
+                sections: selectedSections.join(','),
             });
-            const text = launched.length === 1
-                ? `Обновление ${launched[0]} запущено. Результат придёт в Telegram.`
-                : `Обновление запущено (${launched.join(', ')}). Результат придёт в Telegram.`;
-            showToast(text, 'success');
-        } else if (launched.length > 0) {
-            closeRefreshModal();
-            logAdminAction('run_workflow_partial', null, null, {
-                launched: launched,
-                failed: failed,
-            });
-            showToast(`Запущено: ${launched.join(', ')}. Ошибки: ${failed.join('; ')}`, 'info');
-        } else {
-            showToast('Не удалось запустить: ' + failed.join('; '), 'error');
+            
+            showToast(`✅ Обновление запущено для: ${selectedSections.join(', ')}. Результат придёт в Telegram.`, 'success');
+
+        } catch (e) {
+            showToast('❌ Не удалось запустить: ' + e.message, 'error');
+        } finally {
+            startBtn.disabled = false;
+            startBtn.innerHTML = '<i class="fas fa-play"></i> Запустить обновление';
         }
     }
 
@@ -370,9 +294,6 @@
     // ============================================================
     // BADGES: ОСИРОТЕВШИЕ + ОШИБКИ JS + ЖУРНАЛ
     // ============================================================
-
-    // Отдельный флаг: тост о большом числе orphans показывается только раз
-    // за сессию вкладки.
     let _orphansAlertShown = false;
 
     async function refreshOrphansBadge() {
@@ -394,7 +315,6 @@
                 badge.textContent = total;
                 badge.style.display = 'inline-block';
 
-                // Красный фон при большом числе
                 if (total >= ORPHANS_ALERT_BADGE) {
                     badge.style.background = '#dc2626';
                     badge.style.color = '#fff';
@@ -407,7 +327,6 @@
                     badge.title = '';
                 }
 
-                // Однократный тост при загрузке админки
                 if (total >= ORPHANS_ALERT_BADGE && !_orphansAlertShown) {
                     _orphansAlertShown = true;
                     showToast(
@@ -741,7 +660,6 @@
         openRefreshModal,
         closeRefreshModal,
         startRefresh,
-        detectSectionSources,
         init,
     });
 

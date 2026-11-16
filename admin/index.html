@@ -593,17 +593,19 @@
         }
 
         .refresh-modal-sources { display: flex; flex-direction: column; gap: 16px; margin: 18px 0; max-height: 55vh; overflow-y: auto; padding-right: 4px; }
-        .refresh-source-block { border: 2px solid #e2e8f0; border-radius: 14px; padding: 16px 18px; background: #f8fafc; }
-        .refresh-source-header { display: flex; align-items: center; gap: 10px; font-size: 16px; font-weight: 700; color: #0f172a; cursor: pointer; user-select: none; padding-bottom: 12px; border-bottom: 1px dashed #cbd5e1; margin-bottom: 12px; }
-        .refresh-source-header input[type="checkbox"] { width: 18px; height: 18px; accent-color: #f59e0b; cursor: pointer; }
-        .refresh-source-header i { color: #f59e0b; font-size: 18px; }
-        .refresh-source-sections { display: flex; flex-direction: column; gap: 4px; padding-left: 28px; }
-        .refresh-source-sections label { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #334155; cursor: pointer; padding: 6px 10px; border-radius: 8px; transition: background 0.15s; }
-        .refresh-source-sections label:hover { background: #eef2ff; }
-        .refresh-source-sections input[type="checkbox"] { width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer; }
-        .refresh-empty { color: #94a3b8; font-style: italic; font-size: 13px; padding: 8px 0 4px; }
         .refresh-loading { text-align: center; color: #94a3b8; padding: 40px 0; font-size: 14px; }
         .refresh-hint { color: #64748b; font-size: 13px; margin-bottom: 6px; line-height: 1.5; }
+        
+        .refresh-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;
+        }
+        .refresh-section-item {
+            display: flex; align-items: center; gap: 8px; padding: 10px; 
+            border: 1px solid #e2e8f0; border-radius: 8px; 
+            cursor: pointer; font-size: 14px; background: white; transition: 0.2s;
+        }
+        .refresh-section-item:hover { border-color: #93c5fd; background: #f8fafc; }
+        .refresh-section-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer; }
 
         .toast { position: fixed; top: 20px; right: 20px; background: white; padding: 14px 20px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,20,80,0.18); display: flex; align-items: flex-start; gap: 10px; font-weight: 600; font-size: 14px; z-index: 10001; transform: translateX(120%); transition: transform 0.3s ease; max-width: 420px; }
         .toast.show { transform: translateX(0); }
@@ -750,18 +752,12 @@
             .admin-folder-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
             .toast { left: 20px; right: 20px; max-width: none; }
             .error-row-msg { max-width: 220px; }
+            .refresh-grid { grid-template-columns: 1fr; }
         }
 
         /* ============================================================
            ВАЛИДАЦИЯ ОПИСАНИЙ (п. 1.6)
-           ------------------------------------------------------------
-           Стили для:
-             • чекбокса «Только с коротким описанием» в тулбаре
-             • бейджа ⚠️ и жёлтой подсветки ячейки с коротким описанием
-           Добавлено вместе с admin-content.js.
            ============================================================ */
-
-        /* Обёртка чекбокса в тулбаре (дополняет inline-стили из JS) */
         .toolbar-checkbox {
             display: inline-flex;
             align-items: center;
@@ -792,16 +788,12 @@
             color: #d97706;
             font-size: 12px;
         }
-
-        /* Ячейка таблицы с коротким описанием — жёлтая подсветка */
         .content-table td.short-desc-cell {
             background: #fffbeb;
             border-left: 3px solid #f59e0b;
             position: relative;
             color: #78350f;
         }
-
-        /* Бейдж «⚠ N симв.» рядом с коротким описанием */
         .short-desc-badge {
             display: inline-flex;
             align-items: center;
@@ -918,24 +910,35 @@
     <div class="modal-box"></div>
 </div>
 
-<!-- Модалка обновления контента -->
+<!-- Модалка обновления контента (ОБНОВЛЕНА) -->
 <div class="modal-overlay" id="refreshModal">
     <div class="modal-box" style="max-width: 620px;">
         <h3><i class="fas fa-sync-alt"></i> Обновление контента</h3>
-        <p class="refresh-hint">
-            Выберите источники и разделы, которые нужно обновить.
-            После запуска результат придёт в Telegram-бот.
+        <p class="refresh-hint" style="color: #64748b; font-size: 13px; margin-bottom: 15px; line-height: 1.5;">
+            Выберите разделы каталога, которые нужно синхронизировать с GitHub Releases. 
+            Скрипт автоматически обновит ссылки, добавит новые файлы и сгенерирует JSON.
+            <br><br>
+            <small><i class="fas fa-info-circle"></i> После запуска результат придёт в Telegram-бот.</small>
         </p>
-        <div class="refresh-modal-sources" id="refreshSources">
-            <div class="refresh-loading">
+        
+        <!-- Контейнер для чекбоксов разделов -->
+        <div class="refresh-modal-sources" id="refreshSources" style="max-height: 55vh; overflow-y: auto; padding-right: 4px;">
+            <div class="refresh-loading" style="text-align: center; color: #94a3b8; padding: 40px 0; font-size: 14px;">
                 <i class="fas fa-spinner fa-spin"></i> Загрузка разделов...
             </div>
         </div>
-        <div class="modal-actions">
-            <button class="btn-secondary" id="refreshCancelBtn">Отмена</button>
-            <button class="btn-warning" id="refreshStartBtn" disabled>
-                <i class="fas fa-play"></i> Запустить обновление
-            </button>
+        
+        <div class="modal-actions" style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 600; font-size: 14px; color: #475569;">
+                <input type="checkbox" id="refreshSelectAll" checked style="width: 16px; height: 16px; accent-color: #f59e0b;">
+                Выбрать все
+            </label>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn-secondary" id="refreshCancelBtn" style="padding: 10px 24px; border-radius: 30px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif;">Отмена</button>
+                <button class="btn-warning" id="refreshStartBtn" style="padding: 10px 24px; border-radius: 30px; border: none; font-weight: 600; font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; background: #f59e0b; color: white;" disabled>
+                    <i class="fas fa-play"></i> Запустить обновление
+                </button>
+            </div>
         </div>
     </div>
 </div>
