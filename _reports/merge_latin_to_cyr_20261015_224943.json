@@ -1,0 +1,38 @@
+[
+  {
+    "sheet": "Книги",
+    "total_rows": 1045,
+    "latin_rows": 9,
+    "cyr_rows": 1035,
+    "auto_merge": 8,
+    "review": 0,
+    "no_match": 1,
+    "updated_cyr": 8,
+    "deleted_lat": 8,
+    "errors": []
+  },
+  {
+    "sheet": "Программы",
+    "total_rows": 547,
+    "latin_rows": 0,
+    "cyr_rows": 546,
+    "auto_merge": 0,
+    "review": 0,
+    "no_match": 0,
+    "updated_cyr": 0,
+    "deleted_lat": 0,
+    "errors": []
+  },
+  {
+    "sheet": "Музыка",
+    "total_rows": 247,
+    "latin_rows": 2,
+    "cyr_rows": 245,
+    "auto_merge": 2,
+    "review": 0,
+    "no_match": 0,
+    "updated_cyr": 2,
+    "deleted_lat": 2,
+    "errors": []
+  }
+]

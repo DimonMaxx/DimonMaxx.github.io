@@ -1,0 +1,1289 @@
+[
+  {
+    "sheet": "Книги",
+    "total_rows": 1203,
+    "latin_rows": 167,
+    "cyr_rows": 1035,
+    "auto_merge": 166,
+    "review": 0,
+    "no_match": 1,
+    "updated_cyr": 0,
+    "deleted_lat": 0,
+    "errors": [],
+    "auto_merge_items": [
+      {
+        "latin": "bitva-polchishh",
+        "cyr": "Битва полчищ",
+        "score": 0.929,
+        "latin_row": 265,
+        "cyr_row": 6
+      },
+      {
+        "latin": "shestirukij-rezident",
+        "cyr": "ШЕСТИРУКИЙ РЕЗИДЕНТ",
+        "score": 1.0,
+        "latin_row": 273,
+        "cyr_row": 5
+      },
+      {
+        "latin": "elfijskoe-triedinstvo",
+        "cyr": "Эльфийское Триединство",
+        "score": 1.0,
+        "latin_row": 286,
+        "cyr_row": 9
+      },
+      {
+        "latin": "paralleli-semejnyh-uz",
+        "cyr": "Параллели семейных уз",
+        "score": 1.0,
+        "latin_row": 290,
+        "cyr_row": 8
+      },
+      {
+        "latin": "pokinutyj-korabl",
+        "cyr": "Покинутый корабль",
+        "score": 1.0,
+        "latin_row": 298,
+        "cyr_row": 20
+      },
+      {
+        "latin": "zachumlennyj-korabl",
+        "cyr": "Зачумленный корабль",
+        "score": 1.0,
+        "latin_row": 303,
+        "cyr_row": 19
+      },
+      {
+        "latin": "ya-edu-domoj",
+        "cyr": "Я! Еду! Домой!",
+        "score": 1.0,
+        "latin_row": 307,
+        "cyr_row": 17
+      },
+      {
+        "latin": "giperborejskaya-chuma",
+        "cyr": "Гиперборейская чума",
+        "score": 1.0,
+        "latin_row": 311,
+        "cyr_row": 18
+      },
+      {
+        "latin": "kreshhenie-ognem",
+        "cyr": "Крещение огнем",
+        "score": 0.933,
+        "latin_row": 317,
+        "cyr_row": 10
+      },
+      {
+        "latin": "astralshhik-tom-1",
+        "cyr": "Астральщик. Том 1",
+        "score": 0.933,
+        "latin_row": 324,
+        "cyr_row": 15
+      },
+      {
+        "latin": "astralshhik-tom-2",
+        "cyr": "Астральщик. Том 2",
+        "score": 0.933,
+        "latin_row": 325,
+        "cyr_row": 16
+      },
+      {
+        "latin": "charodej-tom-1",
+        "cyr": "Чародей. Том 1",
+        "score": 1.0,
+        "latin_row": 326,
+        "cyr_row": 13
+      },
+      {
+        "latin": "charodej-tom-2",
+        "cyr": "Чародей. Том 2",
+        "score": 1.0,
+        "latin_row": 327,
+        "cyr_row": 14
+      },
+      {
+        "latin": "stihijnik",
+        "cyr": "Стихийник",
+        "score": 1.0,
+        "latin_row": 340,
+        "cyr_row": 12
+      },
+      {
+        "latin": "tolleus-izgoj",
+        "cyr": "Толлеус. Изгой",
+        "score": 1.0,
+        "latin_row": 343,
+        "cyr_row": 11
+      },
+      {
+        "latin": "kosmicheskij-nyan",
+        "cyr": "Космический нянь",
+        "score": 1.0,
+        "latin_row": 352,
+        "cyr_row": 21
+      },
+      {
+        "latin": "grad-obrechennyj",
+        "cyr": "ГРАД ОБРЕЧЕННЫЙ",
+        "score": 1.0,
+        "latin_row": 353,
+        "cyr_row": 4
+      },
+      {
+        "latin": "obitaemyj-ostrov-vosstanovlennyj-polnyj-variant-1992-goda",
+        "cyr": "Обитаемый остров (Восстановленный полный вариант 1992 года)",
+        "score": 1.0,
+        "latin_row": 355,
+        "cyr_row": 2
+      },
+      {
+        "latin": "skazka-o-trojke",
+        "cyr": "СКАЗКА О ТРОЙКЕ",
+        "score": 1.0,
+        "latin_row": 359,
+        "cyr_row": 3
+      },
+      {
+        "latin": "stremitelnyj-polet-si",
+        "cyr": "Стремительный полет [СИ]",
+        "score": 1.0,
+        "latin_row": 379,
+        "cyr_row": 29
+      },
+      {
+        "latin": "svobodnyj-polet-obshhij",
+        "cyr": "Свободный полет (общий)",
+        "score": 0.947,
+        "latin_row": 380,
+        "cyr_row": 23
+      },
+      {
+        "latin": "svobodnyj-polet-snova-polet-stremitelnyj-polet",
+        "cyr": "Свободный полет. Снова полет. Стремительный полет",
+        "score": 1.0,
+        "latin_row": 381,
+        "cyr_row": 30
+      },
+      {
+        "latin": "svobodnyj-polet",
+        "cyr": "Свободный полет",
+        "score": 1.0,
+        "latin_row": 382,
+        "cyr_row": 31
+      },
+      {
+        "latin": "volnyj-polet",
+        "cyr": "Вольный полет",
+        "score": 1.0,
+        "latin_row": 383,
+        "cyr_row": 28
+      },
+      {
+        "latin": "baganutyj-tom-5",
+        "cyr": "Баганутый. Том 5",
+        "score": 1.0,
+        "latin_row": 400,
+        "cyr_row": 56
+      },
+      {
+        "latin": "elfanutyj",
+        "cyr": "Эльфанутый",
+        "score": 1.0,
+        "latin_row": 401,
+        "cyr_row": 63
+      },
+      {
+        "latin": "idushhij-vopreki",
+        "cyr": "Идущий вопреки",
+        "score": 0.929,
+        "latin_row": 404,
+        "cyr_row": 61
+      },
+      {
+        "latin": "imbanutyj-tom-4",
+        "cyr": "Имбанутый. Том 4",
+        "score": 1.0,
+        "latin_row": 405,
+        "cyr_row": 65
+      },
+      {
+        "latin": "orkanutyj",
+        "cyr": "Орканутый",
+        "score": 1.0,
+        "latin_row": 408,
+        "cyr_row": 62
+      },
+      {
+        "latin": "vampanutyj-tom-3",
+        "cyr": "Вампанутый. Том 3",
+        "score": 1.0,
+        "latin_row": 412,
+        "cyr_row": 64
+      },
+      {
+        "latin": "drugoj-mir-vidyashhij-mag",
+        "cyr": "Другой мир: видящий маг",
+        "score": 0.952,
+        "latin_row": 421,
+        "cyr_row": 68
+      },
+      {
+        "latin": "bitva-za-budushhee",
+        "cyr": "Битва за будущее",
+        "score": 0.938,
+        "latin_row": 422,
+        "cyr_row": 53
+      },
+      {
+        "latin": "krasnyj-drakon",
+        "cyr": "КРАСНЫЙ ДРАКОН",
+        "score": 1.0,
+        "latin_row": 426,
+        "cyr_row": 54
+      },
+      {
+        "latin": "velikij-um-marsa",
+        "cyr": "6. Великий ум Марса",
+        "score": 0.92,
+        "latin_row": 442,
+        "cyr_row": 55
+      },
+      {
+        "latin": "ezdovoj-gnom",
+        "cyr": "Ездовой гном",
+        "score": 1.0,
+        "latin_row": 457,
+        "cyr_row": 255
+      },
+      {
+        "latin": "drakon-na-vojne",
+        "cyr": "Дракон на войне",
+        "score": 1.0,
+        "latin_row": 470,
+        "cyr_row": 52
+      },
+      {
+        "latin": "inoj",
+        "cyr": "Иной",
+        "score": 1.0,
+        "latin_row": 472,
+        "cyr_row": 69
+      },
+      {
+        "latin": "vojna-bogov",
+        "cyr": "Война богов",
+        "score": 1.0,
+        "latin_row": 476,
+        "cyr_row": 70
+      },
+      {
+        "latin": "hranilishhe-si",
+        "cyr": "Хранилище (СИ)",
+        "score": 0.923,
+        "latin_row": 479,
+        "cyr_row": 72
+      },
+      {
+        "latin": "ne-blagoslovlyajte-muzha-tmoj",
+        "cyr": "Не благословляйте мужа Тьмой",
+        "score": 1.0,
+        "latin_row": 507,
+        "cyr_row": 74
+      },
+      {
+        "latin": "skazochnyj-perepoloh",
+        "cyr": "Сказочный переполох",
+        "score": 1.0,
+        "latin_row": 525,
+        "cyr_row": 75
+      },
+      {
+        "latin": "temnyj-lord",
+        "cyr": "Темный Лорд",
+        "score": 1.0,
+        "latin_row": 528,
+        "cyr_row": 76
+      },
+      {
+        "latin": "zapretnyj-plod",
+        "cyr": "1 Запретный плод",
+        "score": 0.92,
+        "latin_row": 537,
+        "cyr_row": 78
+      },
+      {
+        "latin": "lazorevyj-greh",
+        "cyr": "11 Лазоревый грех",
+        "score": 0.92,
+        "latin_row": 539,
+        "cyr_row": 79
+      },
+      {
+        "latin": "smeyushhijsya-trup",
+        "cyr": "2 Смеющийся труп",
+        "score": 0.882,
+        "latin_row": 540,
+        "cyr_row": 80
+      },
+      {
+        "latin": "smertelnyj-tanec",
+        "cyr": "6 Смертельный танец",
+        "score": 0.92,
+        "latin_row": 544,
+        "cyr_row": 81
+      },
+      {
+        "latin": "beskonechnaya-vojna",
+        "cyr": "Бесконечная война",
+        "score": 1.0,
+        "latin_row": 548,
+        "cyr_row": 85
+      },
+      {
+        "latin": "nastoyashhaya-magiya",
+        "cyr": "Настоящая магия",
+        "score": 0.944,
+        "latin_row": 554,
+        "cyr_row": 84
+      },
+      {
+        "latin": "pervyj-pohod",
+        "cyr": "Первый поход",
+        "score": 1.0,
+        "latin_row": 556,
+        "cyr_row": 83
+      },
+      {
+        "latin": "tajna-kota",
+        "cyr": "Тайна Кота",
+        "score": 1.0,
+        "latin_row": 559,
+        "cyr_row": 82
+      },
+      {
+        "latin": "angarskij-sokol-si",
+        "cyr": "Ангарский Сокол [СИ]",
+        "score": 1.0,
+        "latin_row": 563,
+        "cyr_row": 121
+      },
+      {
+        "latin": "arkticheskij-udar",
+        "cyr": "Арктический удар",
+        "score": 1.0,
+        "latin_row": 566,
+        "cyr_row": 122
+      },
+      {
+        "latin": "bejssel",
+        "cyr": "Бейссел",
+        "score": 1.0,
+        "latin_row": 571,
+        "cyr_row": 125
+      },
+      {
+        "latin": "bestiarij-spalnogo-rajona",
+        "cyr": "Бестиарий спального района",
+        "score": 1.0,
+        "latin_row": 572,
+        "cyr_row": 110
+      },
+      {
+        "latin": "bolshoj-pogrom",
+        "cyr": "Большой погром",
+        "score": 1.0,
+        "latin_row": 574,
+        "cyr_row": 118
+      },
+      {
+        "latin": "chernyj-vlastelin",
+        "cyr": "Черный властелин",
+        "score": 1.0,
+        "latin_row": 577,
+        "cyr_row": 124
+      },
+      {
+        "latin": "dalnij-pohod",
+        "cyr": "Дальний поход",
+        "score": 1.0,
+        "latin_row": 578,
+        "cyr_row": 116
+      },
+      {
+        "latin": "drejk",
+        "cyr": "Дрейк",
+        "score": 1.0,
+        "latin_row": 583,
+        "cyr_row": 96
+      },
+      {
+        "latin": "druzej-ne-vybirayut",
+        "cyr": "Друзей не выбирают",
+        "score": 1.0,
+        "latin_row": 585,
+        "cyr_row": 89
+      },
+      {
+        "latin": "geroj-chuzhoj-vojny",
+        "cyr": "Герой чужой войны",
+        "score": 1.0,
+        "latin_row": 589,
+        "cyr_row": 99
+      },
+      {
+        "latin": "koleso-vojny",
+        "cyr": "Колесо войны",
+        "score": 1.0,
+        "latin_row": 607,
+        "cyr_row": 113
+      },
+      {
+        "latin": "majorat-na-dvoih",
+        "cyr": "Майорат на двоих",
+        "score": 1.0,
+        "latin_row": 619,
+        "cyr_row": 87
+      },
+      {
+        "latin": "malchik-iz-budushhego",
+        "cyr": "Мальчик из будущего",
+        "score": 0.947,
+        "latin_row": 620,
+        "cyr_row": 109
+      },
+      {
+        "latin": "mehanicheskij-drakon",
+        "cyr": "Механический дракон",
+        "score": 1.0,
+        "latin_row": 626,
+        "cyr_row": 92
+      },
+      {
+        "latin": "mehanicheskij-volshebnik",
+        "cyr": "Механический волшебник",
+        "score": 1.0,
+        "latin_row": 627,
+        "cyr_row": 91
+      },
+      {
+        "latin": "neizvestnyj-s-drakkara",
+        "cyr": "Неизвестный с Драккара",
+        "score": 1.0,
+        "latin_row": 628,
+        "cyr_row": 103
+      },
+      {
+        "latin": "nejtralnye-miry",
+        "cyr": "Нейтральные миры",
+        "score": 1.0,
+        "latin_row": 629,
+        "cyr_row": 101
+      },
+      {
+        "latin": "neuchtennyj",
+        "cyr": "Неучтённый",
+        "score": 1.0,
+        "latin_row": 631,
+        "cyr_row": 102
+      },
+      {
+        "latin": "peshhernaya-taktika",
+        "cyr": "Пещерная тактика",
+        "score": 0.944,
+        "latin_row": 637,
+        "cyr_row": 104
+      },
+      {
+        "latin": "prizrak-nevedomoj-vojny",
+        "cyr": "Призрак неведомой войны",
+        "score": 1.0,
+        "latin_row": 644,
+        "cyr_row": 97
+      },
+      {
+        "latin": "provalivshijsya-v-proshloe",
+        "cyr": "Провалившийся в прошлое",
+        "score": 1.0,
+        "latin_row": 648,
+        "cyr_row": 86
+      },
+      {
+        "latin": "put-domoj",
+        "cyr": "Путь домой",
+        "score": 1.0,
+        "latin_row": 649,
+        "cyr_row": 98
+      },
+      {
+        "latin": "rojho-vairskij",
+        "cyr": "Ройхо Ваирский",
+        "score": 1.0,
+        "latin_row": 651,
+        "cyr_row": 114
+      },
+      {
+        "latin": "severnaya-vojna",
+        "cyr": "Северная война",
+        "score": 1.0,
+        "latin_row": 656,
+        "cyr_row": 117
+      },
+      {
+        "latin": "unesennye-magiej",
+        "cyr": "Унесенные магией",
+        "score": 1.0,
+        "latin_row": 668,
+        "cyr_row": 88
+      },
+      {
+        "latin": "urkvart-rojho",
+        "cyr": "Уркварт Ройхо",
+        "score": 1.0,
+        "latin_row": 670,
+        "cyr_row": 112
+      },
+      {
+        "latin": "vojna-tenej",
+        "cyr": "Война теней",
+        "score": 1.0,
+        "latin_row": 676,
+        "cyr_row": 111
+      },
+      {
+        "latin": "vostochnyj-front",
+        "cyr": "Восточный фронт",
+        "score": 1.0,
+        "latin_row": 682,
+        "cyr_row": 115
+      },
+      {
+        "latin": "vsevidyashhee-oko",
+        "cyr": "Всевидящее око",
+        "score": 0.938,
+        "latin_row": 685,
+        "cyr_row": 95
+      },
+      {
+        "latin": "ya-rejvan",
+        "cyr": "Я, Рейван",
+        "score": 1.0,
+        "latin_row": 688,
+        "cyr_row": 93
+      },
+      {
+        "latin": "zhivuchij",
+        "cyr": "Живучий",
+        "score": 1.0,
+        "latin_row": 691,
+        "cyr_row": 100
+      },
+      {
+        "latin": "almaznyj-mech-derevyannyj-mech-tom-1",
+        "cyr": "Алмазный меч, Деревянный Меч - том 1",
+        "score": 1.0,
+        "latin_row": 700,
+        "cyr_row": 129
+      },
+      {
+        "latin": "almaznyj-mech-derevyannyj-mech-tom-2",
+        "cyr": "Алмазный меч, Деревянный Меч - том 2",
+        "score": 1.0,
+        "latin_row": 701,
+        "cyr_row": 130
+      },
+      {
+        "latin": "pivovoj",
+        "cyr": "Пивовой",
+        "score": 1.0,
+        "latin_row": 714,
+        "cyr_row": 135
+      },
+      {
+        "latin": "roj",
+        "cyr": "Рой",
+        "score": 1.0,
+        "latin_row": 717,
+        "cyr_row": 136
+      },
+      {
+        "latin": "vedminy-bajki",
+        "cyr": "Ведьмины байки",
+        "score": 1.0,
+        "latin_row": 723,
+        "cyr_row": 134
+      },
+      {
+        "latin": "almaznyj-kultivator",
+        "cyr": "Алмазный культиватор",
+        "score": 1.0,
+        "latin_row": 727,
+        "cyr_row": 144
+      },
+      {
+        "latin": "derevyannyj-kultivator",
+        "cyr": "Деревянный культиватор",
+        "score": 1.0,
+        "latin_row": 728,
+        "cyr_row": 138
+      },
+      {
+        "latin": "kamennyj-kultivator",
+        "cyr": "Каменный культиватор",
+        "score": 1.0,
+        "latin_row": 729,
+        "cyr_row": 140
+      },
+      {
+        "latin": "stalnoj-kultivator",
+        "cyr": "Стальной Культиватор",
+        "score": 1.0,
+        "latin_row": 732,
+        "cyr_row": 143
+      },
+      {
+        "latin": "vojna-krovi",
+        "cyr": "Война крови",
+        "score": 1.0,
+        "latin_row": 733,
+        "cyr_row": 141
+      },
+      {
+        "latin": "vozvrashhenie-nikkasu",
+        "cyr": "Возвращение Никкасу",
+        "score": 0.95,
+        "latin_row": 734,
+        "cyr_row": 139
+      },
+      {
+        "latin": "vtoroj-syn",
+        "cyr": "Второй сын",
+        "score": 1.0,
+        "latin_row": 737,
+        "cyr_row": 137
+      },
+      {
+        "latin": "1klinkikardinala",
+        "cyr": "1.Клинки_кардинала",
+        "score": 1.0,
+        "latin_row": 741,
+        "cyr_row": 183
+      },
+      {
+        "latin": "argentumnyj-klyuch",
+        "cyr": "Аргентумный ключ",
+        "score": 1.0,
+        "latin_row": 747,
+        "cyr_row": 158
+      },
+      {
+        "latin": "atomnyj-son",
+        "cyr": "Атомный сон",
+        "score": 1.0,
+        "latin_row": 749,
+        "cyr_row": 159
+      },
+      {
+        "latin": "chuzhoj-dozor",
+        "cyr": "Чужой Дозор",
+        "score": 1.0,
+        "latin_row": 766,
+        "cyr_row": 214
+      },
+      {
+        "latin": "cvetnoj-dozor",
+        "cyr": "Цветной Дозор",
+        "score": 1.0,
+        "latin_row": 767,
+        "cyr_row": 202
+      },
+      {
+        "latin": "dnevnoj-dozor",
+        "cyr": "Дневной дозор",
+        "score": 1.0,
+        "latin_row": 770,
+        "cyr_row": 185
+      },
+      {
+        "latin": "dozory-nochnoj-dozor-dnevnoj-dozor-sumerechnyj-dozor",
+        "cyr": "Дозоры: Ночной Дозор. Дневной Дозор. Сумеречный Дозор",
+        "score": 1.0,
+        "latin_row": 778,
+        "cyr_row": 174
+      },
+      {
+        "latin": "dozory-ot-nochnogo-do-shestogo-sbornik",
+        "cyr": "Дозоры. От Ночного до Шестого (сборник)",
+        "score": 1.0,
+        "latin_row": 779,
+        "cyr_row": 162
+      },
+      {
+        "latin": "forsajt",
+        "cyr": "Форсайт",
+        "score": 1.0,
+        "latin_row": 823,
+        "cyr_row": 172
+      },
+      {
+        "latin": "glubokij-sumrak",
+        "cyr": "Глубокий Сумрак",
+        "score": 1.0,
+        "latin_row": 829,
+        "cyr_row": 212
+      },
+      {
+        "latin": "gluhoj-telefon",
+        "cyr": "Глухой телефон",
+        "score": 1.0,
+        "latin_row": 830,
+        "cyr_row": 161
+      },
+      {
+        "latin": "imperatory-illyuzij",
+        "cyr": "Императоры иллюзий",
+        "score": 1.0,
+        "latin_row": 840,
+        "cyr_row": 197
+      },
+      {
+        "latin": "kajnozoj",
+        "cyr": "Кайноzой",
+        "score": 1.0,
+        "latin_row": 848,
+        "cyr_row": 198
+      },
+      {
+        "latin": "knizhnyj-dozor",
+        "cyr": "Книжный Дозор",
+        "score": 1.0,
+        "latin_row": 856,
+        "cyr_row": 208
+      },
+      {
+        "latin": "labirint-otrazhenij",
+        "cyr": "Лабиринт отражений",
+        "score": 1.0,
+        "latin_row": 872,
+        "cyr_row": 175
+      },
+      {
+        "latin": "lovec-videnij",
+        "cyr": "Ловец видений",
+        "score": 1.0,
+        "latin_row": 879,
+        "cyr_row": 165
+      },
+      {
+        "latin": "melkij-dozor",
+        "cyr": "Мелкий дозор",
+        "score": 1.0,
+        "latin_row": 889,
+        "cyr_row": 219
+      },
+      {
+        "latin": "muzhskoj-razgovor",
+        "cyr": "Мужской разговор",
+        "score": 1.0,
+        "latin_row": 895,
+        "cyr_row": 176
+      },
+      {
+        "latin": "nahimovskij-dozor",
+        "cyr": "Нахимовский Дозор",
+        "score": 1.0,
+        "latin_row": 897,
+        "cyr_row": 209
+      },
+      {
+        "latin": "nevskij-dozor",
+        "cyr": "Невский Дозор",
+        "score": 1.0,
+        "latin_row": 912,
+        "cyr_row": 195
+      },
+      {
+        "latin": "nochnoj-dozor",
+        "cyr": "Ночной Дозор",
+        "score": 1.0,
+        "latin_row": 915,
+        "cyr_row": 178
+      },
+      {
+        "latin": "novyj-dozor",
+        "cyr": "Новый Дозор",
+        "score": 1.0,
+        "latin_row": 919,
+        "cyr_row": 201
+      },
+      {
+        "latin": "obshhij-sbor",
+        "cyr": "Общий сбор",
+        "score": 0.9,
+        "latin_row": 923,
+        "cyr_row": 167
+      },
+      {
+        "latin": "obydennyj-dozor",
+        "cyr": "Обыденный Дозор",
+        "score": 1.0,
+        "latin_row": 924,
+        "cyr_row": 200
+      },
+      {
+        "latin": "odinochnyj-dozor",
+        "cyr": "Одиночный Дозор",
+        "score": 1.0,
+        "latin_row": 928,
+        "cyr_row": 206
+      },
+      {
+        "latin": "operativnyj-rezerv",
+        "cyr": "Оперативный резерв",
+        "score": 1.0,
+        "latin_row": 933,
+        "cyr_row": 203
+      },
+      {
+        "latin": "peregovorshhiki",
+        "cyr": "Переговорщики",
+        "score": 0.933,
+        "latin_row": 943,
+        "cyr_row": 216
+      },
+      {
+        "latin": "pletelshhica-snov",
+        "cyr": "Плетельщица Снов",
+        "score": 0.938,
+        "latin_row": 947,
+        "cyr_row": 225
+      },
+      {
+        "latin": "poezd-v-teplyj-kraj",
+        "cyr": "Поезд в Тёплый Край",
+        "score": 1.0,
+        "latin_row": 949,
+        "cyr_row": 217
+      },
+      {
+        "latin": "pojmat-pyatimernika",
+        "cyr": "Поймать пятимерника!",
+        "score": 1.0,
+        "latin_row": 951,
+        "cyr_row": 226
+      },
+      {
+        "latin": "poludennyj-fokstrot",
+        "cyr": "Полуденный фокстрот",
+        "score": 1.0,
+        "latin_row": 952,
+        "cyr_row": 168
+      },
+      {
+        "latin": "poslednij-dozor",
+        "cyr": "Последний дозор",
+        "score": 1.0,
+        "latin_row": 954,
+        "cyr_row": 193
+      },
+      {
+        "latin": "poslednij-geroj",
+        "cyr": "Последний герой",
+        "score": 1.0,
+        "latin_row": 955,
+        "cyr_row": 184
+      },
+      {
+        "latin": "poslednij-shans",
+        "cyr": "Последний шанс",
+        "score": 1.0,
+        "latin_row": 956,
+        "cyr_row": 222
+      },
+      {
+        "latin": "sedmoj",
+        "cyr": "Седьмой",
+        "score": 1.0,
+        "latin_row": 982,
+        "cyr_row": 170
+      },
+      {
+        "latin": "sevastopolskij-dozor",
+        "cyr": "Севастопольский Дозор",
+        "score": 1.0,
+        "latin_row": 986,
+        "cyr_row": 213
+      },
+      {
+        "latin": "shagi-za-spinoj",
+        "cyr": "Шаги за спиной",
+        "score": 1.0,
+        "latin_row": 987,
+        "cyr_row": 211
+      },
+      {
+        "latin": "shestoj-dozor",
+        "cyr": "Шестой Дозор",
+        "score": 1.0,
+        "latin_row": 988,
+        "cyr_row": 189
+      },
+      {
+        "latin": "shkolnyj-nadzor",
+        "cyr": "Школьный Надзор",
+        "score": 1.0,
+        "latin_row": 990,
+        "cyr_row": 192
+      },
+      {
+        "latin": "strojka-veka",
+        "cyr": "Стройка века",
+        "score": 1.0,
+        "latin_row": 1001,
+        "cyr_row": 181
+      },
+      {
+        "latin": "sumerechnyj-dozor",
+        "cyr": "Сумеречный дозор",
+        "score": 1.0,
+        "latin_row": 1003,
+        "cyr_row": 188
+      },
+      {
+        "latin": "tajnyj-dozor",
+        "cyr": "Тайный Дозор",
+        "score": 1.0,
+        "latin_row": 1005,
+        "cyr_row": 223
+      },
+      {
+        "latin": "tenevoj-dozor",
+        "cyr": "Теневой Дозор",
+        "score": 1.0,
+        "latin_row": 1009,
+        "cyr_row": 194
+      },
+      {
+        "latin": "tri-toshhaka",
+        "cyr": "Три Тощака",
+        "score": 0.909,
+        "latin_row": 1016,
+        "cyr_row": 191
+      },
+      {
+        "latin": "trinadcatyj-gorod",
+        "cyr": "Тринадцатый город",
+        "score": 1.0,
+        "latin_row": 1017,
+        "cyr_row": 182
+      },
+      {
+        "latin": "uchastkovyj",
+        "cyr": "Участковый",
+        "score": 1.0,
+        "latin_row": 1018,
+        "cyr_row": 186
+      },
+      {
+        "latin": "vechnyj-dozor",
+        "cyr": "Вечный Дозор",
+        "score": 1.0,
+        "latin_row": 1024,
+        "cyr_row": 187
+      },
+      {
+        "latin": "vremya-inversij",
+        "cyr": "Время инверсий",
+        "score": 1.0,
+        "latin_row": 1037,
+        "cyr_row": 207
+      },
+      {
+        "latin": "vremya-zhelanij",
+        "cyr": "Время желаний",
+        "score": 1.0,
+        "latin_row": 1039,
+        "cyr_row": 204
+      },
+      {
+        "latin": "z-kvazi-kajnozoj",
+        "cyr": "Z: Квази. Кайнозой",
+        "score": 1.0,
+        "latin_row": 1046,
+        "cyr_row": 173
+      },
+      {
+        "latin": "zhivi-spokojno",
+        "cyr": "Живи спокойно",
+        "score": 1.0,
+        "latin_row": 1051,
+        "cyr_row": 163
+      },
+      {
+        "latin": "desyatyj-hram",
+        "cyr": "Десятый храм",
+        "score": 1.0,
+        "latin_row": 1060,
+        "cyr_row": 231
+      },
+      {
+        "latin": "gnomij-bog",
+        "cyr": "Гномий Бог",
+        "score": 1.0,
+        "latin_row": 1061,
+        "cyr_row": 232
+      },
+      {
+        "latin": "korolevskij-kvest",
+        "cyr": "Королевский квест",
+        "score": 1.0,
+        "latin_row": 1062,
+        "cyr_row": 228
+      },
+      {
+        "latin": "krovavyj-bog",
+        "cyr": "Кровавый бог",
+        "score": 1.0,
+        "latin_row": 1063,
+        "cyr_row": 230
+      },
+      {
+        "latin": "bajki-u-kostra",
+        "cyr": "Байки у костра",
+        "score": 1.0,
+        "latin_row": 1069,
+        "cyr_row": 249
+      },
+      {
+        "latin": "poputnyj-veter",
+        "cyr": "Попутный ветер",
+        "score": 1.0,
+        "latin_row": 1081,
+        "cyr_row": 250
+      },
+      {
+        "latin": "poslednij-povelitel",
+        "cyr": "Последний Повелитель",
+        "score": 1.0,
+        "latin_row": 1082,
+        "cyr_row": 251
+      },
+      {
+        "latin": "andrej-levickij-serdce-zony",
+        "cyr": "Андрей Левицкий - Сердце Зоны",
+        "score": 1.0,
+        "latin_row": 1101,
+        "cyr_row": 233
+      },
+      {
+        "latin": "andrej-levickij-vybor-oruzhiya",
+        "cyr": "Андрей Левицкий - Выбор Оружия",
+        "score": 1.0,
+        "latin_row": 1102,
+        "cyr_row": 243
+      },
+      {
+        "latin": "andrej-livadnyj-chernaya-pustosh",
+        "cyr": "Андрей Ливадный Черная Пустошь",
+        "score": 1.0,
+        "latin_row": 1103,
+        "cyr_row": 238
+      },
+      {
+        "latin": "andrej-livadnyj-titanovaya-loza",
+        "cyr": "Андрей Ливадный Титановая Лоза",
+        "score": 1.0,
+        "latin_row": 1104,
+        "cyr_row": 237
+      },
+      {
+        "latin": "chernyj-angel",
+        "cyr": "Черный Ангел",
+        "score": 1.0,
+        "latin_row": 1106,
+        "cyr_row": 236
+      },
+      {
+        "latin": "dmitrij-yankovskij-epicentr-udachi",
+        "cyr": "Дмитрий Янковский - Эпицентр удачи",
+        "score": 1.0,
+        "latin_row": 1110,
+        "cyr_row": 245
+      },
+      {
+        "latin": "kontrolnyj-vybros",
+        "cyr": "Контрольный выброс",
+        "score": 1.0,
+        "latin_row": 1112,
+        "cyr_row": 234
+      },
+      {
+        "latin": "obratnyj-otschet",
+        "cyr": "ОБратный отсчет",
+        "score": 1.0,
+        "latin_row": 1114,
+        "cyr_row": 240
+      },
+      {
+        "latin": "svincovyj-zakat",
+        "cyr": "Свинцовый закат",
+        "score": 1.0,
+        "latin_row": 1125,
+        "cyr_row": 239
+      },
+      {
+        "latin": "trinadcatyj-sektor",
+        "cyr": "Тринадцатый сектор",
+        "score": 1.0,
+        "latin_row": 1128,
+        "cyr_row": 235
+      },
+      {
+        "latin": "igry-s-kozhej-lp",
+        "cyr": "Игры с кожей (ЛП)",
+        "score": 1.0,
+        "latin_row": 1165,
+        "cyr_row": 248
+      },
+      {
+        "latin": "komandor-vojny",
+        "cyr": "Командор войны",
+        "score": 1.0,
+        "latin_row": 1178,
+        "cyr_row": 40
+      },
+      {
+        "latin": "korolevskij-krest",
+        "cyr": "Королевский крест",
+        "score": 1.0,
+        "latin_row": 1181,
+        "cyr_row": 38
+      },
+      {
+        "latin": "moskovskij-klub",
+        "cyr": "Московский клуб",
+        "score": 1.0,
+        "latin_row": 1185,
+        "cyr_row": 32
+      },
+      {
+        "latin": "dorogoj-haosa",
+        "cyr": "Дорогой Хаоса",
+        "score": 1.0,
+        "latin_row": 1202,
+        "cyr_row": 51
+      }
+    ],
+    "review_items": [],
+    "no_match_items": [
+      {
+        "latin": "let",
+        "folder": "sumerechnaya-saga",
+        "row": 1145
+      }
+    ]
+  },
+  {
+    "sheet": "Программы",
+    "total_rows": 556,
+    "latin_rows": 8,
+    "cyr_rows": 547,
+    "auto_merge": 7,
+    "review": 1,
+    "no_match": 0,
+    "updated_cyr": 0,
+    "deleted_lat": 0,
+    "errors": [],
+    "auto_merge_items": [
+      {
+        "latin": "snyatzashhutuslistavxlsx",
+        "cyr": "СнятьЗащутуСЛистаВxlsx",
+        "score": 0.958,
+        "latin_row": 550,
+        "cyr_row": 131
+      },
+      {
+        "latin": "avtomatpoiskapobazeizfajla",
+        "cyr": "АвтоматПоискаПоБазеИзФайла",
+        "score": 1.0,
+        "latin_row": 551,
+        "cyr_row": 32
+      },
+      {
+        "latin": "Poisk_Vakansii",
+        "cyr": "ПоискВакансий",
+        "score": 1.0,
+        "latin_row": 553,
+        "cyr_row": 548
+      },
+      {
+        "latin": "otbor-tekstovyj-rajon",
+        "cyr": "ОТБОР Текстовый Район",
+        "score": 1.0,
+        "latin_row": 554,
+        "cyr_row": 23
+      },
+      {
+        "latin": "otbor-tekstovyj",
+        "cyr": "ОТБОР Текстовый",
+        "score": 1.0,
+        "latin_row": 555,
+        "cyr_row": 22
+      },
+      {
+        "latin": "ruipvspriur16032026-versiya-5",
+        "cyr": "RUIPvsPRIUR_16.03.2026 версия 5",
+        "score": 1.0,
+        "latin_row": 556,
+        "cyr_row": 31
+      },
+      {
+        "latin": "sravnenie-stat52iruip167polej-poisk-dvojnikov",
+        "cyr": "Сравнение стат52иРУИП167полей Поиск Двойников",
+        "score": 1.0,
+        "latin_row": 557,
+        "cyr_row": 25
+      }
+    ],
+    "review_items": [
+      {
+        "latin": "Avtosbor_sobitii_s_chygimi_i_sobitii_s_odnoi_datoi",
+        "cyr": "Автосбор событий с чужими событиями или карточек с одной датой 30.17",
+        "score": 0.61,
+        "latin_row": 552,
+        "cyr_row": 547
+      }
+    ],
+    "no_match_items": []
+  },
+  {
+    "sheet": "Музыка",
+    "total_rows": 247,
+    "latin_rows": 2,
+    "cyr_rows": 245,
+    "auto_merge": 2,
+    "review": 0,
+    "no_match": 0,
+    "updated_cyr": 0,
+    "deleted_lat": 0,
+    "errors": [],
+    "auto_merge_items": [
+      {
+        "latin": "Don t Say",
+        "cyr": "Don't Stay",
+        "score": 0.875,
+        "latin_row": 247,
+        "cyr_row": 13
+      },
+      {
+        "latin": "Crawing",
+        "cyr": "Crawling",
+        "score": 0.875,
+        "latin_row": 248,
+        "cyr_row": 11
+      }
+    ],
+    "review_items": [],
+    "no_match_items": []
+  }
+]

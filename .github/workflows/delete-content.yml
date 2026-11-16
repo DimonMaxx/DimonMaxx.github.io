@@ -34,7 +34,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install gspread google-auth google-auth-httplib2 pandas requests supabase
+          pip install gspread google-auth google-auth-httplib2 requests supabase
 
       - name: Delete from Google Sheets
         env:
@@ -46,13 +46,17 @@ jobs:
           TELEGRAM_CHAT_ID:          ${{ secrets.TELEGRAM_CHAT_ID }}
         run: python delete_content.py
 
+      # ─── ИСПРАВЛЕННЫЙ ШАГ: Используем update_content_json.py вместо generate_from_sheets.py ───
       - name: Regenerate JSON
         env:
           GOOGLE_CREDENTIALS_JSON:   ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
           SPREADSHEET_ID:            ${{ secrets.SPREADSHEET_ID }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           SITE_BASE_URL:             "https://dimonmaxx.github.io"
-        run: python generate_from_sheets.py
+          STORAGE_OWNER:             ${{ secrets.STORAGE_OWNER || 'DimonMaxx' }}
+          STORAGE_REPO:              ${{ secrets.STORAGE_REPO || 'files' }}
+          STORAGE_TOKEN:             ${{ secrets.STORAGE_TOKEN }}
+        run: python update_content_json.py --mode sheets-to-json --in-place
 
       - name: Commit and push changes
         run: |
