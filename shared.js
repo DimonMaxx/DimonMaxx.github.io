@@ -54,7 +54,7 @@
 
     function renderPagination(containerId, totalItems, totalPages, state, position) {
         position = position === 'top' ? 'top' : 'bottom';
-        const PAGE_SIZES = window.APP_CONFIG.PAGE_SIZES || [10, 20, 50, 100];
+        const PAGE_SIZES = window.APP_CONFIG.PAGE_SIZES;
         const sizes = PAGE_SIZES.map(sz =>
             `<option value="${sz}"${state.pageSize === sz ? ' selected' : ''}>${sz}</option>`
         ).join('');
@@ -144,7 +144,8 @@
             const nextBtn = bar.querySelector('.next-btn');
             if (nextBtn) {
                 nextBtn.addEventListener('click', function () {
-                    const totalPages = Math.max(1, Math.ceil(state.totalItems / state.pageSize));
+                    const totalPages = Math.max(1,
+                        Math.ceil(state.totalItems / state.pageSize));
                     if (state.currentPage < totalPages) {
                         state.currentPage++;
                         afterRender();
@@ -166,7 +167,8 @@
             const jumpInput = bar.querySelector('.page-jump-input');
             if (jumpBtn && jumpInput) {
                 const doJump = () => {
-                    const totalPages = Math.max(1, Math.ceil(state.totalItems / state.pageSize));
+                    const totalPages = Math.max(1,
+                        Math.ceil(state.totalItems / state.pageSize));
                     let p = parseInt(jumpInput.value, 10);
                     if (isNaN(p)) p = 1;
                     if (p < 1) p = 1;
@@ -180,22 +182,6 @@
                 });
             }
         });
-    }
-
-    // ============================================================
-    // Скачивание файлов (ПРЯМАЯ ССЫЛКА, БЕЗ ЗАДЕРЖЕК)
-    // ============================================================
-    function triggerDownload(url, filename) {
-        if (!url) return;
-        const a = document.createElement('a');
-        a.href = url;
-        if (filename) a.download = String(filename);
-        a.rel = 'noopener noreferrer';
-        a.target = '_blank'; // Открываем в новой вкладке
-        a.style.display = 'none';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
     }
 
     // ============================================================
@@ -218,6 +204,17 @@
         }
     }
 
+    function triggerDownload(url, filename) {
+        const a = document.createElement('a');
+        a.href = url;
+        if (filename) a.download = String(filename);
+        a.rel = 'noopener';
+        a.style.display = 'none';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
     function formatDateRu(date) {
         if (!date) return '—';
         const d = date instanceof Date ? date : new Date(date);
@@ -228,57 +225,434 @@
 
     // ============================================================
     // Прокси-ссылки для скачивания
+    // ------------------------------------------------------------
+    // Логика по источникам ссылки:
+    //
+    //  1. gh-release-proxy.macsimenkodima.workers.dev
+    //     → ССЫЛКА УЖЕ ГОТОВА, возвращаем как есть.
+    //     Файлы хранятся в приватном репо DimonMaxx/files,
+    //     Cloudflare Worker стримит их через свой GITHUB_TOKEN.
+    //     Supabase НЕ участвует → egress = 0.
+    //
+    //  2. terabox / 1024tera / 4funbox / d.terabox.app
+    //     → legacy, заворачиваем в Supabase-прокси
+    //     (это старые ссылки, которые ещё не мигрировали в релизы).
+    //
+    //  3. disk.yandex / yadi.sk
+    //     → legacy, заворачиваем в Supabase-прокси.
+    //
+    //  4. что-то другое (прямые ссылки)
+    //     → возвращаем как есть.
+    //
+    // ВАЖНО: если ссылка на gh-release-proxy — не трогаем.
     // ============================================================
     function buildProxyUrl(downloadUrl, fileName) {
         if (!downloadUrl) return '';
+
         const urlStr = String(downloadUrl);
 
-        // 1. Уже готовый release-прокси (Cloudflare Worker) → возвращаем как есть
+        // ─── 1. Уже готовый release-прокси → возвращаем как есть ───
         if (/^https:\/\/gh-release-proxy\.[^/]+\//i.test(urlStr)) {
             return urlStr;
         }
 
-        // 2. Legacy: TeraBox / Яндекс → через Supabase (если такие еще остались)
+        // ─── 2-3. Legacy: TeraBox / Яндекс → через Supabase ───
         try {
             const cfg = window.APP_CONFIG;
             const SUPABASE_URL = cfg && cfg.SUPABASE_URL ? cfg.SUPABASE_URL : '';
             const parsed = new URL(urlStr);
             const host = parsed.hostname.toLowerCase();
 
-            if (host.includes('terabox') || host.includes('1024tera') || host.includes('4funbox')) {
+            // ─── TeraBox ───
+            if (host.includes('terabox')
+                || host.includes('1024tera')
+                || host.includes('4funbox')
+                || host.includes('teraboxapp')
+                || host.includes('d.terabox.app')) {
                 let fname = fileName && String(fileName).trim();
-                if (!fname) fname = 'file.bin';
+                if (!fname) {
+                    const fromPath = parsed.searchParams.get('path');
+                    fname = fromPath
+                        ? decodeURIComponent(fromPath).split('/').pop()
+                        : 'file.bin';
+                }
                 if (!/\.[a-z0-9]{1,6}$/i.test(fname)) fname += '.bin';
-                return `${SUPABASE_URL}/functions/v1/terabox-download?url=${encodeURIComponent(urlStr)}&name=${encodeURIComponent(fname)}`;
+                return `${SUPABASE_URL}/functions/v1/terabox-download`
+                     + `?url=${encodeURIComponent(urlStr)}`
+                     + `&name=${encodeURIComponent(fname)}`;
             }
 
+            // ─── Яндекс.Диск ───
             if (host.includes('disk.yandex') || host.includes('yadi.sk')) {
-                let fname = fileName && String(fileName).trim();
-                if (!fname) fname = 'file.bin';
-                if (!/\.[a-z0-9]{1,6}$/i.test(fname)) fname += '.bin';
-                return `${SUPABASE_URL}/functions/v1/yandex-download?url=${encodeURIComponent(urlStr)}&name=${encodeURIComponent(fname)}`;
+                const folder = `${parsed.origin}${parsed.pathname}`;
+                const path = parsed.searchParams.get('path');
+                if (!folder || !path) return urlStr;
+                return `${SUPABASE_URL}/functions/v1/yandex-download`
+                     + `?folder=${encodeURIComponent(folder)}`
+                     + `&path=${encodeURIComponent(path)}`;
             }
         } catch (e) {
-            // Если URL кривой, просто вернем как есть
+            return urlStr;
         }
 
-        // 3. Прямые ссылки (обычно не используется)
+        // ─── 4. Всё остальное — как есть ───
         return urlStr;
     }
 
     // ============================================================
-    // Экспорт в window.MF
+    // Определение MIME-типа аудио по расширению
     // ============================================================
-    window.MF = {
-        escapeHtml,
-        escapeAttr,
-        slugify,
-        renderPagination,
+    function getAudioMimeType(url) {
+        if (!url) return '';
+        const m = String(url).match(/\.([a-zA-Z0-9]+)(?:\?|$)/);
+        const ext = m ? m[1].toLowerCase() : '';
+        const map = {
+            mp3:  'audio/mpeg',
+            flac: 'audio/flac',
+            wav:  'audio/wav',
+            ogg:  'audio/ogg',
+            m4a:  'audio/mp4',
+            aac:  'audio/aac',
+            wma:  'audio/x-ms-wma',
+            opus: 'audio/opus',
+            ape:  'audio/x-ape',
+            aiff: 'audio/aiff',
+            alac: 'audio/mp4'
+        };
+        return map[ext] || '';
+    }
+
+    // ============================================================
+    // Supabase client (singleton)
+    // ============================================================
+    let _supabaseClient = null;
+    function getSupabaseClient() {
+        if (_supabaseClient) return _supabaseClient;
+        if (!window.supabase) throw new Error('Supabase SDK не загружен');
+        const cfg = window.APP_CONFIG;
+        if (!cfg) throw new Error('config.js не загружен');
+        _supabaseClient = window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY);
+        return _supabaseClient;
+    }
+
+    // ============================================================
+    // Таймаут-обёртка
+    // ============================================================
+    function _withTimeout(promise, ms, label) {
+        return new Promise((resolve, reject) => {
+            const t = setTimeout(() => {
+                reject(new Error(`${label}: таймаут ${ms}ms`));
+            }, ms);
+            promise.then(
+                v => { clearTimeout(t); resolve(v); },
+                e => { clearTimeout(t); reject(e); }
+            );
+        });
+    }
+
+    // ============================================================
+    // ЛОГИРОВАНИЕ JS-ОШИБОК В SUPABASE
+    // ============================================================
+    let _errorQueue = [];
+    let _errorWindowStart = Date.now();
+    let _errorSendInFlight = false;
+    let _errorHandlerInstalled = false;
+
+    const ERR_MAX_PER_WINDOW = 5;
+    const ERR_WINDOW_MS      = 60 * 1000;
+
+    function _truncate(s, n) {
+        if (!s) return '';
+        const str = String(s);
+        return str.length > n ? str.slice(0, n) : str;
+    }
+
+    function _sendQueuedErrors() {
+        if (_errorSendInFlight) return;
+        if (_errorQueue.length === 0) return;
+
+        _errorSendInFlight = true;
+        const batch = _errorQueue.splice(0, _errorQueue.length);
+
+        let client;
+        try {
+            client = getSupabaseClient();
+        } catch (_) {
+            _errorSendInFlight = false;
+            return;
+        }
+
+        client.auth.getUser().then(({ data }) => {
+            const userId = data?.user?.id || null;
+            const rows = batch.map(item => ({
+                user_id:    userId,
+                page:       item.page,
+                message:    item.message,
+                stack:      item.stack,
+                user_agent: item.user_agent,
+                meta:       item.meta || null,
+            }));
+
+            client.from('client_errors').insert(rows).then(
+                () => { _errorSendInFlight = false; },
+                () => { _errorSendInFlight = false; }
+            );
+        }).catch(() => {
+            _errorSendInFlight = false;
+        });
+    }
+
+    function _pushError(payload) {
+        const now = Date.now();
+        if (now - _errorWindowStart > ERR_WINDOW_MS) {
+            _errorWindowStart = now;
+            _errorQueue = [];
+        }
+        if (_errorQueue.length >= ERR_MAX_PER_WINDOW) {
+            return;
+        }
+
+        _errorQueue.push(payload);
+        setTimeout(_sendQueuedErrors, 500);
+    }
+
+    function installErrorHandler(extraMeta) {
+        if (_errorHandlerInstalled) return;
+        _errorHandlerInstalled = true;
+
+        window.addEventListener('error', function (e) {
+            try {
+                if (!e.message && !e.error) return;
+
+                if (e.message === 'Script error.' && !e.error) {
+                    return;
+                }
+
+                const message = e.message || String(e.error && e.error.message) || 'Unknown error';
+                const stack   = (e.error && e.error.stack) || `${e.filename || ''}:${e.lineno || 0}:${e.colno || 0}`;
+
+                _pushError({
+                    page:       window.location.pathname,
+                    message:    _truncate(message, 500),
+                    stack:      _truncate(stack, 2000),
+                    user_agent: _truncate(navigator.userAgent, 500),
+                    meta:       extraMeta || null,
+                });
+            } catch (_) { /* сам хендлер не должен падать */ }
+        }, true);
+
+        window.addEventListener('unhandledrejection', function (e) {
+            try {
+                const reason = e.reason;
+                let message;
+                let stack;
+
+                if (reason instanceof Error) {
+                    message = reason.message;
+                    stack   = reason.stack;
+                } else if (typeof reason === 'string') {
+                    message = reason;
+                    stack   = '';
+                } else {
+                    try {
+                        message = 'Unhandled rejection: ' + JSON.stringify(reason).slice(0, 500);
+                    } catch (_) {
+                        message = 'Unhandled rejection: ' + String(reason);
+                    }
+                    stack = '';
+                }
+
+                _pushError({
+                    page:       window.location.pathname,
+                    message:    _truncate('Unhandled: ' + message, 500),
+                    stack:      _truncate(stack, 2000),
+                    user_agent: _truncate(navigator.userAgent, 500),
+                    meta:       extraMeta || null,
+                });
+            } catch (_) { /* ignore */ }
+        });
+    }
+
+    // ============================================================
+    // Безопасная замена содержимого SECTIONS
+    // ============================================================
+    function _replaceSections(cfg, newSections) {
+        if (!cfg.SECTIONS || typeof cfg.SECTIONS !== 'object') {
+            cfg.SECTIONS = {};
+        }
+        Object.keys(cfg.SECTIONS).forEach(k => { delete cfg.SECTIONS[k]; });
+        Object.keys(newSections).forEach(k => { cfg.SECTIONS[k] = newSections[k]; });
+    }
+
+    // ============================================================
+    // КЭШ site_sections В localStorage
+    // ============================================================
+    const SECTIONS_CACHE_KEY    = 'mf_site_sections_v1';
+    const SECTIONS_CACHE_TTL_MS = 5 * 60 * 1000;
+
+    function _readSectionsCache(force) {
+        if (force) return null;
+        try {
+            const raw = localStorage.getItem(SECTIONS_CACHE_KEY);
+            if (!raw) return null;
+            const parsed = JSON.parse(raw);
+            if (!parsed || !parsed.sections || !parsed.ts) return null;
+            const age = Date.now() - Number(parsed.ts);
+            if (age > SECTIONS_CACHE_TTL_MS) {
+                localStorage.removeItem(SECTIONS_CACHE_KEY);
+                return null;
+            }
+            return parsed.sections;
+        } catch (e) {
+            console.warn('[sections cache] read failed:', e);
+            return null;
+        }
+    }
+
+    function _writeSectionsCache(sections) {
+        try {
+            const payload = {
+                ts: Date.now(),
+                sections: sections || {},
+            };
+            localStorage.setItem(SECTIONS_CACHE_KEY, JSON.stringify(payload));
+        } catch (e) {
+            console.warn('[sections cache] write failed:', e);
+        }
+    }
+
+    function invalidateSectionsCache() {
+        try {
+            localStorage.removeItem(SECTIONS_CACHE_KEY);
+        } catch (_) { /* ignore */ }
+        _sectionsLoaded = null;
+    }
+
+    // ============================================================
+    // Загрузка разделов из Supabase
+    // ============================================================
+    let _sectionsLoaded = null;
+
+    function loadSections(force) {
+        if (force) {
+            _sectionsLoaded = null;
+        }
+        if (_sectionsLoaded && !force) return _sectionsLoaded;
+
+        _sectionsLoaded = (async function () {
+            const cfg = window.APP_CONFIG;
+
+            if (!cfg) {
+                console.error('[loadSections] APP_CONFIG не загружен');
+                return {};
+            }
+
+            const cached = _readSectionsCache(force);
+            if (cached) {
+                console.log('[loadSections] из localStorage (кэш):',
+                    Object.keys(cached));
+                _replaceSections(cfg, cached);
+                return cfg.SECTIONS;
+            }
+
+            const applyFallback = () => {
+                console.warn('[loadSections] → fallback на DEFAULT_SECTIONS');
+                _replaceSections(cfg, cfg.DEFAULT_SECTIONS || {});
+                return cfg.SECTIONS;
+            };
+
+            try {
+                const client = getSupabaseClient();
+
+                const { data, error } = await _withTimeout(
+                    client
+                        .from('site_sections')
+                        .select('key,label,icon,json_path,container,folderable,columns,sort_order,is_active,manual_override')
+                        .eq('is_active', true)
+                        .order('sort_order', { ascending: true }),
+                    8000,
+                    'site_sections'
+                );
+
+                if (error) {
+                    console.error('[loadSections] Supabase error:', error);
+                    return applyFallback();
+                }
+
+                if (Array.isArray(data) && data.length > 0) {
+                    const sections = {};
+                    data.forEach(row => {
+                        if (!row || !row.key) return;
+                        sections[row.key] = {
+                            label: row.label || row.key,
+                            icon: row.icon || 'fa-folder',
+                            json: row.json_path || '',
+                            container: row.container || (row.key + '-container'),
+                            folderable: !!row.folderable,
+                            columns: Array.isArray(row.columns) ? row.columns : [],
+                            manual_override: !!row.manual_override,
+                            sort_order: row.sort_order || 100,
+                        };
+                    });
+                    const sorted = {};
+                    Object.entries(sections)
+                        .sort((a, b) => (a[1].sort_order || 100) - (b[1].sort_order || 100))
+                        .forEach(([k, v]) => { sorted[k] = v; });
+
+                    _replaceSections(cfg, sorted);
+                    _writeSectionsCache(sorted);
+
+                    console.log('[loadSections] из Supabase (свежие):',
+                        Object.keys(cfg.SECTIONS));
+                    return cfg.SECTIONS;
+                }
+
+                console.warn('[loadSections] Supabase вернул пусто → fallback');
+                return applyFallback();
+            } catch (e) {
+                console.error('[loadSections] исключение:', e);
+                try {
+                    const raw = localStorage.getItem(SECTIONS_CACHE_KEY);
+                    if (raw) {
+                        const parsed = JSON.parse(raw);
+                        if (parsed && parsed.sections) {
+                            console.warn('[loadSections] используем устаревший кэш');
+                            _replaceSections(cfg, parsed.sections);
+                            return cfg.SECTIONS;
+                        }
+                    }
+                } catch (_) { /* ignore */ }
+                return applyFallback();
+            }
+        })();
+
+        return _sectionsLoaded;
+    }
+
+    // ============================================================
+    // Экспорт
+    // ============================================================
+    window.MF = Object.freeze({
+        escapeHtml, escapeAttr, slugify,
+        getMaxPageButtons, getVisiblePages,
+        renderPagination, attachPaginationHandlers,
         scrollToContainer,
-        attachPaginationHandlers,
-        triggerDownload,
-        toggleDesc,
-        formatDateRu,
-        buildProxyUrl
-    };
+        toggleDesc, triggerDownload, formatDateRu,
+        buildProxyUrl, getAudioMimeType,
+        getSupabaseClient, loadSections,
+        invalidateSectionsCache,
+        installErrorHandler,
+    });
+
+    window.toggleDesc = toggleDesc;
+
+    if (window.APP_CONFIG) {
+        installErrorHandler();
+    } else {
+        document.addEventListener('DOMContentLoaded', function () {
+            if (window.APP_CONFIG) {
+                installErrorHandler();
+            }
+        });
+    }
 })();
