@@ -1,7 +1,6 @@
 /* ============================================================
    app-content.js — рендеры разделов и таблиц MyFiles
-   + временное ограничение размера
-   + гибрид Supabase + Yandex Cloud Functions
+   + прямое скачивание через Cloudflare Worker (без ожидания Supabase)
    ============================================================ */
 (function () {
     'use strict';
@@ -23,87 +22,6 @@
     const showToast        = App.showToast;
     const buildProxyUrl    = MF.buildProxyUrl;
     const getAudioMimeType = MF.getAudioMimeType;
-
-    // ============================================================
-    // ГИБРИДНАЯ СХЕМА: НАСТРОЙКИ
-    // ============================================================
-
-    // Временный лимит: файлы больше этого размера не идём через Supabase.
-    // Причина: Supabase egress 22 ГБ / 5 ГБ, стоит throttling — файлы
-    // >5-10 МБ часто падают по IDLE_TIMEOUT.
-    // После 1 ноября (обнуление billing) или после настройки Yandex Cloud
-    // можно увеличить или убрать вовсе.
-    const MAX_FILE_SIZE_MB_FOR_SUPABASE = 10;
-
-    // URL Yandex Cloud Function (одна универсальная функция).
-    // Пример: 'https://functions.yandexcloud.net/d4e1234567890abcdef'
-    //
-    // Пока пусто — работает только Supabase с ограничениями.
-    // Как только вы развернёте YC-функцию — впишите сюда её URL,
-    // и большие файлы + файлы при заблокированном Supabase пойдут
-    // через Yandex Cloud Functions.
-    const YANDEX_CLOUD_FUNCTION_URL = '';
-
-    // Ключ флага в localStorage. Флаг означает:
-    // «Supabase заблокирован до указанной даты».
-    const SUPABASE_BLOCKED_KEY = 'mf_supabase_blocked_until';
-
-    // ============================================================
-    // ГИБРИДНАЯ СХЕМА: ФУНКЦИИ
-    // ============================================================
-
-    /**
-     * Проверяет, стоит ли флаг «Supabase заблокирован».
-     * Если дата флага прошла — сбрасывает его.
-     * Billing cycle Supabase — 1-е число каждого месяца UTC.
-     */
-    function isSupabaseBlocked() {
-        try {
-            const raw = localStorage.getItem(SUPABASE_BLOCKED_KEY);
-            if (!raw) return false;
-            const until = new Date(raw);
-            if (isNaN(until.getTime())) {
-                localStorage.removeItem(SUPABASE_BLOCKED_KEY);
-                return false;
-            }
-            if (Date.now() > until.getTime()) {
-                localStorage.removeItem(SUPABASE_BLOCKED_KEY);
-                return false;
-            }
-            return true;
-        } catch (_) {
-            return false;
-        }
-    }
-
-    /**
-     * Ставит флаг «Supabase заблокирован до 1-го числа следующего месяца».
-     * Далее все запросы пойдут через Yandex Cloud Function (если URL задан).
-     */
-    function markSupabaseBlocked() {
-        try {
-            const now = new Date();
-            // 1-е число следующего месяца, 00:00 UTC
-            const nextReset = new Date(
-                Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 0, 0, 0)
-            );
-            localStorage.setItem(SUPABASE_BLOCKED_KEY, nextReset.toISOString());
-            console.warn('[hybrid] Supabase заблокирован до', nextReset.toISOString());
-        } catch (_) { /* ignore */ }
-    }
-
-    /**
-     * Формирует URL Yandex Cloud Function.
-     * Функция принимает ?url=<cloud_dlink>&name=<filename>.
-     */
-    function buildYandexCloudProxyUrl(downloadUrl, fileName) {
-        if (!YANDEX_CLOUD_FUNCTION_URL) return '';
-        let fname = fileName && String(fileName).trim() || 'file.bin';
-        if (!/\.[a-z0-9]{1,6}$/i.test(fname)) fname += '.bin';
-        return YANDEX_CLOUD_FUNCTION_URL
-             + `?url=${encodeURIComponent(downloadUrl)}`
-             + `&name=${encodeURIComponent(fname)}`;
-    }
 
     if (!state.loadedSections)   state.loadedSections = new Set();
     if (!state.tableStates)      state.tableStates = {};
@@ -328,233 +246,55 @@
     }
 
     // ============================================================
-    // ПРОВЕРКА ПРОКСИ ПЕРЕД СКАЧИВАНИЕМ
+    // ИНКРЕМЕНТ СКАЧИВАНИЯ И ЗАПУСК ФАЙЛА
     // ------------------------------------------------------------
-    // Делаем маленький Range-запрос (первые 1 КБ). Смотрим на
-    // Content-Type ответа:
-    //   • application/json, text/html → ошибка
-    //   • timeout (15 сек) → сервер не отвечает
-    //   • всё остальное → это файл, ок
-    //
-    // Возвращает { ok: bool, error: string, isSupabaseError: bool }
+    // Скачивание происходит МГНОВЕННО через Cloudflare Worker.
+    // Запрос к Supabase (статистика) уходит "в фоне" и не блокирует.
     // ============================================================
-    async function checkProxyBeforeDownload(proxyUrl) {
-        const TIMEOUT_MS = 15000;
-        const ctrl = new AbortController();
-        const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
-
-        try {
-            const resp = await fetch(proxyUrl, {
-                method: 'GET',
-                headers: { 'Range': 'bytes=0-1023' },
-                signal: ctrl.signal,
-            });
-            clearTimeout(timer);
-
-            const ct = (resp.headers.get('content-type') || '').toLowerCase();
-
-            // ─── JSON-ошибка ───
-            if (ct.includes('application/json')) {
-                let msg = 'Файл временно недоступен. Попробуйте позже.';
-                try {
-                    const text = await resp.text();
-                    const json = JSON.parse(text);
-                    if (json.code === 'IDLE_TIMEOUT') {
-                        msg = 'Файл слишком большой для текущего режима. ' +
-                              'Попробуйте позже или свяжитесь с администратором.';
-                    } else if (json.message) {
-                        msg = 'Ошибка сервера: ' + json.message;
-                    } else if (json.error) {
-                        msg = 'Ошибка сервера: ' + json.error;
-                    }
-                } catch (_) { /* ignore */ }
-                try { resp.body?.cancel(); } catch (_) {}
-                return { ok: false, error: msg, isSupabaseError: true };
-            }
-
-            // ─── HTML-ошибка ───
-            if (ct.includes('text/html')) {
-                try { resp.body?.cancel(); } catch (_) {}
-                return {
-                    ok: false,
-                    error: 'Файл временно недоступен. Попробуйте позже.',
-                    isSupabaseError: true,
-                };
-            }
-
-            // ─── text/plain может быть txt-файлом или JSON-ошибкой ───
-            if (ct.includes('text/plain')) {
-                try {
-                    const text = await resp.text();
-                    const trimmed = text.trim();
-                    if (trimmed.startsWith('{') || trimmed.startsWith('<')) {
-                        try {
-                            const json = JSON.parse(trimmed);
-                            let msg = 'Файл временно недоступен. Попробуйте позже.';
-                            if (json.code === 'IDLE_TIMEOUT') {
-                                msg = 'Файл слишком большой для текущего режима.';
-                            } else if (json.message) {
-                                msg = 'Ошибка сервера: ' + json.message;
-                            }
-                            return { ok: false, error: msg, isSupabaseError: true };
-                        } catch (_) {
-                            return {
-                                ok: false,
-                                error: 'Файл временно недоступен.',
-                                isSupabaseError: true,
-                            };
-                        }
-                    }
-                } catch (_) { /* ignore */ }
-                try { resp.body?.cancel(); } catch (_) {}
-                return { ok: true, isSupabaseError: false };
-            }
-
-            // ─── Всё остальное — файл ───
-            try { resp.body?.cancel(); } catch (_) {}
-            return { ok: true, isSupabaseError: false };
-        } catch (e) {
-            clearTimeout(timer);
-            if (e.name === 'AbortError') {
-                return {
-                    ok: false,
-                    error: 'Сервер не отвечает более 15 секунд. Возможно, файл очень большой ' +
-                           'или сервер перегружен. Попробуйте позже.',
-                    isSupabaseError: true,
-                };
-            }
-            return {
-                ok: false,
-                error: 'Не удалось связаться с сервером: ' + e.message,
-                isSupabaseError: false,
-            };
-        }
-    }
-
-    // ============================================================
-    // ИНКРЕМЕНТ СКАЧИВАНИЯ
-    // ------------------------------------------------------------
-    // Гибридная логика:
-    //
-    //   1. Файл > MAX_FILE_SIZE_MB_FOR_SUPABASE
-    //      → Yandex Cloud Function (если URL задан)
-    //      → иначе: alert «файл слишком большой, попробуйте после 1-го»
-    //
-    //   2. Supabase ранее вернул ошибку (флаг стоит)
-    //      → Yandex Cloud Function (если URL задан)
-    //      → иначе: alert «временно недоступно»
-    //
-    //   3. Иначе — Supabase как обычно
-    //      При ошибке от Supabase — ставим флаг и пробуем YC
-    // ============================================================
-    async function incrementDownload(fileId, sectionKey, downloadUrl, fileName, fileSizeMb) {
+    function incrementDownload(fileId, sectionKey, downloadUrl, fileName) {
         if (!state.currentUser) {
             alert('Для скачивания необходимо зарегистрироваться.');
             return;
         }
 
-        // ─── Определяем размер ───
-        const size = parseFloat(fileSizeMb);
-        const sizeKnown = isFinite(size) && size >= 0;
-        const sizeMb = sizeKnown ? size : 0;
-
-        const tooBigForSupabase = sizeKnown && sizeMb > MAX_FILE_SIZE_MB_FOR_SUPABASE;
-        const supabaseBlocked   = isSupabaseBlocked();
-        const ycAvailable       = !!YANDEX_CLOUD_FUNCTION_URL;
-
-        // ─── Выбор прокси ───
-        let proxyType = 'supabase'; // 'supabase' | 'yandex_cloud'
-
-        if (tooBigForSupabase) {
-            if (ycAvailable) {
-                proxyType = 'yandex_cloud';
-            } else {
-                alert(
-                    `Этот файл весит ${sizeMb.toFixed(1)} МБ. ` +
-                    `Скачивание файлов больше ${MAX_FILE_SIZE_MB_FOR_SUPABASE} МБ ` +
-                    `временно недоступно. Мы работаем над решением проблемы, ` +
-                    `попробуйте после 1-го числа следующего месяца.`
-                );
-                return;
-            }
-        } else if (supabaseBlocked) {
-            if (ycAvailable) {
-                proxyType = 'yandex_cloud';
-            } else {
-                alert(
-                    'Скачивание временно недоступно из-за технических работ. ' +
-                    'Попробуйте позже или свяжитесь с администратором.'
-                );
-                return;
-            }
-        }
-
-        // ─── Счётчик + лог ───
-        try {
-            const { data } = await supabaseClient.rpc('increment_download', {
-                p_file_id:     fileId,
-                p_file_name:   fileName   || null,
-                p_section_key: sectionKey || null,
-            });
-            state.downloadCounts[fileId] = data;
-            updateDownloadCountsDisplay();
-
-            await supabaseClient.from('download_logs').insert([{
-                file_id:     fileId,
-                file_name:   fileName   || null,
-                section_key: sectionKey || null,
-                user_id:     state.currentUser.id,
-                username:    state.currentProfile?.username || state.currentUser.email,
-            }]);
-        } catch (e) {
-            console.warn('[incrementDownload] rpc/log error:', e);
-        }
-
         if (!downloadUrl || downloadUrl === '#') return;
 
-        // ─── Строим URL прокси ───
-        const proxyUrl = (proxyType === 'yandex_cloud')
-            ? buildYandexCloudProxyUrl(downloadUrl, fileName)
-            : buildProxyUrl(downloadUrl, fileName);
-
-        // ─── Проверяем прокси перед скачиванием ───
-        const check = await checkProxyBeforeDownload(proxyUrl);
-
-        if (!check.ok) {
-            // Если ошибка Supabase и есть YC — пробуем через YC
-            if (check.isSupabaseError && proxyType === 'supabase' && ycAvailable) {
-                console.warn('[download] Supabase failed, switching to Yandex Cloud');
-                markSupabaseBlocked();
-
-                const ycUrl = buildYandexCloudProxyUrl(downloadUrl, fileName);
-                const ycCheck = await checkProxyBeforeDownload(ycUrl);
-                if (ycCheck.ok) {
-                    try {
-                        MF.triggerDownload(ycUrl, fileName);
-                        return;
-                    } catch (e) {
-                        console.warn('[download] YC trigger failed:', e);
-                    }
-                }
-                alert('Скачивание временно недоступно. Попробуйте позже.');
-                return;
-            }
-
-            // Если ошибка Supabase без YC — ставим флаг для будущих сессий
-            if (check.isSupabaseError) {
-                markSupabaseBlocked();
-            }
-
-            alert(check.error);
-            return;
-        }
-
-        // ─── Всё ок — начинаем скачивание ───
+        // 1. Мгновенно запускаем скачивание файла
+        const proxyUrl = buildProxyUrl(downloadUrl, fileName);
         try {
             MF.triggerDownload(proxyUrl, fileName);
         } catch (e) {
             console.warn('[download] trigger failed:', e);
             alert('Не удалось начать скачивание. Попробуйте позже.');
+            return;
+        }
+
+        // 2. В фоне обновляем статистику в Supabase
+        try {
+            // Обновляем счётчик
+            supabaseClient.rpc('increment_download', {
+                p_file_id:     fileId,
+                p_file_name:   fileName   || null,
+                p_section_key: sectionKey || null,
+            }).then(({ data, error }) => {
+                if (!error && data) {
+                    state.downloadCounts[fileId] = data;
+                    updateDownloadCountsDisplay();
+                }
+            }).catch(err => console.warn('[bg rpc]', err));
+
+            // Пишем лог
+            supabaseClient.from('download_logs').insert([{
+                file_id:     fileId,
+                file_name:   fileName   || null,
+                section_key: sectionKey || null,
+                user_id:     state.currentUser.id,
+                username:    state.currentProfile?.username || state.currentUser.email,
+            }]).catch(err => console.warn('[bg log]', err));
+
+        } catch (e) {
+            // Если Supabase заблокирован, тихо игнорируем, файл уже качается
+            console.warn('[bg stats error]', e);
         }
     }
 
@@ -1109,8 +849,7 @@
                     this.dataset.fileId,
                     this.dataset.sectionKey,
                     this.dataset.downloadUrl,
-                    this.dataset.fileName,
-                    this.dataset.fileSize
+                    this.dataset.fileName
                 );
             });
         });
@@ -1211,9 +950,6 @@
         loadDownloadCounts,
         updateDownloadCountsDisplay,
         incrementDownload,
-        checkProxyBeforeDownload,
-        isSupabaseBlocked,
-        markSupabaseBlocked,
         initTableState,
         loadCollection,
         loadSectionIfNeeded,
@@ -1223,9 +959,6 @@
         getFilteredSorted,
         renderTableWithState,
         init,
-        // Экспорт констант для отладки
-        _MAX_FILE_SIZE_MB_FOR_SUPABASE: MAX_FILE_SIZE_MB_FOR_SUPABASE,
-        _YANDEX_CLOUD_FUNCTION_URL: YANDEX_CLOUD_FUNCTION_URL,
     });
 
     if (document.readyState === 'loading') {
