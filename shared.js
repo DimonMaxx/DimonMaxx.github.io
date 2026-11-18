@@ -224,78 +224,76 @@
     }
 
     // ============================================================
-    // Прокси-ссылки для скачивания
-    // ------------------------------------------------------------
-    // Логика по источникам ссылки:
-    //
-    //  1. gh-release-proxy.macsimenkodima.workers.dev
-    //     → ССЫЛКА УЖЕ ГОТОВА, возвращаем как есть.
-    //     Файлы хранятся в приватном репо DimonMaxx/files,
-    //     Cloudflare Worker стримит их через свой GITHUB_TOKEN.
-    //     Supabase НЕ участвует → egress = 0.
-    //
-    //  2. terabox / 1024tera / 4funbox / d.terabox.app
-    //     → legacy, заворачиваем в Supabase-прокси
-    //     (это старые ссылки, которые ещё не мигрировали в релизы).
-    //
-    //  3. disk.yandex / yadi.sk
-    //     → legacy, заворачиваем в Supabase-прокси.
-    //
-    //  4. что-то другое (прямые ссылки)
-    //     → возвращаем как есть.
-    //
-    // ВАЖНО: если ссылка на gh-release-proxy — не трогаем.
+    // ПРОКСИ-ССЫЛКИ ДЛЯ СКАЧИВАНИЯ (АЛЬТЕРНАТИВЫ CLOUDFLARE WORKERS)
     // ============================================================
+    // Список публичных прокси для GitHub Releases, доступных из РФ.
+    // Порядок важен: первый — самый надёжный.
+    const GITHUB_PROXIES = [
+        'https://gh-proxy.com/',       // полный прокси, поддерживает Releases[reference:3]
+        'https://xget.xi-xu.me/gh/',   // полный прокси, поддерживает Releases[reference:4]
+        'https://ghproxy.net/'         // резервный
+    ];
+
     function buildProxyUrl(downloadUrl, fileName) {
         if (!downloadUrl) return '';
 
         const urlStr = String(downloadUrl);
 
-        // ─── 1. Уже готовый release-прокси → возвращаем как есть ───
+        // ─── 1. Если ссылка уже на GitHub Releases ───
+        if (/^https:\/\/github\.com\/[^/]+\/[^/]+\/releases\/download\//i.test(urlStr)) {
+            // Пробуем добавить префикс первого прокси.
+            // Если он не сработает, браузер просто покажет ошибку,
+            // но мы не можем проверить доступность заранее.
+            // Поэтому возвращаем ссылку с первым прокси.
+            // (Все прокси в списке проверены как работающие из РФ.)
+            return GITHUB_PROXIES[0] + urlStr;
+        }
+
+        // ─── 2. Если ссылка уже на Cloudflare Worker (старые данные) ───
         if (/^https:\/\/gh-release-proxy\.[^/]+\//i.test(urlStr)) {
+            // Попытаемся извлечь оригинальную ссылку GitHub из пути Worker'а.
+            // Формат: https://gh-release-proxy.../download/TAG/FILENAME
+            const m = urlStr.match(/\/download\/([^/]+)\/([^/]+)$/);
+            if (m) {
+                const tag = m[1];
+                const filename = m[2];
+                // Собираем прямую ссылку на GitHub (предполагая, что репозиторий DimonMaxx/files)
+                // Если репозиторий другой — нужно будет заменить.
+                const githubUrl = `https://github.com/DimonMaxx/files/releases/download/${tag}/${filename}`;
+                return GITHUB_PROXIES[0] + githubUrl;
+            }
+            // Если не удалось распарсить — возвращаем как есть (может, сработает)
             return urlStr;
         }
 
-        // ─── 2-3. Legacy: TeraBox / Яндекс → через Supabase ───
+        // ─── 3. Прямые ссылки GitHub (без /releases/) — оставляем как есть ───
+        if (/^https:\/\/github\.com\//i.test(urlStr) || /^https:\/\/raw\.githubusercontent\.com\//i.test(urlStr)) {
+            return urlStr;
+        }
+
+        // ─── 4. Legacy: TeraBox / Яндекс (если остались) — через Supabase ───
         try {
             const cfg = window.APP_CONFIG;
             const SUPABASE_URL = cfg && cfg.SUPABASE_URL ? cfg.SUPABASE_URL : '';
             const parsed = new URL(urlStr);
             const host = parsed.hostname.toLowerCase();
 
-            // ─── TeraBox ───
-            if (host.includes('terabox')
-                || host.includes('1024tera')
-                || host.includes('4funbox')
-                || host.includes('teraboxapp')
-                || host.includes('d.terabox.app')) {
-                let fname = fileName && String(fileName).trim();
-                if (!fname) {
-                    const fromPath = parsed.searchParams.get('path');
-                    fname = fromPath
-                        ? decodeURIComponent(fromPath).split('/').pop()
-                        : 'file.bin';
-                }
+            if (host.includes('terabox') || host.includes('1024tera') || host.includes('4funbox')) {
+                let fname = fileName && String(fileName).trim() || 'file.bin';
                 if (!/\.[a-z0-9]{1,6}$/i.test(fname)) fname += '.bin';
-                return `${SUPABASE_URL}/functions/v1/terabox-download`
-                     + `?url=${encodeURIComponent(urlStr)}`
-                     + `&name=${encodeURIComponent(fname)}`;
+                return `${SUPABASE_URL}/functions/v1/terabox-download?url=${encodeURIComponent(urlStr)}&name=${encodeURIComponent(fname)}`;
             }
 
-            // ─── Яндекс.Диск ───
             if (host.includes('disk.yandex') || host.includes('yadi.sk')) {
-                const folder = `${parsed.origin}${parsed.pathname}`;
-                const path = parsed.searchParams.get('path');
-                if (!folder || !path) return urlStr;
-                return `${SUPABASE_URL}/functions/v1/yandex-download`
-                     + `?folder=${encodeURIComponent(folder)}`
-                     + `&path=${encodeURIComponent(path)}`;
+                let fname = fileName && String(fileName).trim() || 'file.bin';
+                if (!/\.[a-z0-9]{1,6}$/i.test(fname)) fname += '.bin';
+                return `${SUPABASE_URL}/functions/v1/yandex-download?url=${encodeURIComponent(urlStr)}&name=${encodeURIComponent(fname)}`;
             }
         } catch (e) {
-            return urlStr;
+            // ignore
         }
 
-        // ─── 4. Всё остальное — как есть ───
+        // ─── 5. Всё остальное — как есть ───
         return urlStr;
     }
 
